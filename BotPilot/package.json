@@ -1,37 +1,18 @@
 {
   "name": "botpilot",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "dependencies": {
-    "blake3-wasm": "^2.1.5",
-    "cookie": "^1.1.1",
-    "detect-libc": "^2.1.2",
-    "error-stack-parser-es": "^1.0.5",
-    "esbuild": "^0.28.1",
-    "hono": "^4.12.27",
-    "kleur": "^4.1.5",
-    "miniflare": "^4.20260625.0",
-    "path-to-regexp": "^6.3.0",
-    "pathe": "^2.0.3",
-    "semver": "^7.8.5",
-    "sharp": "^0.34.5",
-    "supports-color": "^10.2.2",
-    "typescript": "^6.0.3",
-    "undici": "^7.28.0",
-    "unenv": "^2.0.0-rc.24",
-    "workerd": "^1.20260625.1",
-    "wrangler": "^4.105.0",
-    "ws": "^8.21.0",
-    "youch": "^4.1.0-beta.10",
-    "youch-core": "^0.3.3"
-  },
-  "devDependencies": {},
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+  "dependencies": {
+    "hono": "^4.12.27"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260625.0",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.105.0"
+  }
 }

@@ -13,5 +13,13 @@
 
   "observability": {
     "enabled": true
-  }
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "botpilot-db",
+      "database_id": "191331b8-58cb-4ac4-ad57-a1e0a2125b8e"
+    }
+  ]
 }
