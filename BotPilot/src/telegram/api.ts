@@ -339,3 +339,17 @@ export async function setMyDescription(
   );
 
 }
+export async function setMyShortDescription(
+  token: string,
+  shortDescription: string
+) {
+
+  return telegramRequest(
+    token,
+    "setMyShortDescription",
+    {
+      short_description: shortDescription
+    }
+  );
+
+}
