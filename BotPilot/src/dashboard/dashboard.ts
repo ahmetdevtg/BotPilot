@@ -117,44 +117,9 @@ font-family:Arial,sans-serif;
 
 body{
 background:#0f172a;
-display:flex;
-height:100vh;
 color:white;
-}
-
-.sidebar{
-width:250px;
-background:#111827;
-padding:25px;
-}
-
-.logo{
-font-size:28px;
-font-weight:bold;
-margin-bottom:35px;
-}
-
-.menu{
-display:flex;
-flex-direction:column;
-gap:12px;
-}
-
-.menu a{
-color:#cbd5e1;
-text-decoration:none;
-padding:12px;
-border-radius:8px;
-}
-
-.menu a:hover{
-background:#2563eb;
-}
-
-.main{
-flex:1;
-padding:35px;
-overflow:auto;
+font-family:Arial,sans-serif;
+padding:40px;
 }
 
 .cards{
@@ -216,9 +181,9 @@ font-weight:bold;
 
 <body>
 
-${sidebar()}
-
-<div class="main">
+<h1 style="margin-bottom:25px;">
+Dashboard
+</h1>
 
 <h1 style="margin-bottom:25px;">
 Dashboard
