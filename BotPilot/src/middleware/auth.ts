@@ -2,37 +2,32 @@ import { Context, Next } from "hono";
 import { getSession } from "../database/sessions";
 
 export async function auth(
+  c: Context,
+  next: Next
+) {
 
-c:Context,
+  // Webhook'lar giriş istemez
+  if (c.req.path.startsWith("/webhook")) {
+    return await next();
+  }
 
-next:Next
+  const cookie = c.req.header("Cookie") || "";
 
-){
+  const match = cookie.match(/session=([^;]+)/);
 
-const cookie=c.req.header("Cookie") || "";
+  if (!match) {
+    return c.redirect("/login");
+  }
 
-const match=cookie.match(/session=([^;]+)/);
+  const session = await getSession(
+    (c.env as any).DB,
+    match[1]
+  );
 
-if(!match){
+  if (!session) {
+    return c.redirect("/login");
+  }
 
-return c.redirect("/login");
-
-}
-
-const session=await getSession(
-
-(c.env as any).DB,
-
-match[1]
-
-);
-
-if(!session){
-
-return c.redirect("/login");
-
-}
-
-await next();
+  await next();
 
 }
