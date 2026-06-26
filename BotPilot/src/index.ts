@@ -11,6 +11,7 @@ import settings from "./settings";
 import admin from "./admin";
 import password from "./admin/password";
 import globalSettings from "./global-settings";
+import replyButtons from "./reply-buttons";
 
 const app = new Hono<Env>();
 
@@ -24,6 +25,7 @@ app.route("/", broadcast);
 app.route("/", admin);
 app.route("/", password);
 app.route("/", globalSettings);
+app.route("/", replyButtons);
 
 // Çıkış Yap
 app.get("/logout", (c) => {
