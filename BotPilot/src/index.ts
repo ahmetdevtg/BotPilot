@@ -9,6 +9,7 @@ import broadcast from "./broadcast";
 import users from "./users";
 import settings from "./settings";
 import admin from "./admin";
+import password from "./admin/password";
 
 const app = new Hono<Env>();
 
@@ -20,6 +21,7 @@ app.route("/", users);
 app.route("/", webhook);
 app.route("/", broadcast);
 app.route("/", admin);
+app.route("/", password);
 
 app.get("/", (c) => c.redirect("/login"));
 
