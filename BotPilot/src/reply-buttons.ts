@@ -65,7 +65,7 @@ margin-bottom:20px;
 <body>
 
 <h1>⌨ Reply Keyboard</h1>
-<a href="/dashboard" class="back">
+<a class="btn" href="/dashboard" class="back">
 🏠 Anasayfaya Dön
 </a>
 <a class="btn" href="/reply-buttons/new">
