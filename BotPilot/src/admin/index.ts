@@ -206,3 +206,4 @@ admin.post("/admin/delete/:id", async (c) => {
   return c.redirect("/admin");
 
 });
+export default admin;
