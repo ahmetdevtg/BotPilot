@@ -124,6 +124,11 @@ background:#172033;
 <body>
 
 <h1>👤 Admin Yönetimi</h1>
+<p>
+<a href="/admin/password" style="color:#60a5fa;text-decoration:none;">
+🔐 Şifre Değiştir
+</a>
+</p>
 
 <div class="card">
 
