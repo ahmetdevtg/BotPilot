@@ -39,6 +39,15 @@ if (!settings.is_enabled) {
   return;
 }
 
+const settings: any = await getBotSettings(
+  db,
+  botId
+);
+
+if (!settings.is_enabled) {
+  return;
+}
+
 await sendMessage(
   token,
   message.chat.id,
