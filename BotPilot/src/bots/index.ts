@@ -24,9 +24,30 @@ bots.get("/bots", async (c) => {
 <td>${bot.status ? "🟢 Online" : "🔴 Offline"}</td>
 <td>
 
-<form method="POST" action="/bots/delete/${bot.id}">
+<a
+href="/bots/edit/${bot.id}"
+style="
+display:inline-block;
+padding:8px 12px;
+background:#16a34a;
+color:white;
+text-decoration:none;
+border-radius:6px;
+margin-right:8px;
+">
 
-<button class="delete-btn">
+📝 Düzenle
+
+</a>
+
+<form
+method="POST"
+action="/bots/delete/${bot.id}"
+style="display:inline-block;">
+
+<button
+class="delete-btn"
+type="submit">
 
 🗑 Sil
 
