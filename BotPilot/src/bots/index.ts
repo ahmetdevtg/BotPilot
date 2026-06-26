@@ -1,24 +1,21 @@
 import { Hono } from "hono";
 import { getBots } from "../database/bots";
 import { addBot } from "../services/bot.service";
+import { auth } from "../middleware/auth";
 
-type Env = {
-  Bindings: {
-    DB: D1Database;
-  };
-};
-
+import type { Env } from "../types/env";
 const bots = new Hono<Env>();
+
+// Giriş yapılmadan erişilemez
+bots.use("*", auth);
 
 // Bot listesi
 bots.get("/bots", async (c) => {
-
   const botlar = await getBots(c.env.DB);
 
   let rows = "";
 
   for (const bot of botlar as any[]) {
-
     rows += `
       <tr>
         <td>${bot.id}</td>
@@ -27,44 +24,67 @@ bots.get("/bots", async (c) => {
         <td>${bot.status == 1 ? "🟢 Online" : "🔴 Offline"}</td>
       </tr>
     `;
-
   }
 
   return c.html(`
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>BotPilot</title>
+<title>BotPilot - Bot Yönetimi</title>
 
 <style>
 
 body{
-background:#0f172a;
-font-family:Arial;
-padding:40px;
-color:white;
+    background:#0f172a;
+    color:white;
+    font-family:Arial,sans-serif;
+    padding:40px;
+}
+
+h1{
+    margin-bottom:25px;
 }
 
 input{
-padding:12px;
-width:420px;
+    width:420px;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    margin-right:10px;
 }
 
 button{
-padding:12px;
-cursor:pointer;
+    padding:12px 20px;
+    border:none;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#1d4ed8;
 }
 
 table{
-width:100%;
-margin-top:30px;
-border-collapse:collapse;
+    width:100%;
+    margin-top:30px;
+    border-collapse:collapse;
 }
 
 th,td{
-padding:12px;
-border:1px solid #334155;
+    border:1px solid #334155;
+    padding:12px;
+    text-align:left;
+}
+
+th{
+    background:#1e293b;
+}
+
+tr:nth-child(even){
+    background:#162033;
 }
 
 </style>
@@ -82,10 +102,8 @@ name="token"
 placeholder="Telegram Bot Token"
 required>
 
-<button>
-
+<button type="submit">
 Bot Ekle
-
 </button>
 
 </form>
@@ -93,15 +111,10 @@ Bot Ekle
 <table>
 
 <tr>
-
 <th>ID</th>
-
-<th>Bot</th>
-
+<th>Bot Adı</th>
 <th>Username</th>
-
 <th>Durum</th>
-
 </tr>
 
 ${rows}
@@ -109,13 +122,9 @@ ${rows}
 </table>
 
 </body>
-
 </html>
-
 `);
-
 });
-
 
 // Bot ekle
 bots.post("/bots/add", async (c) => {
@@ -124,15 +133,18 @@ bots.post("/bots/add", async (c) => {
 
   const token = String(body.token || "");
 
-  try{
+  try {
 
-      await addBot(c.env.DB,token);
+    await addBot(c.env.DB, token);
 
-      return c.redirect("/bots");
+    return c.redirect("/bots");
 
-  }catch(e:any){
+  } catch (e: any) {
 
-      return c.html(`<h1>${e.message}</h1>`);
+    return c.html(`
+      <h2>${e.message}</h2>
+      <a href="/bots">Geri Dön</a>
+    `);
 
   }
 

@@ -1,8 +1,16 @@
 import { Hono } from "hono";
+import { auth } from "../middleware/auth";
+import { getDashboardStats } from "../database/dashboard";
 
-const dashboard = new Hono();
+import type { Env } from "../types/env";
 
-dashboard.get("/dashboard", (c) => {
+const dashboard = new Hono<Env>();
+
+dashboard.use("*",auth);
+
+dashboard.get("/dashboard", async (c) => {
+
+  const stats = await getDashboardStats(c.env.DB);
 
 return c.html(`
 
@@ -238,7 +246,7 @@ Dashboard
 
 <h2>Toplam Bot</h2>
 
-<p>0</p>
+<p>${stats.totalBots}</p>
 
 </div>
 

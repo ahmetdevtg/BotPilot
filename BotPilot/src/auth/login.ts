@@ -3,11 +3,7 @@ import { getUserByUsername } from "../database/users";
 import { verifyPassword } from "./password";
 import { createSession } from "./session";
 
-type Env = {
-  Bindings: {
-    DB: D1Database;
-  };
-};
+import type { Env } from "../types/env";
 
 const login = new Hono<Env>();
 

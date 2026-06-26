@@ -1,37 +1,43 @@
-import { createBot } from "../database/bots";
+import {
+  createBot,
+  getBotByTelegramId
+} from "../database/bots";
 
 import { getMe } from "../telegram/api";
+import { setWebhook } from "../telegram/api";
 
 export async function addBot(
+  db: D1Database,
+  token: string
+) {
 
-db:D1Database,
+  const me: any = await getMe(token);
 
-token:string
+  if (!me.ok) {
+    throw new Error("Bot Token geçersiz.");
+  }
 
-){
+  const exists = await getBotByTelegramId(
+    db,
+    me.result.id
+  );
 
-const me=await getMe(token);
+  if (exists) {
+    throw new Error("Bu bot zaten eklenmiş.");
+  }
 
-if(!me.ok){
-
-throw new Error("Geçersiz Bot Token");
-
-}
-
-await createBot(
-
-db,
-
-me.result.first_name,
-
-me.result.username,
-
-token,
-
-me.result.id
-
+  await createBot(
+    db,
+    me.result.first_name,
+    me.result.username,
+    token,
+    me.result.id
+  );
+  await setWebhook(
+    token,
+    "https://botpilot.yrdahmets.workers.dev/webhook/" + me.result.id
 );
 
-return me.result;
+  return me.result;
 
 }
