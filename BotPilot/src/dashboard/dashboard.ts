@@ -1,3 +1,4 @@
+
 import { Hono } from "hono";
 import { auth } from "../middleware/auth";
 import { getDashboardStats } from "../database/dashboard";
@@ -11,7 +12,6 @@ dashboard.use("*", auth);
 
 dashboard.get("/dashboard", async (c) => {
 
-  // Bot durumlarını Telegram üzerinden güncelle
   const bots = await getBots(c.env.DB);
 
   for (const bot of bots as any[]) {
@@ -96,6 +96,7 @@ Henüz yayın yapılmadı.
   }
 
   return c.html(`
+
 <!DOCTYPE html>
 
 <html lang="tr">
@@ -104,7 +105,7 @@ Henüz yayın yapılmadı.
 
 <meta charset="UTF-8">
 
-<title>BotPilot Dashboard</title>
+<title>Dashboard</title>
 
 <style>
 
@@ -118,8 +119,21 @@ font-family:Arial,sans-serif;
 body{
 background:#0f172a;
 color:white;
-font-family:Arial,sans-serif;
 padding:40px;
+}
+
+h1{
+margin-bottom:20px;
+}
+
+.logout{
+display:inline-block;
+margin-bottom:25px;
+padding:10px 18px;
+background:#dc2626;
+color:white;
+text-decoration:none;
+border-radius:8px;
 }
 
 .cards{
@@ -128,7 +142,6 @@ grid-template-columns:repeat(4,1fr);
 gap:20px;
 margin-bottom:30px;
 }
-
 .card{
 background:#1e293b;
 padding:22px;
@@ -181,26 +194,11 @@ font-weight:bold;
 
 <body>
 
-<h1 style="margin-bottom:25px;">
-Dashboard
-</h1>
-<div style="margin-bottom:25px;display:flex;gap:10px;">
+<h1>Dashboard</h1>
 
-<a
-href="/logout"
-style="
-padding:10px 18px;
-background:#dc2626;
-color:white;
-text-decoration:none;
-border-radius:8px;
-">
-
+<a href="/logout" class="logout">
 🚪 Çıkış Yap
-
 </a>
-
-</div>
 
 <div class="cards">
 
@@ -233,9 +231,11 @@ border-radius:8px;
 <table>
 
 <tr>
+
 <th>Bot</th>
 <th>Username</th>
 <th>Durum</th>
+
 </tr>
 
 ${botRows}
@@ -243,7 +243,6 @@ ${botRows}
 </table>
 
 </div>
-
 <div class="table">
 
 <h2>📢 Son Broadcastlar</h2>
@@ -251,10 +250,12 @@ ${botRows}
 <table>
 
 <tr>
+
 <th>ID</th>
 <th>Başarılı</th>
 <th>Başarısız</th>
 <th>Tarih</th>
+
 </tr>
 
 ${broadcastRows}
@@ -270,5 +271,4 @@ ${broadcastRows}
 `);
 
 });
-
 export default dashboard;
