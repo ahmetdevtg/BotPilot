@@ -25,31 +25,56 @@ export async function handleReplyButton(
 
   switch (button.response_type) {
 
-    case "photo":
+  case "photo":
 
-      await sendPhotoWithButton(
-        token,
-        message.chat.id,
-        button.photo_url,
-        button.message || "",
-        button.button_text_url || "",
-        button.button_url || ""
-      );
+    await sendPhotoWithButton(
+      token,
+      message.chat.id,
+      button.photo_url || "",
+      button.message || "",
+      button.button_text_url || "",
+      button.button_url || ""
+    );
 
-      return true;
+    return true;
 
-    case "video":
+  case "video":
 
-      await sendVideoWithButton(
-        token,
-        message.chat.id,
-        button.video_url,
-        button.message || "",
-        button.button_text_url || "",
-        button.button_url || ""
-      );
+    await sendVideoWithButton(
+      token,
+      message.chat.id,
+      button.video_url || "",
+      button.message || "",
+      button.button_text_url || "",
+      button.button_url || ""
+    );
 
-      return true;
+    return true;
+
+  case "document":
+
+    await sendDocumentWithButton(
+      token,
+      message.chat.id,
+      button.document_url || "",
+      button.message || "",
+      button.button_text_url || "",
+      button.button_url || ""
+    );
+
+    return true;
+
+  default:
+
+    await sendMessage(
+      token,
+      message.chat.id,
+      button.message || ""
+    );
+
+    return true;
+
+}
 
     case "document":
 
