@@ -377,9 +377,17 @@ const parseMode = String(body.parseMode || "HTML");
   if (botId === "all") {
 
     const stats = await sendBroadcastAllBots(
-      c.env.DB,
-      message
-    );
+  c.env.DB,
+  {
+    message,
+    photo,
+    video,
+    document,
+    buttonText,
+    buttonUrl,
+    parseMode
+  }
+);
 
     return c.html(`
 
@@ -500,11 +508,20 @@ border-radius:8px;
 
   }
 
-  const result = await createBroadcast(
-    c.env.DB,
-    Number(botId),
-    message
-  );
+  const stats = await sendBroadcast(
+  c.env.DB,
+  bot.token,
+  Number(botId),
+  {
+    message,
+    photo,
+    video,
+    document,
+    buttonText,
+    buttonUrl,
+    parseMode
+  }
+);
 
   const broadcastId =
     Number((result as any).meta?.last_row_id);
