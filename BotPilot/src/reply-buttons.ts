@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { auth } from "./middleware/auth";
 import type { Env } from "./types/env";
-import { getReplyButtons } from "./database/reply-buttons";
+import {
+  getReplyButtons,
+  createReplyButton
+} from "./database/reply-buttons";
 
 const replyButtons = new Hono<Env>();
 
@@ -66,6 +69,9 @@ margin-bottom:20px;
 
 🏠 Anasayfaya Dön
 
+</a>
+<a class="btn" href="/reply-buttons/new">
+➕ Yeni Buton
 </a>
 
 <a class="btn" href="/dashboard">
@@ -201,5 +207,25 @@ Kaydet
 `);
 
 });
+replyButtons.post("/reply-buttons/new", async (c) => {
 
+  const body = await c.req.parseBody();
+
+  await createReplyButton(c.env.DB, {
+    button_text: String(body.button_text || ""),
+    response_type: String(body.response_type || "text"),
+    message: String(body.message || ""),
+    photo_url: "",
+    video_url: "",
+    document_url: "",
+    button_text_url: "",
+    button_url: "",
+    parse_mode: "HTML",
+    reply_keyboard: "",
+    sort_order: 0
+  });
+
+  return c.redirect("/reply-buttons");
+
+});
 export default replyButtons;
