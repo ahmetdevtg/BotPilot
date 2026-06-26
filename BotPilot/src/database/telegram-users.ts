@@ -1,14 +1,69 @@
+export async function getTelegramUsers(
+  db: D1Database
+) {
+
+  const { results } = await db
+    .prepare(`
+      SELECT *
+      FROM telegram_users
+      ORDER BY id DESC
+    `)
+    .all();
+
+  return results;
+
+}
+
+export async function getTelegramUsersByBot(
+  db: D1Database,
+  botId: number
+) {
+
+  const { results } = await db
+    .prepare(`
+      SELECT *
+      FROM telegram_users
+      WHERE bot_id=?
+      ORDER BY id DESC
+    `)
+    .bind(botId)
+    .all();
+
+  return results;
+
+}
+
+export async function countTelegramUsers(
+  db: D1Database
+) {
+
+  const result = await db
+    .prepare(`
+      SELECT COUNT(*) AS total
+      FROM telegram_users
+    `)
+    .first();
+
+  return Number((result as any)?.total || 0);
+
+}
+
 export async function findTelegramUser(
   db: D1Database,
   botId: number,
   telegramId: number
 ) {
+
   return await db
-    .prepare(
-      "SELECT * FROM telegram_users WHERE bot_id=? AND telegram_id=?"
-    )
+    .prepare(`
+      SELECT *
+      FROM telegram_users
+      WHERE bot_id=?
+      AND telegram_id=?
+    `)
     .bind(botId, telegramId)
     .first();
+
 }
 
 export async function createTelegramUser(
@@ -17,7 +72,8 @@ export async function createTelegramUser(
   user: any
 ) {
 
-  return await db.prepare(`
+  return await db
+    .prepare(`
       INSERT INTO telegram_users
       (
         bot_id,
@@ -30,8 +86,8 @@ export async function createTelegramUser(
         is_bot
       )
       VALUES(?,?,?,?,?,?,?,?)
-  `)
-  .bind(
+    `)
+    .bind(
       botId,
       user.id,
       user.username || "",
@@ -40,7 +96,23 @@ export async function createTelegramUser(
       user.language_code || "",
       user.is_premium ? 1 : 0,
       user.is_bot ? 1 : 0
-  )
-  .run();
+    )
+    .run();
+
+}
+
+export async function deleteTelegramUser(
+  db: D1Database,
+  telegramId: number
+) {
+
+  return await db
+    .prepare(`
+      DELETE
+      FROM telegram_users
+      WHERE telegram_id=?
+    `)
+    .bind(telegramId)
+    .run();
 
 }
