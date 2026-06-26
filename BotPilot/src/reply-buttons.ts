@@ -85,6 +85,7 @@ margin-bottom:20px;
 <th>Buton</th>
 
 <th>Tür</th>
+<th>İşlem</th>
 
 </tr>
 
@@ -97,6 +98,11 @@ ${buttons.map((x:any)=>`
 <td>${x.button_text}</td>
 
 <td>${x.response_type}</td>
+<td>
+<a href="/reply-buttons/edit/${x.id}">
+✏️ Düzenle
+</a>
+</td>
 
 </tr>
 
@@ -319,6 +325,30 @@ rows="6">${button.message||""}</textarea>
 
 </html>
 `);
+
+});
+replyButtons.post("/reply-buttons/edit/:id", async (c) => {
+
+  const id = Number(c.req.param("id"));
+
+  const body = await c.req.parseBody();
+
+  await updateReplyButton(
+    c.env.DB,
+    id,
+    {
+      button_text: String(body.button_text || ""),
+      response_type: String(body.response_type || "text"),
+      message: String(body.message || ""),
+      photo_url: "",
+      video_url: "",
+      document_url: "",
+      button_text_url: "",
+      button_url: ""
+    }
+  );
+
+  return c.redirect("/reply-buttons");
 
 });
 export default replyButtons;
