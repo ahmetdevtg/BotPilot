@@ -239,7 +239,21 @@ None
 💾 Kaydet
 
 </button>
+<div style="margin-top:15px;">
 
+<button
+type="submit"
+formaction="/global-settings/apply"
+style="
+background:#16a34a;
+margin-left:10px;
+">
+
+🚀 Tüm Botlara Uygula
+
+</button>
+
+</div>
 </form>
 
 </body>
@@ -268,6 +282,63 @@ globalSettings.post("/global-settings", async (c) => {
   });
 
   return c.redirect("/global-settings");
+
+});
+globalSettings.post("/global-settings/apply", async (c) => {
+
+  const settings = await getBotSettings(c.env.DB) as any;
+
+  const bots = await getBots(c.env.DB) as any[];
+
+  let success = 0;
+  let failed = 0;
+
+  for (const bot of bots) {
+
+    try {
+
+      await setMyName(
+        bot.token,
+        settings.bot_name
+      );
+
+      await setMyDescription(
+        bot.token,
+        settings.description
+      );
+
+      await setMyShortDescription(
+        bot.token,
+        settings.short_description
+      );
+
+      success++;
+
+    } catch (e) {
+
+      console.error(e);
+
+      failed++;
+
+    }
+
+  }
+
+  return c.html(`
+
+<h2>İşlem Tamamlandı</h2>
+
+<p>✅ Başarılı: ${success}</p>
+
+<p>❌ Başarısız: ${failed}</p>
+
+<a href="/global-settings">
+
+← Geri Dön
+
+</a>
+
+`);
 
 });
 
