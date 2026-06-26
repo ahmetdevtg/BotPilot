@@ -11,11 +11,14 @@ const globalSettings = new Hono<Env>();
 globalSettings.use("*", auth);
 
 globalSettings.get("/global-settings", async (c) => {
-const settings = await getBotSettings(c.env.DB);
+
+  const settings = await getBotSettings(c.env.DB);
+
   return c.html(`
+
 <!DOCTYPE html>
 
-<html>
+<html lang="tr">
 
 <head>
 
@@ -25,11 +28,28 @@ const settings = await getBotSettings(c.env.DB);
 
 <style>
 
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
 body{
 background:#0f172a;
 color:white;
-font-family:Arial,sans-serif;
 padding:40px;
+}
+
+.back{
+display:inline-block;
+margin-bottom:20px;
+padding:10px 18px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+font-weight:bold;
 }
 
 .card{
@@ -39,16 +59,22 @@ border-radius:12px;
 margin-bottom:25px;
 }
 
+.card h2{
+margin-bottom:20px;
+}
+
 input,
 textarea,
 select{
 
 width:100%;
 padding:12px;
-margin-top:8px;
-margin-bottom:18px;
 border:none;
 border-radius:8px;
+margin-top:8px;
+margin-bottom:18px;
+background:#0f172a;
+color:white;
 
 }
 
@@ -63,15 +89,9 @@ cursor:pointer;
 
 }
 
-.back{
+button:hover{
 
-display:inline-block;
-margin-bottom:20px;
-padding:10px 18px;
-background:#475569;
-color:white;
-text-decoration:none;
-border-radius:8px;
+background:#1d4ed8;
 
 }
 
@@ -81,78 +101,88 @@ border-radius:8px;
 
 <body>
 
-<form method="POST" action="/global-settings">
-
-
-</form>
-
-</body>
-
-<h1>
-
-⚙ Genel Bot Ayarları
-
-</h1>
-<div style="margin-bottom:20px;">
-
-<a
-href="/dashboard"
-style="
-display:inline-block;
-padding:10px 18px;
-background:#2563eb;
-color:white;
-text-decoration:none;
-border-radius:8px;
-font-weight:bold;
-">
+<a href="/dashboard" class="back">
 
 🏠 Anasayfaya Dön
 
 </a>
 
-</div>
+<h1 style="margin-bottom:25px;">
+
+⚙ Genel Bot Ayarları
+
+</h1>
+
+<form method="POST" action="/global-settings">
 
 <div class="card">
 
 <h2>🤖 Profil</h2>
 
+<label>Bot Adı</label>
+
 <input
 name="bot_name"
-value="${settings?.bot_name || ""}"
-placeholder="Bot Adı">
+value="${settings?.bot_name || ""}">
+
+<label>Açıklama</label>
 
 <textarea
 name="description"
-placeholder="Açıklama">${settings?.description || ""}</textarea>
+rows="4">${settings?.description || ""}</textarea>
+
+<label>Kısa Açıklama</label>
 
 <textarea
 name="short_description"
-placeholder="Kısa Açıklama">${settings?.short_description || ""}</textarea>
+rows="2">${settings?.short_description || ""}</textarea>
+
+</div>
+<div class="card">
+
+<h2>🚀 /start Ayarları</h2>
+
+<label>/start Mesajı</label>
+
+<textarea
+name="start_message"
+rows="6">${settings?.start_message || ""}</textarea>
+
+<label>Fotoğraf URL</label>
+
+<input
+name="photo_url"
+value="${settings?.photo_url || ""}">
+
+<label>Video URL</label>
+
+<input
+name="video_url"
+value="${settings?.video_url || ""}">
+
+<label>Dosya URL</label>
+
+<input
+name="document_url"
+value="${settings?.document_url || ""}">
 
 </div>
 
 <div class="card">
 
-<h2>🚀 /start</h2>
+<h2>🔘 Buton Ayarları</h2>
 
-<textarea placeholder="/start mesajı"></textarea>
+<label>Buton Yazısı</label>
 
-<input placeholder="Fotoğraf URL">
+<input
+name="button_text"
+value="${settings?.button_text || ""}">
 
-<input placeholder="Video URL">
+<label>Buton Linki</label>
 
-<input placeholder="Dosya URL">
-
-</div>
-
-<div class="card">
-
-<h2>🔘 Buton</h2>
-
-<input placeholder="Buton Yazısı">
-
-<input placeholder="Buton Linki">
+<input
+name="button_url"
+value="${settings?.button_url || ""}">
 
 </div>
 
@@ -160,15 +190,42 @@ placeholder="Kısa Açıklama">${settings?.short_description || ""}</textarea>
 
 <h2>⌨ Reply Keyboard</h2>
 
-<textarea placeholder="🌐 Site&#10;🎁 Bonus&#10;💬 Destek"></textarea>
+<label>Her satıra bir buton yaz.</label>
+
+<textarea
+name="reply_keyboard"
+rows="6">${settings?.reply_keyboard || ""}</textarea>
+
+<label>Parse Mode</label>
+
+<select name="parse_mode">
+
+<option value="HTML"
+${settings?.parse_mode==="HTML"?"selected":""}>
+HTML
+</option>
+
+<option value="MarkdownV2"
+${settings?.parse_mode==="MarkdownV2"?"selected":""}>
+MarkdownV2
+</option>
+
+<option value="None"
+${settings?.parse_mode==="None"?"selected":""}>
+None
+</option>
+
+</select>
 
 </div>
 
-<button>
+<button type="submit">
 
 💾 Kaydet
 
 </button>
+
+</form>
 
 </body>
 
@@ -177,23 +234,34 @@ placeholder="Kısa Açıklama">${settings?.short_description || ""}</textarea>
 `);
 
 });
-
 globalSettings.post("/global-settings", async (c) => {
 
   const body = await c.req.parseBody();
 
   await updateBotSettings(c.env.DB, {
+
     bot_name: String(body.bot_name || ""),
+
     description: String(body.description || ""),
+
     short_description: String(body.short_description || ""),
+
     start_message: String(body.start_message || ""),
+
     photo_url: String(body.photo_url || ""),
+
     video_url: String(body.video_url || ""),
+
     document_url: String(body.document_url || ""),
+
     button_text: String(body.button_text || ""),
+
     button_url: String(body.button_url || ""),
+
     reply_keyboard: String(body.reply_keyboard || ""),
-    parse_mode: "HTML"
+
+    parse_mode: String(body.parse_mode || "HTML")
+
   });
 
   return c.redirect("/global-settings");
