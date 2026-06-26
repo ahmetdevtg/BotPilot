@@ -31,7 +31,9 @@ async function telegramRequest(
   const json = await res.json() as any;
 
   if (!json.ok) {
-    throw new Error(json.description || "Telegram API Hatası");
+    throw new Error(
+      json.description || "Telegram API Hatası"
+    );
   }
 
   return json;
@@ -47,7 +49,9 @@ export async function getMe(
   );
 
   if (!res.ok) {
-    throw new Error("Telegram API'ye bağlanılamadı.");
+    throw new Error(
+      "Telegram API'ye bağlanılamadı."
+    );
   }
 
   return await res.json() as TelegramBotInfo;
@@ -62,7 +66,9 @@ export async function setWebhook(
   return telegramRequest(
     token,
     "setWebhook",
-    { url }
+    {
+      url
+    }
   );
 
 }
@@ -85,7 +91,6 @@ export async function sendText(
   );
 
 }
-
 export async function sendPhoto(
   token: string,
   chatId: number,
@@ -148,6 +153,35 @@ export async function sendDocument(
   );
 
 }
+
+export async function sendMessageWithButton(
+  token: string,
+  chatId: number,
+  text: string,
+  buttonText: string,
+  buttonUrl: string,
+  parseMode = "HTML"
+) {
+
+  return telegramRequest(
+    token,
+    "sendMessage",
+    {
+      chat_id: chatId,
+      text,
+      parse_mode: parseMode,
+      reply_markup: {
+        inline_keyboard: [[
+          {
+            text: buttonText,
+            url: buttonUrl
+          }
+        ]]
+      }
+    }
+  );
+
+}
 export async function sendPhotoWithButton(
   token: string,
   chatId: number,
@@ -178,34 +212,7 @@ export async function sendPhotoWithButton(
   );
 
 }
-export async function sendMessageWithButton(
-  token: string,
-  chatId: number,
-  text: string,
-  buttonText: string,
-  buttonUrl: string,
-  parseMode = "HTML"
-) {
 
-  return telegramRequest(
-    token,
-    "sendMessage",
-    {
-      chat_id: chatId,
-      text,
-      parse_mode: parseMode,
-      reply_markup: {
-        inline_keyboard: [[
-          {
-            text: buttonText,
-            url: buttonUrl
-          }
-        ]]
-      }
-    }
-  );
-
-}
 export async function sendVideoWithButton(
   token: string,
   chatId: number,
@@ -266,38 +273,6 @@ export async function sendDocumentWithButton(
     }
   );
 
- 
-
-}
-
-export async function setMyDescription(
-  token: string,
-  description: string
-) {
-
-  return telegramRequest(
-    token,
-    "setMyDescription",
-    {
-      description
-    }
-  );
-
-}
-
-export async function setMyShortDescription(
-  token: string,
-  shortDescription: string
-) {
-
-  return telegramRequest(
-    token,
-    "setMyShortDescription",
-    {
-      short_description: shortDescription
-    }
-  );
-
 }
 export async function setMyName(
   token: string,
@@ -313,6 +288,7 @@ export async function setMyName(
   );
 
 }
+
 export async function setMyDescription(
   token: string,
   description: string
@@ -327,6 +303,7 @@ export async function setMyDescription(
   );
 
 }
+
 export async function setMyShortDescription(
   token: string,
   shortDescription: string
