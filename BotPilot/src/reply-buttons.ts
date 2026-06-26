@@ -62,6 +62,11 @@ margin-bottom:20px;
 <body>
 
 <h1>⌨ Reply Keyboard</h1>
+<a href="/dashboard" class="back">
+
+🏠 Anasayfaya Dön
+
+</a>
 
 <a class="btn" href="/dashboard">
 ← Dashboard
@@ -98,6 +103,101 @@ ${buttons.map((x:any)=>`
 </body>
 
 </html>
+`);
+
+});
+replyButtons.get("/reply-buttons/new", async (c) => {
+
+return c.html(`
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>Yeni Buton</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:40px;
+}
+
+input,
+textarea,
+select{
+
+width:100%;
+padding:12px;
+margin-top:10px;
+margin-bottom:20px;
+background:#1e293b;
+color:white;
+border:none;
+border-radius:8px;
+
+}
+
+button{
+
+padding:14px 25px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:8px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>➕ Yeni Reply Button</h1>
+
+<form method="POST" action="/reply-buttons/new">
+
+<label>Buton Yazısı</label>
+
+<input name="button_text">
+
+<label>Cevap Türü</label>
+
+<select name="response_type">
+
+<option value="text">Mesaj</option>
+
+<option value="photo">Fotoğraf</option>
+
+<option value="video">Video</option>
+
+<option value="document">Doküman</option>
+
+</select>
+
+<label>Mesaj</label>
+
+<textarea
+name="message"
+rows="6"></textarea>
+
+<button>
+
+Kaydet
+
+</button>
+
+</form>
+
+</body>
+
+</html>
+
 `);
 
 });
