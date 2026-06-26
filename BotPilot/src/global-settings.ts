@@ -1,13 +1,17 @@
 import { Hono } from "hono";
 import { auth } from "./middleware/auth";
 import type { Env } from "./types/env";
+import {
+  getBotSettings,
+  updateBotSettings
+} from "./database/bot-settings";
 
 const globalSettings = new Hono<Env>();
 
 globalSettings.use("*", auth);
 
 globalSettings.get("/global-settings", async (c) => {
-
+const settings = await getBotSettings(c.env.DB);
   return c.html(`
 <!DOCTYPE html>
 
@@ -77,12 +81,6 @@ border-radius:8px;
 
 <body>
 
-<a class="back" href="/dashboard">
-
-🏠 Dashboard
-
-</a>
-
 <h1>
 
 ⚙ Genel Bot Ayarları
@@ -112,11 +110,18 @@ font-weight:bold;
 
 <h2>🤖 Profil</h2>
 
-<input placeholder="Bot Adı">
+<input
+name="bot_name"
+value="${settings?.bot_name || ""}"
+placeholder="Bot Adı">
 
-<textarea placeholder="Açıklama"></textarea>
+<textarea
+name="description"
+placeholder="Açıklama">${settings?.description || ""}</textarea>
 
-<textarea placeholder="Kısa Açıklama"></textarea>
+<textarea
+name="short_description"
+placeholder="Kısa Açıklama">${settings?.short_description || ""}</textarea>
 
 </div>
 
