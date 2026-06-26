@@ -4,7 +4,13 @@ import login from "./auth/login";
 import dashboard from "./dashboard/dashboard";
 import bots from "./bots";
 
-const app = new Hono();
+type Bindings = {
+  DB: D1Database;
+};
+
+const app = new Hono<{
+  Bindings: Bindings;
+}>();
 
 app.route("/", login);
 app.route("/", dashboard);

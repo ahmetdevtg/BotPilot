@@ -1,6 +1,15 @@
 import { Hono } from "hono";
+import { getUserByUsername } from "../database/users";
+import { verifyPassword } from "./password";
+import { createSession } from "./session";
 
-const login = new Hono();
+type Env = {
+  Bindings: {
+    DB: D1Database;
+  };
+};
+
+const login = new Hono<Env>();
 
 login.get("/login", (c) => {
   return c.html(`
@@ -67,6 +76,12 @@ button:hover{
 background:#1d4ed8;
 }
 
+.error{
+margin-top:20px;
+color:#ef4444;
+text-align:center;
+}
+
 .footer{
 margin-top:25px;
 text-align:center;
@@ -119,22 +134,52 @@ BotPilot v1.0
 `);
 });
 
-login.post("/login", async(c)=>{
+login.post("/login", async (c) => {
 
-const body=await c.req.parseBody();
+  const body = await c.req.parseBody();
 
-const username=String(body.username);
+  const username = String(body.username || "");
 
-const password=String(body.password);
+  const password = String(body.password || "");
 
-if(username==="admin" && password==="123456"){
+  const user = await getUserByUsername(
+    c.env.DB,
+    username
+  );
+
+  if (!user) {
+
+    return c.html("<h1>Kullanıcı bulunamadı.</h1>");
+
+  }
+
+  const ok = await verifyPassword(
+    password,
+    String((user as any).password_hash)
+  );
+
+  if (!ok) {
+
+    return c.html("<h1>Şifre yanlış.</h1>");
+
+  }
+
+  // Şimdilik session yok.
+  // Bir sonraki adımda cookie oluşturacağız.
+
+const sessionId = await createSession(
+  c.env.DB,
+  Number((user as any).id)
+);
+
+c.header(
+  "Set-Cookie",
+  `session=${sessionId}; HttpOnly; Path=/; Max-Age=2592000`
+);
 
 return c.redirect("/dashboard");
 
 }
-
-return c.html("<h1>Hatalı kullanıcı adı veya şifre.</h1>");
-
-});
+);
 
 export default login;
