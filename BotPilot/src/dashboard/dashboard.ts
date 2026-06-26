@@ -184,6 +184,23 @@ font-weight:bold;
 <h1 style="margin-bottom:25px;">
 Dashboard
 </h1>
+<div style="margin-bottom:25px;display:flex;gap:10px;">
+
+<a
+href="/logout"
+style="
+padding:10px 18px;
+background:#dc2626;
+color:white;
+text-decoration:none;
+border-radius:8px;
+">
+
+🚪 Çıkış Yap
+
+</a>
+
+</div>
 
 <div class="cards">
 
