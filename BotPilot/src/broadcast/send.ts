@@ -2,7 +2,11 @@ import {
   sendText,
   sendPhoto,
   sendVideo,
-  sendDocument
+  sendDocument,
+  sendPhotoWithButton,
+  sendVideoWithButton,
+  sendDocumentWithButton,
+  sendMessageWithButton
 } from "../telegram/api";
 
 export interface BroadcastOptions {
@@ -11,6 +15,8 @@ export interface BroadcastOptions {
   video?: string;
   document?: string;
   parseMode?: string;
+  buttonText?: string;
+  buttonUrl?: string;
 }
 
 export async function sendBroadcast(
