@@ -1,6 +1,12 @@
 import { Hono } from "hono";
 import { auth } from "./middleware/auth";
 import type { Env } from "./types/env";
+import { getBots } from "./database/bots";
+import {
+  setMyName,
+  setMyDescription,
+  setMyShortDescription
+} from "./telegram/api";
 import {
   getBotSettings,
   updateBotSettings
