@@ -1,5 +1,41 @@
 export function sidebar() {
   return `
+
+<style>
+
+.sidebar{
+width:250px;
+background:#111827;
+padding:25px;
+min-height:100vh;
+}
+
+.logo{
+font-size:28px;
+font-weight:bold;
+margin-bottom:35px;
+}
+
+.menu{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.menu a{
+color:#cbd5e1;
+text-decoration:none;
+padding:12px;
+border-radius:8px;
+transition:.2s;
+}
+
+.menu a:hover{
+background:#2563eb;
+}
+
+</style>
+
 <div class="sidebar">
 
 <div class="logo">
@@ -20,10 +56,9 @@ export function sidebar() {
 
 <a href="/admin">👤 Admin</a>
 
-<a href="/login">🚪 Çıkış</a>
-
 </div>
 
 </div>
+
 `;
 }
