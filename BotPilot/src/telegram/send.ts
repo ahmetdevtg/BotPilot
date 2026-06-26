@@ -43,7 +43,9 @@ export async function sendPhotoWithButton(
   photo: string,
   caption: string,
   buttonText: string,
-  buttonUrl: string
+  buttonUrl: string,
+  parseMode: string = "HTML",
+  keyboard?: string
 ) {
 
   const res = await fetch(
@@ -53,20 +55,27 @@ export async function sendPhotoWithButton(
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        chat_id: chatId,
-        photo,
-        caption,
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [[
-            {
-              text: buttonText,
-              url: buttonUrl
-            }
-          ]]
-        }
-      })
+ body: JSON.stringify({
+  chat_id: chatId,
+  photo,
+  caption,
+  parse_mode: parseMode === "None" ? undefined : parseMode,
+  reply_markup: keyboard && keyboard.trim() !== ""
+    ? {
+        keyboard: keyboard
+          .split("\n")
+          .map(x => [{ text: x.trim() }]),
+        resize_keyboard: true
+      }
+    : {
+        inline_keyboard: [[
+          {
+            text: buttonText,
+            url: buttonUrl
+          }
+        ]]
+      }
+})
     }
   );
 
