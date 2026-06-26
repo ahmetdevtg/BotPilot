@@ -1,4 +1,3 @@
-
 import { Hono } from "hono";
 import { auth } from "../middleware/auth";
 import { getDashboardStats } from "../database/dashboard";
@@ -60,7 +59,7 @@ ${bot.status ? "🟢 Online" : "🔴 Offline"}
 
     botRows = `
 <tr>
-<td colspan="3" style="text-align:center;">
+<td colspan="3">
 Henüz bot eklenmedi.
 </td>
 </tr>
@@ -87,8 +86,8 @@ Henüz bot eklenmedi.
 
     broadcastRows = `
 <tr>
-<td colspan="4" style="text-align:center;">
-Henüz yayın yapılmadı.
+<td colspan="4">
+Henüz broadcast yapılmadı.
 </td>
 </tr>
 `;
@@ -105,7 +104,7 @@ Henüz yayın yapılmadı.
 
 <meta charset="UTF-8">
 
-<title>Dashboard</title>
+<title>BotPilot Dashboard</title>
 
 <style>
 
@@ -119,36 +118,42 @@ font-family:Arial,sans-serif;
 body{
 background:#0f172a;
 color:white;
-font-family:Arial,sans-serif;
 padding:35px;
-min-width:1200px;
 }
 
 h1{
 margin-bottom:20px;
 }
 
-.logout{
-display:inline-block;
-margin-bottom:25px;
-padding:10px 18px;
-background:#dc2626;
+.menu{
+display:flex;
+flex-wrap:wrap;
+gap:12px;
+margin-bottom:30px;
+}
+
+.menu a{
+padding:12px 18px;
+background:#2563eb;
 color:white;
 text-decoration:none;
 border-radius:8px;
+font-weight:bold;
+}
+
+.logout{
+background:#dc2626 !important;
 }
 
 .cards{
 display:grid;
-grid-template-columns:repeat(4,minmax(220px,1fr));
+grid-template-columns:repeat(4,1fr);
 gap:20px;
 margin-bottom:30px;
-width:100%;
 }
-
 .card{
 background:#1e293b;
-padding:22px;
+padding:20px;
 border-radius:12px;
 }
 
@@ -173,7 +178,6 @@ overflow-x:auto;
 
 table{
 width:100%;
-min-width:700px;
 border-collapse:collapse;
 margin-top:15px;
 }
@@ -200,11 +204,23 @@ font-weight:bold;
 
 <body>
 
-<h1>Dashboard</h1>
+<h1>🚀 BotPilot Dashboard</h1>
 
-<a href="/logout" class="logout">
-🚪 Çıkış Yap
-</a>
+<div class="menu">
+
+<a href="/bots">🤖 Botlar</a>
+
+<a href="/users">👥 Kullanıcılar</a>
+
+<a href="/broadcast">📢 Broadcast</a>
+
+<a href="/settings">⚙️ Ayarlar</a>
+
+<a href="/admin">👤 Admin</a>
+
+<a href="/logout" class="logout">🚪 Çıkış Yap</a>
+
+</div>
 
 <div class="cards">
 
@@ -277,4 +293,5 @@ ${broadcastRows}
 `);
 
 });
+
 export default dashboard;
