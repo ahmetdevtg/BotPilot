@@ -266,19 +266,7 @@ export async function sendDocumentWithButton(
     }
   );
 
-}
-export async function setMyName(
-  token: string,
-  name: string
-) {
-
-  return telegramRequest(
-    token,
-    "setMyName",
-    {
-      name
-    }
-  );
+ 
 
 }
 
