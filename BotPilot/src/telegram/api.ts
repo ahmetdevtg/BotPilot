@@ -148,3 +148,61 @@ export async function sendDocument(
   );
 
 }
+export async function sendPhotoWithButton(
+  token: string,
+  chatId: number,
+  photo: string,
+  caption: string,
+  buttonText: string,
+  buttonUrl: string,
+  parseMode = "HTML"
+) {
+
+  return telegramRequest(
+    token,
+    "sendPhoto",
+    {
+      chat_id: chatId,
+      photo,
+      caption,
+      parse_mode: parseMode,
+      reply_markup: {
+        inline_keyboard: [[
+          {
+            text: buttonText,
+            url: buttonUrl
+          }
+        ]]
+      }
+    }
+  );
+
+}
+export async function sendMessageWithButton(
+  token: string,
+  chatId: number,
+  text: string,
+  buttonText: string,
+  buttonUrl: string,
+  parseMode = "HTML"
+) {
+
+  return telegramRequest(
+    token,
+    "sendMessage",
+    {
+      chat_id: chatId,
+      text,
+      parse_mode: parseMode,
+      reply_markup: {
+        inline_keyboard: [[
+          {
+            text: buttonText,
+            url: buttonUrl
+          }
+        ]]
+      }
+    }
+  );
+
+}
