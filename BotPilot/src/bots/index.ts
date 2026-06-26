@@ -211,6 +211,118 @@ ${rows}
 
 });
 // Bot Ekle
+// Bot Düzenleme Sayfası
+bots.get("/bots/edit/:id", async (c) => {
+
+  const id = Number(c.req.param("id"));
+
+  const bot = await getBotById(
+    c.env.DB,
+    id
+  ) as any;
+
+  if (!bot) {
+
+    return c.html("<h2>Bot bulunamadı.</h2>");
+
+  }
+
+  return c.html(`
+
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Bot Düzenle</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial,sans-serif;
+padding:40px;
+}
+
+input,textarea{
+width:100%;
+padding:12px;
+margin-top:10px;
+margin-bottom:20px;
+border:none;
+border-radius:8px;
+}
+
+button{
+padding:12px 20px;
+background:#2563eb;
+border:none;
+border-radius:8px;
+color:white;
+cursor:pointer;
+}
+
+.back{
+display:inline-block;
+margin-bottom:20px;
+padding:10px 18px;
+background:#475569;
+color:white;
+text-decoration:none;
+border-radius:8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<a href="/bots" class="back">
+⬅ Botlara Dön
+</a>
+
+<h1>📝 Bot Düzenle</h1>
+
+<form method="POST" action="/bots/edit/${bot.id}">
+
+<label>Bot Adı</label>
+
+<input
+name="name"
+value="${bot.name || ""}">
+
+<label>Açıklama</label>
+
+<textarea
+name="description"
+rows="4">${bot.description || ""}</textarea>
+
+<label>Kısa Açıklama</label>
+
+<textarea
+name="shortDescription"
+rows="2">${bot.short_description || ""}</textarea>
+
+<button>
+
+💾 Kaydet
+
+</button>
+
+</form>
+
+</body>
+
+</html>
+
+`);
+
+});
 bots.post("/bots/add", async (c) => {
 
   const body = await c.req.parseBody();
