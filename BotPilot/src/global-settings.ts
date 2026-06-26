@@ -83,11 +83,6 @@ border-radius:8px;
 
 <form method="POST" action="/global-settings">
 
-... tüm inputlar ...
-
-<button>
-💾 Kaydet
-</button>
 
 </form>
 
