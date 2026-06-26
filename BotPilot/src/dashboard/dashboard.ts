@@ -4,6 +4,7 @@ import { getDashboardStats } from "../database/dashboard";
 import { getBots, updateBotStatus } from "../database/bots";
 import { getMe } from "../telegram/api";
 import type { Env } from "../types/env";
+import { sidebar } from "../layout/sidebar";
 
 const dashboard = new Hono<Env>();
 
@@ -216,27 +217,7 @@ font-weight:bold;
 
 <body>
 
-<div class="sidebar">
-
-<div class="logo">
-🚀 BotPilot
-</div>
-
-<div class="menu">
-
-<a href="/dashboard">🏠 Dashboard</a>
-
-<a href="/bots">🤖 Botlar</a>
-
-<a href="/users">👥 Kullanıcılar</a>
-
-<a href="/broadcast">📢 Broadcast</a>
-
-<a href="/settings">⚙ Ayarlar</a>
-
-</div>
-
-</div>
+${sidebar()}
 
 <div class="main">
 
