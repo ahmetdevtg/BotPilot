@@ -73,3 +73,49 @@ export async function deleteReplyButton(
     .bind(id)
     .run();
 }
+export async function getReplyButtonById(
+  db: D1Database,
+  id: number
+) {
+  return await db
+    .prepare(`
+      SELECT *
+      FROM reply_buttons
+      WHERE id=?
+    `)
+    .bind(id)
+    .first();
+}
+
+export async function updateReplyButton(
+  db: D1Database,
+  id: number,
+  data: any
+) {
+  return await db
+    .prepare(`
+      UPDATE reply_buttons
+      SET
+        button_text=?,
+        response_type=?,
+        message=?,
+        photo_url=?,
+        video_url=?,
+        document_url=?,
+        button_text_url=?,
+        button_url=?
+      WHERE id=?
+    `)
+    .bind(
+      data.button_text,
+      data.response_type,
+      data.message,
+      data.photo_url,
+      data.video_url,
+      data.document_url,
+      data.button_text_url,
+      data.button_url,
+      id
+    )
+    .run();
+}
