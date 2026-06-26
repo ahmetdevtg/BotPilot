@@ -267,3 +267,47 @@ export async function sendDocumentWithButton(
   );
 
 }
+export async function setMyName(
+  token: string,
+  name: string
+) {
+
+  return telegramRequest(
+    token,
+    "setMyName",
+    {
+      name
+    }
+  );
+
+}
+
+export async function setMyDescription(
+  token: string,
+  description: string
+) {
+
+  return telegramRequest(
+    token,
+    "setMyDescription",
+    {
+      description
+    }
+  );
+
+}
+
+export async function setMyShortDescription(
+  token: string,
+  shortDescription: string
+) {
+
+  return telegramRequest(
+    token,
+    "setMyShortDescription",
+    {
+      short_description: shortDescription
+    }
+  );
+
+}
