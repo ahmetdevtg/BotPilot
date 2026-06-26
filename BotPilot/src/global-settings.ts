@@ -224,7 +224,22 @@ None
 💾 Kaydet
 
 </button>
+<div style="margin-top:15px;">
 
+<button
+type="submit"
+name="action"
+value="apply"
+style="
+background:#16a34a;
+margin-left:10px;
+">
+
+🚀 Tüm Botlara Uygula
+
+</button>
+
+</div>
 </form>
 
 </body>
