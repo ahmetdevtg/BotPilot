@@ -119,7 +119,9 @@ font-family:Arial,sans-serif;
 body{
 background:#0f172a;
 color:white;
-padding:40px;
+font-family:Arial,sans-serif;
+padding:35px;
+min-width:1200px;
 }
 
 h1{
@@ -138,10 +140,12 @@ border-radius:8px;
 
 .cards{
 display:grid;
-grid-template-columns:repeat(4,1fr);
+grid-template-columns:repeat(4,minmax(220px,1fr));
 gap:20px;
 margin-bottom:30px;
+width:100%;
 }
+
 .card{
 background:#1e293b;
 padding:22px;
@@ -164,10 +168,12 @@ background:#1e293b;
 padding:20px;
 border-radius:12px;
 margin-bottom:25px;
+overflow-x:auto;
 }
 
 table{
 width:100%;
+min-width:700px;
 border-collapse:collapse;
 margin-top:15px;
 }
