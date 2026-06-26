@@ -102,6 +102,12 @@ ${buttons.map((x:any)=>`
 <a href="/reply-buttons/edit/${x.id}">
 ✏️ Düzenle
 </a>
+<a
+style="color:#ef4444"
+href="/reply-buttons/delete/${x.id}"
+onclick="return confirm('Bu buton silinsin mi?')">
+🗑️ Sil
+</a>
 </td>
 
 </tr>
@@ -346,6 +352,18 @@ replyButtons.post("/reply-buttons/edit/:id", async (c) => {
       button_text_url: "",
       button_url: ""
     }
+  );
+
+  return c.redirect("/reply-buttons");
+
+});
+replyButtons.get("/reply-buttons/delete/:id", async (c) => {
+
+  const id = Number(c.req.param("id"));
+
+  await deleteReplyButton(
+    c.env.DB,
+    id
   );
 
   return c.redirect("/reply-buttons");
