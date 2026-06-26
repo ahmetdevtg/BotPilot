@@ -1,4 +1,5 @@
 import { handleStart } from "./handlers/start";
+import { sendMessage } from "./send";
 
 export async function handleUpdate(
   db: D1Database,
@@ -23,5 +24,31 @@ export async function handleUpdate(
     );
 
   }
+if (text === "📢 Kanal") {
+  await sendMessage(
+    token,
+    update.message.chat.id,
+    "Kanalımız:\nhttps://t.me/kanaliniz"
+  );
+  return;
+}
+
+if (text === "👤 Profil") {
+  await sendMessage(
+    token,
+    update.message.chat.id,
+    `ID: ${update.message.from.id}\nAd: ${update.message.from.first_name}`
+  );
+  return;
+}
+
+if (text === "ℹ️ Yardım") {
+  await sendMessage(
+    token,
+    update.message.chat.id,
+    "Yardım menüsü yakında eklenecek."
+  );
+  return;
+}
 
 }
