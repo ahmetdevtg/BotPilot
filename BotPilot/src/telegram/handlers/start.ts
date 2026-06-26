@@ -34,57 +34,61 @@ export async function handleStart(
 
   }
 
-
-const settings: any = await getBotSettings(
-  db,
-  botId
-);
-
-if (!settings.is_enabled) {
-  return;
-}
-
-if (
-  settings.photo &&
-  settings.button_text &&
-  settings.button_url
-) {
-
-  await sendPhotoWithButton(
-    token,
-    message.chat.id,
-    settings.photo,
-    settings.start_message || "",
-    settings.button_text,
-    settings.button_url
+  const settings: any = await getBotSettings(
+    db,
+    botId
   );
 
-  return;
+  if (!settings.is_enabled) {
+    return;
+  }
 
-}
+  // Fotoğraf + Buton
+  if (
+    settings.photo &&
+    settings.button_text &&
+    settings.button_url
+  ) {
 
-if (
-  settings.video &&
-  settings.button_text &&
-  settings.button_url
-) {
+    await sendPhotoWithButton(
+      token,
+      message.chat.id,
+      settings.photo,
+      settings.start_message || "",
+      settings.button_text,
+      settings.button_url
+    );
 
-  await sendVideoWithButton(
+    return;
+
+  }
+
+  // Video + Buton
+  if (
+    settings.video &&
+    settings.button_text &&
+    settings.button_url
+  ) {
+
+    await sendVideoWithButton(
+      token,
+      message.chat.id,
+      settings.video,
+      settings.start_message || "",
+      settings.button_text,
+      settings.button_url
+    );
+
+    return;
+
+  }
+
+  // Normal Mesaj
+  await sendMessage(
     token,
     message.chat.id,
-    settings.video,
-    settings.start_message || "",
-    settings.button_text,
-    settings.button_url
+    settings.start_message ||
+      "👋 BotPilot'a hoş geldiniz."
   );
 
-  return;
-
 }
-
-await sendMessage(
-  token,
-  message.chat.id,
-  settings.start_message ||
-    "👋 BotPilot'a hoş geldiniz."
-);
