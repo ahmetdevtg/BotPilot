@@ -33,14 +33,6 @@ export async function handleStart(
 
   }
 
-  const settings: any = await getBotSettings(
-  db,
-  botId
-);
-
-if (!settings.is_enabled) {
-  return;
-}
 
 const settings: any = await getBotSettings(
   db,
