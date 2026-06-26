@@ -1,3 +1,4 @@
+import type { D1Database } from "@cloudflare/workers-types";
 export async function getBotSettings(
   db: D1Database
 ) {
