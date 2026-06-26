@@ -60,6 +60,9 @@ if (
   );
 
   return;
+
+}
+
 if (
   settings.video &&
   settings.button_text &&
@@ -79,13 +82,9 @@ if (
 
 }
 
-}
-
 await sendMessage(
   token,
   message.chat.id,
   settings.start_message ||
     "👋 BotPilot'a hoş geldiniz."
 );
-
-}
