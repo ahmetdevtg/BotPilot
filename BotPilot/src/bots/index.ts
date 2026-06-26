@@ -157,29 +157,6 @@ name="token"
 placeholder="Telegram Bot Token"
 required>
 
-<button type="submit">
-Bot Ekle
-</button>
-
-</form>
-
-<table>
-
-<tr>
-
-<th>ID</th>
-<th>Bot Adı</th>
-<th>Username</th>
-<th>Durum</th>
-<th>İşlemler</th>
-
-</tr>
-
-${rows}
-
-</table>
-
-</div>
 
 <form method="POST" action="/bots/add">
 
