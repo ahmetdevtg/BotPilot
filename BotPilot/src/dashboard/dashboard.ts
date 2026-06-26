@@ -1,19 +1,72 @@
 import { Hono } from "hono";
 import { auth } from "../middleware/auth";
 import { getDashboardStats } from "../database/dashboard";
-
 import type { Env } from "../types/env";
 
 const dashboard = new Hono<Env>();
 
-dashboard.use("*",auth);
+dashboard.use("*", auth);
 
 dashboard.get("/dashboard", async (c) => {
 
   const stats = await getDashboardStats(c.env.DB);
 
-return c.html(`
+  let botRows = "";
 
+  for (const bot of stats.lastBots as any[]) {
+
+    botRows += `
+<tr>
+<td>${bot.name}</td>
+<td>@${bot.username}</td>
+<td class="${bot.status ? "online" : "offline"}">
+${bot.status ? "🟢 Online" : "🔴 Offline"}
+</td>
+</tr>
+`;
+
+  }
+
+  if (botRows === "") {
+
+    botRows = `
+<tr>
+<td colspan="3" style="text-align:center;">
+Henüz bot eklenmedi.
+</td>
+</tr>
+`;
+
+  }
+
+  let broadcastRows = "";
+
+  for (const item of stats.lastBroadcasts as any[]) {
+
+    broadcastRows += `
+<tr>
+<td>${item.id}</td>
+<td>${item.success_count}</td>
+<td>${item.failed_count}</td>
+<td>${item.created_at}</td>
+</tr>
+`;
+
+  }
+
+  if (broadcastRows === "") {
+
+    broadcastRows = `
+<tr>
+<td colspan="4" style="text-align:center;">
+Henüz yayın yapılmadı.
+</td>
+</tr>
+`;
+
+  }
+
+  return c.html(`
 <!DOCTYPE html>
 
 <html lang="tr">
@@ -37,169 +90,95 @@ body{
 background:#0f172a;
 display:flex;
 height:100vh;
-overflow:hidden;
+color:white;
 }
 
 .sidebar{
-
 width:250px;
-
 background:#111827;
-
 padding:25px;
-
-color:white;
-
 }
 
 .logo{
-
 font-size:28px;
-
 font-weight:bold;
-
-margin-bottom:40px;
-
+margin-bottom:35px;
 }
 
 .menu{
-
 display:flex;
-
 flex-direction:column;
-
-gap:15px;
-
+gap:12px;
 }
 
 .menu a{
-
-text-decoration:none;
-
 color:#cbd5e1;
-
+text-decoration:none;
 padding:12px;
-
 border-radius:8px;
-
-transition:.2s;
-
 }
 
 .menu a:hover{
-
 background:#2563eb;
-
-color:white;
-
 }
 
 .main{
-
 flex:1;
-
-padding:40px;
-
+padding:35px;
 overflow:auto;
-
-}
-
-.title{
-
-color:white;
-
-font-size:34px;
-
-margin-bottom:35px;
-
 }
 
 .cards{
-
 display:grid;
-
 grid-template-columns:repeat(4,1fr);
-
 gap:20px;
-
+margin-bottom:30px;
 }
 
 .card{
-
 background:#1e293b;
-
+padding:22px;
 border-radius:12px;
-
-padding:25px;
-
-color:white;
-
 }
 
-.card h2{
-
-font-size:16px;
-
+.card h3{
+font-size:15px;
 color:#94a3b8;
-
 margin-bottom:10px;
-
 }
 
 .card p{
-
 font-size:34px;
-
 font-weight:bold;
-
 }
 
 .table{
-
-margin-top:40px;
-
 background:#1e293b;
-
-border-radius:12px;
-
 padding:20px;
-
-color:white;
-
+border-radius:12px;
+margin-bottom:25px;
 }
 
 table{
-
 width:100%;
-
 border-collapse:collapse;
-
+margin-top:15px;
 }
 
 th,td{
-
-padding:15px;
-
-text-align:left;
-
+padding:14px;
 border-bottom:1px solid #334155;
-
+text-align:left;
 }
 
 .online{
-
 color:#22c55e;
-
 font-weight:bold;
-
 }
 
 .offline{
-
 color:#ef4444;
-
 font-weight:bold;
-
 }
 
 </style>
@@ -211,9 +190,7 @@ font-weight:bold;
 <div class="sidebar">
 
 <div class="logo">
-
 🚀 BotPilot
-
 </div>
 
 <div class="menu">
@@ -224,7 +201,7 @@ font-weight:bold;
 
 <a href="/users">👥 Kullanıcılar</a>
 
-<a href="/broadcast">📢 Yayın</a>
+<a href="/broadcast">📢 Broadcast</a>
 
 <a href="/settings">⚙ Ayarlar</a>
 
@@ -234,82 +211,28 @@ font-weight:bold;
 
 <div class="main">
 
-<div class="title">
-
+<h1 style="margin-bottom:25px;">
 Dashboard
-
-</div>
+</h1>
 
 <div class="cards">
 
 <div class="card">
-
-<h2>Toplam Bot</h2>
-
+<h3>Toplam Bot</h3>
 <p>${stats.totalBots}</p>
-
 </div>
 
 <div class="card">
-
-<h2>Toplam Kullanıcı</h2>
-
-<p>0</p>
-
+<h3>Toplam Kullanıcı</h3>
+<p>${stats.totalUsers}</p>
 </div>
 
 <div class="card">
-
-<h2>Gönderilen Mesaj</h2>
-
-<p>0</p>
-
+<h3>Toplam Broadcast</h3>
+<p>${stats.totalBroadcasts}</p>
 </div>
 
 <div class="card">
-
-<h2>Online Bot</h2>
-
-<p>0</p>
-
+<h3>Online Bot</h3>
+<p>${stats.onlineBots}</p>
 </div>
-
-</div>
-
-<div class="table">
-
-<h2 style="margin-bottom:20px;">Son Botlar</h2>
-
-<table>
-
-<tr>
-
-<th>Bot</th>
-
-<th>Durum</th>
-
-</tr>
-
-<tr>
-
-<td>Henüz bot eklenmedi</td>
-
-<td class="offline">Offline</td>
-
-</tr>
-
-</table>
-
-</div>
-
-</div>
-
-</body>
-
-</html>
-
-`);
-
-});
-
-export default dashboard;
