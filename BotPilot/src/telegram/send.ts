@@ -40,15 +40,26 @@ export async function sendMessage(
 
   return await res.json();
 
-}
 export async function sendPhotoWithButton(
   token: string,
   chatId: number,
   photo: string,
   caption: string,
   buttonText: string,
-  buttonUrl: string
-) {
+  buttonUrl: string,
+  parseMode: string = "HTML",
+  keyboard?: string
+)
+let replyKeyboard: any = undefined;
+
+if (keyboard && keyboard.trim() !== "") {
+  replyKeyboard = {
+    keyboard: keyboard
+      .split("\n")
+      .map(x => [{ text: x.trim() }]),
+    resize_keyboard: true
+  };
+}
 
   const res = await fetch(
     `https://api.telegram.org/bot${token}/sendPhoto`,
