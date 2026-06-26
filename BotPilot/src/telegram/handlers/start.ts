@@ -2,7 +2,8 @@ import { getBotSettings } from "../../database/bot-settings";
 import {
   sendMessage,
   sendPhotoWithButton,
-  sendVideoWithButton
+  sendVideoWithButton,
+  sendDocumentWithButton
 } from "../send";
 import {
   findTelegramUser,
@@ -37,40 +38,48 @@ export async function handleStart(
   const settings: any = await getBotSettings(db);
 
 
-  // Fotoğraf + Buton
-  if (
-    settings.photo &&
-    settings.button_text &&
-    settings.button_url
-  ) {
+    // Fotoğraf
+  if (settings.photo_url) {
 
     await sendPhotoWithButton(
       token,
       message.chat.id,
-      settings.photo,
+      settings.photo_url,
       settings.start_message || "",
-      settings.button_text,
-      settings.button_url
+      settings.button_text || "",
+      settings.button_url || ""
     );
 
     return;
 
   }
 
-  // Video + Buton
-  if (
-    settings.video &&
-    settings.button_text &&
-    settings.button_url
-  ) {
+  // Video
+  if (settings.video_url) {
 
     await sendVideoWithButton(
       token,
       message.chat.id,
-      settings.video,
+      settings.video_url,
       settings.start_message || "",
-      settings.button_text,
-      settings.button_url
+      settings.button_text || "",
+      settings.button_url || ""
+    );
+
+    return;
+
+  }
+
+  // Doküman
+  if (settings.document_url) {
+
+    await sendDocumentWithButton(
+      token,
+      message.chat.id,
+      settings.document_url,
+      settings.start_message || "",
+      settings.button_text || "",
+      settings.button_url || ""
     );
 
     return;
@@ -81,8 +90,7 @@ export async function handleStart(
   await sendMessage(
     token,
     message.chat.id,
-    settings.start_message ||
-      "👋 BotPilot'a hoş geldiniz."
+    settings.start_message || "👋 BotPilot'a hoş geldiniz."
   );
 
 }
