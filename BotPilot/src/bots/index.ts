@@ -2,14 +2,12 @@ import { Hono } from "hono";
 import { getBots, deleteBot } from "../database/bots";
 import { addBot } from "../services/bot.service";
 import { auth } from "../middleware/auth";
-
 import type { Env } from "../types/env";
 
 const bots = new Hono<Env>();
 
 bots.use("*", auth);
 
-// Bot Listesi
 bots.get("/bots", async (c) => {
 
   const botlar = await getBots(c.env.DB);
@@ -19,47 +17,53 @@ bots.get("/bots", async (c) => {
   for (const bot of botlar as any[]) {
 
     rows += `
-      <tr>
-        <td>${bot.id}</td>
-        <td>${bot.name}</td>
-        <td>@${bot.username}</td>
-        <td>${bot.status == 1 ? "🟢 Online" : "🔴 Offline"}</td>
-        <td>
-          <form method="POST" action="/bots/delete/${bot.id}">
-            <button class="delete-btn" type="submit">
-              🗑 Sil
-            </button>
-          </form>
-        </td>
-      </tr>
-    `;
+<tr>
+<td>${bot.id}</td>
+<td>${bot.name}</td>
+<td>@${bot.username}</td>
+<td>${bot.status ? "🟢 Online" : "🔴 Offline"}</td>
+<td>
+
+<form method="POST" action="/bots/delete/${bot.id}">
+
+<button class="delete-btn">
+
+🗑 Sil
+
+</button>
+
+</form>
+
+</td>
+</tr>
+`;
 
   }
 
   if (rows === "") {
 
     rows = `
-      <tr>
-        <td colspan="5" style="text-align:center;">
-          Henüz bot eklenmedi.
-        </td>
-      </tr>
-    `;
+<tr>
+<td colspan="5" style="text-align:center;">
+Henüz bot eklenmedi.
+</td>
+</tr>
+`;
 
   }
 
   return c.html(`
 <!DOCTYPE html>
+
 <html lang="tr">
 
 <head>
 
 <meta charset="UTF-8">
 
-<title>BotPilot - Bot Yönetimi</title>
+<title>Bot Yönetimi</title>
 
 <style>
-
 
 body{
 background:#0f172a;
@@ -69,7 +73,17 @@ padding:40px;
 }
 
 h1{
-margin-bottom:25px;
+margin-bottom:20px;
+}
+
+.back{
+display:inline-block;
+padding:10px 18px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+margin-bottom:20px;
 }
 
 input{
@@ -89,28 +103,19 @@ color:white;
 cursor:pointer;
 }
 
-button:hover{
-background:#1d4ed8;
-}
-
 .delete-btn{
 background:#dc2626;
 }
 
-.delete-btn:hover{
-background:#b91c1c;
-}
-
 table{
 width:100%;
-margin-top:30px;
+margin-top:25px;
 border-collapse:collapse;
 }
 
 th,td{
 border:1px solid #334155;
 padding:12px;
-text-align:left;
 }
 
 th{
@@ -118,37 +123,19 @@ background:#1e293b;
 }
 
 tr:nth-child(even){
-background:#162033;
+background:#172033;
 }
-
 </style>
 
 </head>
 
 <body>
 
+<h1>🤖 Bot Yönetimi</h1>
 
-<h1 style="margin-bottom:25px;">
-🤖 Bot Yönetimi
-</h1>
-<div style="margin-bottom:20px;">
-
-<a
-href="/dashboard"
-style="
-display:inline-block;
-padding:10px 18px;
-background:#2563eb;
-color:white;
-text-decoration:none;
-border-radius:8px;
-">
-
+<a href="/dashboard" class="back">
 🏠 Anasayfaya Dön
-
 </a>
-
-</div>
 
 <form method="POST" action="/bots/add">
 
@@ -157,7 +144,33 @@ name="token"
 placeholder="Telegram Bot Token"
 required>
 
+<button type="submit">
 
+Bot Ekle
+
+</button>
+
+</form>
+
+<table>
+
+<tr>
+
+<th>ID</th>
+
+<th>Bot Adı</th>
+
+<th>Username</th>
+
+<th>Durum</th>
+
+<th>İşlemler</th>
+
+</tr>
+
+${rows}
+
+</table>
 
 </body>
 
@@ -166,7 +179,6 @@ required>
 `);
 
 });
-
 // Bot Ekle
 bots.post("/bots/add", async (c) => {
 
@@ -176,27 +188,37 @@ bots.post("/bots/add", async (c) => {
 
   try {
 
-    await addBot(c.env.DB, token);
+    await addBot(
+      c.env.DB,
+      token
+    );
 
     return c.redirect("/bots");
 
   } catch (e: any) {
 
     return c.html(`
-      <h2>${e.message}</h2>
-      <a href="/bots">Geri Dön</a>
-    `);
+<h2>${e.message}</h2>
+
+<a href="/bots">
+
+Geri Dön
+
+</a>
+`);
 
   }
 
 });
-
 // Bot Sil
 bots.post("/bots/delete/:id", async (c) => {
 
   const id = Number(c.req.param("id"));
 
-  await deleteBot(c.env.DB, id);
+  await deleteBot(
+    c.env.DB,
+    id
+  );
 
   return c.redirect("/bots");
 
