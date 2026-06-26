@@ -400,11 +400,15 @@ bots.post("/bots/edit/:id", async (c) => {
       shortDescription
     );
 
-  } catch (e) {
+  } catch (e: any) {
 
-    console.error(e);
+  return c.html(`
+<h2>Telegram Hatası</h2>
 
-  }
+<pre>${e.message}</pre>
+`);
+
+}
 
   return c.redirect("/bots");
 
