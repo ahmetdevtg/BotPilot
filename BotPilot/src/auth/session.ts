@@ -36,3 +36,19 @@ export async function createSession(
   return sessionId;
 
 }
+export async function getSession(
+  db: D1Database,
+  sessionId: string
+) {
+
+  return await db
+    .prepare(`
+      SELECT *
+      FROM sessions
+      WHERE id=?
+      AND expires_at > datetime('now')
+    `)
+    .bind(sessionId)
+    .first();
+
+}
