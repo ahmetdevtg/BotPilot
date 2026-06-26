@@ -49,3 +49,43 @@ export async function sendBroadcast(
   };
 
 }
+
+export async function sendBroadcastAllBots(
+  db: D1Database,
+  message: string
+) {
+
+  const { results } = await db
+    .prepare(`
+      SELECT *
+      FROM bots
+      WHERE status=1
+    `)
+    .all();
+
+  let totalSuccess = 0;
+  let totalFailed = 0;
+
+  for (const bot of results as any[]) {
+
+    const result = await sendBroadcast(
+      db,
+      bot.token,
+      bot.telegram_id,
+      message
+    );
+
+    totalSuccess += result.success;
+    totalFailed += result.failed;
+
+  }
+
+  return {
+
+    success: totalSuccess,
+
+    failed: totalFailed
+
+  };
+
+}
