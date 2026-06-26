@@ -231,11 +231,78 @@ ${options}
 
 Mesaj
 
+<label>
+
+Mesaj
+
 </label>
 
 <textarea
 name="message"
 required></textarea>
+
+<label>
+
+Fotoğraf URL
+
+</label>
+
+<input
+name="photo">
+
+<label>
+
+Video URL
+
+</label>
+
+<input
+name="video">
+
+<label>
+
+Doküman URL
+
+</label>
+
+<input
+name="document">
+
+<label>
+
+Buton Yazısı
+
+</label>
+
+<input
+name="buttonText">
+
+<label>
+
+Buton Linki
+
+</label>
+
+<input
+name="buttonUrl">
+
+<label>
+
+Parse Mode
+
+</label>
+
+<select name="parseMode">
+
+<option value="HTML">
+HTML
+</option>
+
+<option value="MarkdownV2">
+MarkdownV2
+</option>
+
+</select>
 
 <button>
 
