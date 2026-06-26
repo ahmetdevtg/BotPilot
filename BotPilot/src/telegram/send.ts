@@ -1,8 +1,24 @@
 export async function sendMessage(
   token: string,
   chatId: number,
-  text: string
+  text: string,
+  parseMode: string = "HTML",
+  keyboard?: string
 ) {
+
+  let replyMarkup: any = undefined;
+
+  if (keyboard && keyboard.trim() !== "") {
+
+    replyMarkup = {
+      keyboard: keyboard
+        .split("\n")
+        .map(x => [{ text: x.trim() }]),
+      resize_keyboard: true
+    };
+
+  }
+
   const res = await fetch(
     `https://api.telegram.org/bot${token}/sendMessage`,
     {
@@ -12,12 +28,18 @@ export async function sendMessage(
       },
       body: JSON.stringify({
         chat_id: chatId,
-        text
+        text,
+        parse_mode:
+          parseMode === "None"
+            ? undefined
+            : parseMode,
+        reply_markup: replyMarkup
       })
     }
   );
 
   return await res.json();
+
 }
 export async function sendPhotoWithButton(
   token: string,
