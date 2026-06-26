@@ -9,14 +9,12 @@ export async function sendMessage(
   let replyMarkup: any = undefined;
 
   if (keyboard && keyboard.trim() !== "") {
-
     replyMarkup = {
       keyboard: keyboard
         .split("\n")
         .map(x => [{ text: x.trim() }]),
       resize_keyboard: true
     };
-
   }
 
   const res = await fetch(
@@ -29,10 +27,7 @@ export async function sendMessage(
       body: JSON.stringify({
         chat_id: chatId,
         text,
-        parse_mode:
-          parseMode === "None"
-            ? undefined
-            : parseMode,
+        parse_mode: parseMode === "None" ? undefined : parseMode,
         reply_markup: replyMarkup
       })
     }
@@ -40,26 +35,16 @@ export async function sendMessage(
 
   return await res.json();
 
+}
+
 export async function sendPhotoWithButton(
   token: string,
   chatId: number,
   photo: string,
   caption: string,
   buttonText: string,
-  buttonUrl: string,
-  parseMode: string = "HTML",
-  keyboard?: string
-)
-let replyKeyboard: any = undefined;
-
-if (keyboard && keyboard.trim() !== "") {
-  replyKeyboard = {
-    keyboard: keyboard
-      .split("\n")
-      .map(x => [{ text: x.trim() }]),
-    resize_keyboard: true
-  };
-}
+  buttonUrl: string
+) {
 
   const res = await fetch(
     `https://api.telegram.org/bot${token}/sendPhoto`,
@@ -73,16 +58,14 @@ if (keyboard && keyboard.trim() !== "") {
         photo,
         caption,
         parse_mode: "HTML",
-    reply_markup: {
-  inline_keyboard: [[
-    {
-      text: buttonText,
-      url: buttonUrl
-    }
-  ]],
-  keyboard: replyKeyboard?.keyboard,
-  resize_keyboard: true
-}
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: buttonText,
+              url: buttonUrl
+            }
+          ]]
+        }
       })
     }
   );
@@ -90,6 +73,7 @@ if (keyboard && keyboard.trim() !== "") {
   return await res.json();
 
 }
+
 export async function sendVideoWithButton(
   token: string,
   chatId: number,
@@ -126,11 +110,12 @@ export async function sendVideoWithButton(
   return await res.json();
 
 }
+
 export async function sendDocumentWithButton(
   token: string,
   chatId: number,
   document: string,
- caption: string,
+  caption: string,
   buttonText: string,
   buttonUrl: string
 ) {
