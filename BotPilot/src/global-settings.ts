@@ -1,16 +1,244 @@
 import { Hono } from "hono";
 import { auth } from "./middleware/auth";
 import type { Env } from "./types/env";
+import {
+  getBotSettings,
+  updateBotSettings
+} from "./database/bot-settings";
 
 const globalSettings = new Hono<Env>();
 
 globalSettings.use("*", auth);
 
 globalSettings.get("/global-settings", async (c) => {
-  return c.html(`
-    <h1>⚙ Genel Bot Ayarları</h1>
-    <p>İlk test başarılı.</p>
-  `);
-});
 
-export default globalSettings;
+const settings = await getBotSettings(c.env.DB);
+
+return c.html(`
+
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Genel Bot Ayarları</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#0f172a;
+color:white;
+padding:40px;
+}
+
+.back{
+
+display:inline-block;
+margin-bottom:20px;
+padding:10px 18px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+font-weight:bold;
+
+}
+
+.card{
+
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+margin-bottom:25px;
+
+}
+
+.card h2{
+
+margin-bottom:20px;
+
+}
+
+input,
+textarea,
+select{
+
+width:100%;
+padding:12px;
+border:none;
+border-radius:8px;
+margin-top:8px;
+margin-bottom:18px;
+background:#0f172a;
+color:white;
+
+}
+
+button{
+
+padding:14px 24px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+
+}
+
+button:hover{
+
+background:#1d4ed8;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<a href="/dashboard" class="back">
+
+🏠 Anasayfaya Dön
+
+</a>
+
+<h1 style="margin-bottom:25px;">
+
+⚙ Genel Bot Ayarları
+
+</h1>
+
+<form method="POST" action="/global-settings">
+<div class="card">
+
+<h2>🤖 Bot Profili</h2>
+
+<label>Bot Adı</label>
+
+<input
+name="bot_name"
+value="${settings?.bot_name || ""}">
+
+<label>Açıklama</label>
+
+<textarea
+name="description"
+rows="4">${settings?.description || ""}</textarea>
+
+<label>Kısa Açıklama</label>
+
+<textarea
+name="short_description"
+rows="2">${settings?.short_description || ""}</textarea>
+
+</div>
+
+<div class="card">
+
+<h2>🚀 /start Ayarları</h2>
+
+<label>/start Mesajı</label>
+
+<textarea
+name="start_message"
+rows="6">${settings?.start_message || ""}</textarea>
+
+<label>Fotoğraf URL</label>
+
+<input
+name="photo_url"
+value="${settings?.photo_url || ""}">
+
+<label>Video URL</label>
+
+<input
+name="video_url"
+value="${settings?.video_url || ""}">
+
+<label>Dosya URL</label>
+
+<input
+name="document_url"
+value="${settings?.document_url || ""}">
+
+</div>
+<div class="card">
+
+<h2>🔘 Buton Ayarları</h2>
+
+<label>Buton Yazısı</label>
+
+<input
+name="button_text"
+value="${settings?.button_text || ""}">
+
+<label>Buton Linki</label>
+
+<input
+name="button_url"
+value="${settings?.button_url || ""}">
+
+</div>
+
+<div class="card">
+
+<h2>⌨ Reply Keyboard</h2>
+
+<label>Her satıra bir buton yaz.</label>
+
+<textarea
+name="reply_keyboard"
+rows="6">${settings?.reply_keyboard || ""}</textarea>
+
+<label>Parse Mode</label>
+
+<select name="parse_mode">
+
+<option
+value="HTML"
+${settings?.parse_mode==="HTML"?"selected":""}>
+HTML
+</option>
+
+<option
+value="MarkdownV2"
+${settings?.parse_mode==="MarkdownV2"?"selected":""}>
+MarkdownV2
+</option>
+
+<option
+value="None"
+${settings?.parse_mode==="None"?"selected":""}>
+None
+</option>
+
+</select>
+
+</div>
+
+<button type="submit">
+
+💾 Kaydet
+
+</button>
+
+</form>
+
+</body>
+
+</html>
+
+`);
+
+});
