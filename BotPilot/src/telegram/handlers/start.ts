@@ -38,14 +38,16 @@ export async function handleStart(
   // FOTOĞRAF
   if (settings.photo_url) {
 
-    await sendPhotoWithButton(
-      token,
-      message.chat.id,
-      settings.photo_url,
-      settings.start_message || "",
-      settings.button_text || "",
-      settings.button_url || ""
-    );
+await sendPhotoWithButton(
+  token,
+  message.chat.id,
+  settings.photo_url,
+  settings.start_message || "",
+  settings.button_text || "",
+  settings.button_url || "",
+  settings.parse_mode || "HTML",
+  settings.reply_keyboard || ""
+);
 
     if (settings.reply_keyboard) {
       await sendMessage(
