@@ -42,46 +42,108 @@ export async function sendBroadcast(
 
     try {
 
-      if (options.photo) {
+      if (
+  options.photo &&
+  options.buttonText &&
+  options.buttonUrl
+) {
 
-        await sendPhoto(
-          token,
-          user.telegram_id,
-          options.photo,
-          options.message,
-          options.parseMode || "HTML"
-        );
+  await sendPhotoWithButton(
+    token,
+    user.telegram_id,
+    options.photo,
+    options.message,
+    options.buttonText,
+    options.buttonUrl,
+    options.parseMode || "HTML"
+  );
 
-      } else if (options.video) {
+} else if (
+  options.video &&
+  options.buttonText &&
+  options.buttonUrl
+) {
 
-        await sendVideo(
-          token,
-          user.telegram_id,
-          options.video,
-          options.message,
-          options.parseMode || "HTML"
-        );
+  await sendVideoWithButton(
+    token,
+    user.telegram_id,
+    options.video,
+    options.message,
+    options.buttonText,
+    options.buttonUrl,
+    options.parseMode || "HTML"
+  );
 
-      } else if (options.document) {
+} else if (
+  options.document &&
+  options.buttonText &&
+  options.buttonUrl
+) {
 
-        await sendDocument(
-          token,
-          user.telegram_id,
-          options.document,
-          options.message,
-          options.parseMode || "HTML"
-        );
+  await sendDocumentWithButton(
+    token,
+    user.telegram_id,
+    options.document,
+    options.message,
+    options.buttonText,
+    options.buttonUrl,
+    options.parseMode || "HTML"
+  );
 
-      } else {
+} else if (
+  options.buttonText &&
+  options.buttonUrl
+) {
 
-        await sendText(
-          token,
-          user.telegram_id,
-          options.message,
-          options.parseMode || "HTML"
-        );
+  await sendMessageWithButton(
+    token,
+    user.telegram_id,
+    options.message,
+    options.buttonText,
+    options.buttonUrl,
+    options.parseMode || "HTML"
+  );
 
-      }
+} else if (options.photo) {
+
+  await sendPhoto(
+    token,
+    user.telegram_id,
+    options.photo,
+    options.message,
+    options.parseMode || "HTML"
+  );
+
+} else if (options.video) {
+
+  await sendVideo(
+    token,
+    user.telegram_id,
+    options.video,
+    options.message,
+    options.parseMode || "HTML"
+  );
+
+} else if (options.document) {
+
+  await sendDocument(
+    token,
+    user.telegram_id,
+    options.document,
+    options.message,
+    options.parseMode || "HTML"
+  );
+
+} else {
+
+  await sendText(
+    token,
+    user.telegram_id,
+    options.message,
+    options.parseMode || "HTML"
+  );
+
+}
 
       success++;
 
