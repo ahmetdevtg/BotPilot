@@ -1,167 +1,50 @@
-import { Hono } from "hono";
-import { auth } from "../middleware/auth";
-import type { Env } from "../types/env";
+import { Context } from 'telegraf'; // Eğer grammy kullanıyorsan: import { Context } from 'grammy';
 
-const broadcast = new Hono<Env>();
+/**
+ * Telegram hız limitlerine takılmamak için iki mesaj arasında beklenecek süre (milisaniye)
+ * Telegram saniyede en fazla 30 mesaja izin verir. Güvenli sınır için 50-100 ms idealdir.
+ */
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-broadcast.use("*", auth);
-
-broadcast.get("/broadcast", (c) => {
-
-  return c.html(`
-
-<!DOCTYPE html>
-
-<html lang="tr">
-
-<head>
-
-<meta charset="UTF-8">
-
-<title>Broadcast</title>
-
-<style>
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-font-family:Arial,sans-serif;
-
-padding:40px;
-
+interface BroadcastOptions {
+  chatIds: number[];
+  message: string;
+  bot: any; // Bot instance'ı (Telegraf veya Grammy)
 }
 
-.card{
+/**
+ * Tüm kullanıcılara toplu mesaj gönderen fonksiyon
+ */
+export async function sendBroadcast({ chatIds, message, bot }: BroadcastOptions): Promise<{ successCount: number; failedCount: number }> {
+  let successCount = 0;
+  let failedCount = 0;
 
-background:#1e293b;
+  console.log(`${chatIds.length} kullanıcıya toplu mesaj gönderimi başlatıldı...`);
 
-padding:25px;
+  for (const chatId of chatIds) {
+    try {
+      // Telegram API ile mesajı gönder
+      await bot.telegram.sendMessage(chatId, message, {
+        parse_mode: 'HTML' // Mesajda <b>, <i>, <code> gibi HTML etiketlerini kullanabilmek için
+      });
+      
+      successCount++;
+      
+      // Hız limitine (Rate Limit) takılmamak için her mesaj arasında 70ms bekle
+      await delay(70); 
+    } catch (error: any) {
+      console.error(`Chat ID ${chatId} için mesaj gönderilemedi:`, error.message);
+      failedCount++;
+      
+      // Eğer bot çok hızlı gönderim yüzünden engellendiyse (429 hatası) biraz daha fazla bekle
+      if (error.description && error.description.includes('Too Many Requests')) {
+        const retryAfter = error.parameters?.retry_after || 5;
+        console.log(`Hız limitine takılındı. ${retryAfter} saniye bekleniyor...`);
+        await delay(retryAfter * 1000);
+      }
+    }
+  }
 
-border-radius:12px;
-
-max-width:900px;
-
+  console.log(`Toplu mesaj tamamlandı. Başarılı: ${successCount}, Başarısız: ${failedCount}`);
+  return { successCount, failedCount };
 }
-
-textarea{
-
-width:100%;
-
-height:220px;
-
-padding:15px;
-
-border:none;
-
-border-radius:10px;
-
-margin-top:15px;
-
-resize:vertical;
-
-}
-
-button{
-
-margin-top:20px;
-
-padding:12px 24px;
-
-background:#2563eb;
-
-color:white;
-
-border:none;
-
-border-radius:8px;
-
-cursor:pointer;
-
-}
-
-button:hover{
-
-background:#1d4ed8;
-
-}
-
-.info{
-
-margin-top:20px;
-
-color:#94a3b8;
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<h1>📢 Broadcast</h1>
-
-<div class="card">
-
-<form method="POST" action="/broadcast/send">
-
-<textarea
-
-name="message"
-
-placeholder="Göndermek istediğiniz mesajı yazın..."
-
-required></textarea>
-
-<button type="submit">
-
-📨 Yayını Başlat
-
-</button>
-
-</form>
-
-<div class="info">
-
-Bu ekran şimdilik taslak halindedir.
-Bir sonraki adımda seçili botlara veya tüm botlara mesaj gönderecek şekilde tamamlanacaktır.
-
-</div>
-
-</div>
-
-</body>
-
-</html>
-
-`);
-
-});
-
-broadcast.post("/broadcast/send", async (c) => {
-
-  const body = await c.req.parseBody();
-
-  const message = String(body.message || "");
-
-  // Bir sonraki adımda tüm kullanıcıları çekip
-  // sendBroadcast() fonksiyonunu burada kullanacağız.
-
-  return c.html(`
-
-<h2>✅ Yayın isteği alındı.</h2>
-
-<p><b>Mesaj:</b></p>
-
-<pre>${message}</pre>
-
-<p><a href="/broadcast">← Geri Dön</a></p>
-
-`);
-
-});
-
-export default broadcast;
