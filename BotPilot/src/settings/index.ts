@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { auth } from "../middleware/auth";
 import { getBots } from "../database/bots";
-import { getBotSettings } from "../database/settings";
+import {
+  getBotSettings,
+  updateBotSettings
+} from "../database/settings";
 
 import type { Env } from "../types/env";
 
@@ -196,39 +199,70 @@ cursor:pointer;
 
 <p>@${(bot as any).username}</p>
 
-<form>
+<form method="POST" action="/settings/${botId}">
 
 <label>Start Mesajı</label>
 
-<textarea>${s.start_message}</textarea>
+<textarea name="start_message">${s.start_message}</textarea>
 
 <label>Fotoğraf URL</label>
 
-<input value="${s.photo}">
+<input name="photo" value="${s.photo}">
 
 <label>Video URL</label>
 
-<input value="${s.video}">
+<input name="video" value="${s.video}">
 
 <label>Doküman URL</label>
 
-<input value="${s.document_url}">
+<input
+name="document_url"
+value="${s.document_url}">
 
 <label>Buton Yazısı</label>
 
-<input value="${s.button_text}">
+<input
+name="button_text"
+value="${s.button_text}">
 
 <label>Buton Linki</label>
 
-<input value="${s.button_url}">
+<input
+name="button_url"
+value="${s.button_url}">
 
 <label>Parse Mode</label>
 
-<select>
+<select name="parse_mode">
 
-<option ${s.parse_mode==="HTML"?"selected":""}>HTML</option>
+<option
+value="HTML"
+${s.parse_mode==="HTML"?"selected":""}>
+HTML
+</option>
 
-<option ${s.parse_mode==="MarkdownV2"?"selected":""}>MarkdownV2</option>
+<option
+value="MarkdownV2"
+${s.parse_mode==="MarkdownV2"?"selected":""}>
+MarkdownV2
+</option>
+
+</select>
+<label>Bot Durumu</label>
+
+<select name="is_enabled">
+
+<option
+value="1"
+${s.is_enabled ? "selected" : ""}>
+Aktif
+</option>
+
+<option
+value="0"
+${!s.is_enabled ? "selected" : ""}>
+Pasif
+</option>
 
 </select>
 
@@ -247,6 +281,31 @@ cursor:pointer;
 </html>
 
 `);
+
+});
+
+settings.post("/settings/:botId", async (c) => {
+
+  const botId = Number(c.req.param("botId"));
+
+  const body = await c.req.parseBody();
+
+  await updateBotSettings(
+    c.env.DB,
+    botId,
+    {
+      start_message: String(body.start_message || ""),
+      photo: String(body.photo || ""),
+      video: String(body.video || ""),
+      document_url: String(body.document_url || ""),
+      button_text: String(body.button_text || ""),
+      button_url: String(body.button_url || ""),
+      parse_mode: String(body.parse_mode || "HTML"),
+      is_enabled: Number(body.is_enabled || 1)
+    }
+  );
+
+  return c.redirect(`/settings/${botId}`);
 
 });
 
