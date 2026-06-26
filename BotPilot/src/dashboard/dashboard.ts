@@ -4,7 +4,6 @@ import { getDashboardStats } from "../database/dashboard";
 import { getBots, updateBotStatus } from "../database/bots";
 import { getMe } from "../telegram/api";
 import type { Env } from "../types/env";
-import { sidebar } from "../layout/sidebar";
 
 const dashboard = new Hono<Env>();
 
