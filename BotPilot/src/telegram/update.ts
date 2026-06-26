@@ -1,5 +1,6 @@
 import { getReplyButton } from "../database/reply-buttons";
 import { handleStart } from "./handlers/start";
+import { handleReplyButton } from "./handlers/reply-button";
 import { sendMessage } from "./send";
 
 export async function handleUpdate(
@@ -14,6 +15,15 @@ export async function handleUpdate(
   }
 
   const text = update.message.text || "";
+const handled = await handleReplyButton(
+  db,
+  token,
+  update.message
+);
+
+if (handled) {
+  return;
+}
 const reply: any = await getReplyButton(db, text);
 
 if (reply) {
