@@ -12,7 +12,7 @@ globalSettings.use("*", auth);
 
 globalSettings.get("/global-settings", async (c) => {
 
-  const settings = await getBotSettings(c.env.DB);
+  const settings = {};
 
   return c.html(`
 
