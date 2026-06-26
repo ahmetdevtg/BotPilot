@@ -10,6 +10,7 @@ import users from "./users";
 import settings from "./settings";
 import admin from "./admin";
 import password from "./admin/password";
+import globalSettings from "./global-settings";
 
 const app = new Hono<Env>();
 
@@ -22,7 +23,7 @@ app.route("/", webhook);
 app.route("/", broadcast);
 app.route("/", admin);
 app.route("/", password);
-
+app.route("/", globalSettings);
 
 // Çıkış Yap
 app.get("/logout", (c) => {
