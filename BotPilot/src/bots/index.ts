@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { getBots, deleteBot } from "../database/bots";
 import { addBot } from "../services/bot.service";
 import { auth } from "../middleware/auth";
-import { sidebar } from "../layout/sidebar";
 
 import type { Env } from "../types/env";
 
