@@ -311,3 +311,31 @@ export async function setMyShortDescription(
   );
 
 }
+export async function setMyName(
+  token: string,
+  name: string
+) {
+
+  return telegramRequest(
+    token,
+    "setMyName",
+    {
+      name
+    }
+  );
+
+}
+export async function setMyDescription(
+  token: string,
+  description: string
+) {
+
+  return telegramRequest(
+    token,
+    "setMyDescription",
+    {
+      description
+    }
+  );
+
+}
