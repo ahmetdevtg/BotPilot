@@ -1,50 +1,99 @@
-import { Context } from 'telegraf'; // Eğer grammy kullanıyorsan: import { Context } from 'grammy';
-
 /**
- * Telegram hız limitlerine takılmamak için iki mesaj arasında beklenecek süre (milisaniye)
- * Telegram saniyede en fazla 30 mesaja izin verir. Güvenli sınır için 50-100 ms idealdir.
+ * BotPilot - Broadcast Management System
+ * Architecture: Cloudflare Workers + Hono + D1 Database
  */
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-interface BroadcastOptions {
-  chatIds: number[];
+interface BroadcastPayload {
+  botId: string;
+  botToken: string;
   message: string;
-  bot: any; // Bot instance'ı (Telegraf veya Grammy)
+}
+
+interface TelegramUser {
+  telegram_id: string; // D1 tablonuzdaki isimlendirmeye göre gerekirse güncelleyin
 }
 
 /**
- * Tüm kullanıcılara toplu mesaj gönderen fonksiyon
+ * Belirli bir bota ait tüm kayıtlı kullanıcılara toplu mesaj gönderir.
+ * Cloudflare Workers üzerinde fetch kullanarak Telegram API ile haberleşir.
  */
-export async function sendBroadcast({ chatIds, message, bot }: BroadcastOptions): Promise<{ successCount: number; failedCount: number }> {
-  let successCount = 0;
-  let failedCount = 0;
+export async function handleBroadcast(
+  db: D1Database,
+  payload: BroadcastPayload
+): Promise<{ success: boolean; total: number; sent: number; failed: number; error?: string }> {
+  const { botId, botToken, message } = payload;
 
-  console.log(`${chatIds.length} kullanıcıya toplu mesaj gönderimi başlatıldı...`);
+  try {
+    // 1. Veritabanından bu bota kayıtlı aktif kullanıcıları çekiyoruz
+    // NOT: Tablo ve sütun isimlerini mevcut D1 şemanıza (users veya bot_users) göre gerekirse düzenleyin.
+    const { results } = await db
+      .prepare("SELECT telegram_id FROM users WHERE bot_id = ? AND status = 'active'")
+      .bind(botId)
+      .all<TelegramUser>();
 
-  for (const chatId of chatIds) {
-    try {
-      // Telegram API ile mesajı gönder
-      await bot.telegram.sendMessage(chatId, message, {
-        parse_mode: 'HTML' // Mesajda <b>, <i>, <code> gibi HTML etiketlerini kullanabilmek için
-      });
-      
-      successCount++;
-      
-      // Hız limitine (Rate Limit) takılmamak için her mesaj arasında 70ms bekle
-      await delay(70); 
-    } catch (error: any) {
-      console.error(`Chat ID ${chatId} için mesaj gönderilemedi:`, error.message);
-      failedCount++;
-      
-      // Eğer bot çok hızlı gönderim yüzünden engellendiyse (429 hatası) biraz daha fazla bekle
-      if (error.description && error.description.includes('Too Many Requests')) {
-        const retryAfter = error.parameters?.retry_after || 5;
-        console.log(`Hız limitine takılındı. ${retryAfter} saniye bekleniyor...`);
-        await delay(retryAfter * 1000);
+    if (!results || results.length === 0) {
+      return { success: true, total: 0, sent: 0, failed: 0 };
+    }
+
+    let sentCount = 0;
+    let failedCount = 0;
+    const totalUsers = results.length;
+
+    // 2. Kullanıcılara sırayla mesaj gönderimi
+    // Cloudflare Workers fetch senkronizasyonu ve Telegram hız limitleri için döngü
+    for (const user of results) {
+      const telegramId = user.telegram_id;
+
+      try {
+        const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        
+        const response = await fetch(telegramUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: telegramId,
+            text: message,
+            parse_mode: 'HTML',
+          }),
+        });
+
+        if (response.ok) {
+          sentCount++;
+        } else {
+          const errData: any = await response.json().catch(() => ({}));
+          console.error(`Mesaj gönderilemedi (User: ${telegramId}):`, errData?.description || response.statusText);
+          failedCount++;
+        }
+
+        // Cloudflare Workers CPU zamanını ve Telegram sınırlarını (saniyede 30 istek) korumak için 
+        // her istek arasında milisaniyelik mikro bir boşluk bırakıyoruz
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+      } catch (innerError) {
+        console.error(`Fetch hatası (User: ${telegramId}):`, innerError);
+        failedCount++;
       }
     }
-  }
 
-  console.log(`Toplu mesaj tamamlandı. Başarılı: ${successCount}, Başarısız: ${failedCount}`);
-  return { successCount, failedCount };
+    // 3. İsteğe bağlı: Gönderim istatistiklerini broadcast_history gibi bir tabloya kaydedebilirsiniz.
+    // Şimdilik sonucu doğrudan dönüyoruz.
+    return {
+      success: true,
+      total: totalUsers,
+      sent: sentCount,
+      failed: failedCount,
+    };
+
+  } catch (error: any) {
+    console.error("Broadcast sistemi genel hatası:", error);
+    return {
+      success: false,
+      total: 0,
+      sent: 0,
+      failed: 0,
+      error: error.message || "Bilinmeyen bir hata oluştu.",
+    };
+  }
 }
