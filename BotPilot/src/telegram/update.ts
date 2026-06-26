@@ -1,3 +1,4 @@
+import { getReplyButton } from "../database/reply-buttons";
 import { handleStart } from "./handlers/start";
 import { sendMessage } from "./send";
 
@@ -13,6 +14,19 @@ export async function handleUpdate(
   }
 
   const text = update.message.text || "";
+const reply: any = await getReplyButton(db, text);
+
+if (reply) {
+
+  await sendMessage(
+    token,
+    update.message.chat.id,
+    reply.message || ""
+  );
+
+  return;
+
+}
 
   if (text === "/start") {
 
