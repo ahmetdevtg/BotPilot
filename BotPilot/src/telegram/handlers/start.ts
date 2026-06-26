@@ -1,5 +1,8 @@
 import { getBotSettings } from "../../database/settings";
-import { sendMessage } from "../send";
+import {
+  sendMessage,
+  sendPhotoWithButton
+} from "../send";
 import {
   findTelegramUser,
   createTelegramUser
@@ -46,6 +49,25 @@ const settings: any = await getBotSettings(
 
 if (!settings.is_enabled) {
   return;
+}
+
+if (
+  settings.photo &&
+  settings.button_text &&
+  settings.button_url
+) {
+
+  await sendPhotoWithButton(
+    token,
+    message.chat.id,
+    settings.photo,
+    settings.start_message || "",
+    settings.button_text,
+    settings.button_url
+  );
+
+  return;
+
 }
 
 await sendMessage(
