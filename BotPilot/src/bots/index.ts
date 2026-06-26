@@ -158,14 +158,6 @@ placeholder="Telegram Bot Token"
 required>
 
 
-<form method="POST" action="/bots/add">
-
-<input
-name="token"
-placeholder="Telegram Bot Token"
-required>
-
-
 
 </body>
 
