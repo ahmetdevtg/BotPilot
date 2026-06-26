@@ -96,3 +96,29 @@ export async function updateBotStatus(
     .bind(status, id)
     .run();
 }
+export async function updateBotProfile(
+  db: D1Database,
+  id: number,
+  name: string,
+  description: string,
+  shortDescription: string
+) {
+
+  return await db
+    .prepare(`
+      UPDATE bots
+      SET
+        name=?,
+        description=?,
+        short_description=?
+      WHERE id=?
+    `)
+    .bind(
+      name,
+      description,
+      shortDescription,
+      id
+    )
+    .run();
+
+}
