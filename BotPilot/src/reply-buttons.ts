@@ -3,7 +3,10 @@ import { auth } from "./middleware/auth";
 import type { Env } from "./types/env";
 import {
   getReplyButtons,
-  createReplyButton
+  createReplyButton,
+  getReplyButtonById,
+  updateReplyButton,
+  deleteReplyButton
 } from "./database/reply-buttons";
 
 const replyButtons = new Hono<Env>();
@@ -221,6 +224,101 @@ replyButtons.post("/reply-buttons/new", async (c) => {
   });
 
   return c.redirect("/reply-buttons");
+
+});
+replyButtons.get("/reply-buttons/edit/:id", async (c) => {
+
+  const id = Number(c.req.param("id"));
+
+  const button: any = await getReplyButtonById(
+    c.env.DB,
+    id
+  );
+
+  if (!button) {
+    return c.text("Buton bulunamadı.", 404);
+  }
+
+  return c.html(`
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Buton Düzenle</title>
+
+<style>
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:40px;
+}
+
+input,
+textarea,
+select{
+width:100%;
+padding:12px;
+margin-top:10px;
+margin-bottom:20px;
+background:#1e293b;
+color:white;
+border:none;
+border-radius:8px;
+}
+
+button{
+padding:14px 24px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:8px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>✏️ Reply Button Düzenle</h1>
+
+<form method="POST">
+
+<label>Buton Yazısı</label>
+<input
+name="button_text"
+value="${button.button_text}">
+
+<label>Tür</label>
+
+<select name="response_type">
+
+<option value="text" ${button.response_type==="text"?"selected":""}>Mesaj</option>
+
+<option value="photo" ${button.response_type==="photo"?"selected":""}>Fotoğraf</option>
+
+<option value="video" ${button.response_type==="video"?"selected":""}>Video</option>
+
+<option value="document" ${button.response_type==="document"?"selected":""}>Doküman</option>
+
+</select>
+
+<label>Mesaj</label>
+
+<textarea
+name="message"
+rows="6">${button.message||""}</textarea>
+
+<button>
+💾 Kaydet
+</button>
+
+</form>
+
+</body>
+
+</html>
+`);
 
 });
 export default replyButtons;
