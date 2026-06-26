@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { getBots, deleteBot } from "../database/bots";
 import { addBot } from "../services/bot.service";
 import { auth } from "../middleware/auth";
+import { sidebar } from "../layout/sidebar";
 
 import type { Env } from "../types/env";
 
@@ -59,12 +60,19 @@ bots.get("/bots", async (c) => {
 <title>BotPilot - Bot Yönetimi</title>
 
 <style>
+.main{
+flex:1;
+padding:35px;
+overflow:auto;
+}
 
 body{
 background:#0f172a;
 color:white;
 font-family:Arial,sans-serif;
-padding:40px;
+display:flex;
+height:100vh;
+margin:0;
 }
 
 h1{
@@ -126,7 +134,44 @@ background:#162033;
 
 <body>
 
-<h1>🤖 Bot Yönetimi</h1>
+${sidebar()}
+
+<div class="main">
+
+<h1 style="margin-bottom:25px;">
+🤖 Bot Yönetimi
+</h1>
+
+<form method="POST" action="/bots/add">
+
+<input
+name="token"
+placeholder="Telegram Bot Token"
+required>
+
+<button type="submit">
+Bot Ekle
+</button>
+
+</form>
+
+<table>
+
+<tr>
+
+<th>ID</th>
+<th>Bot Adı</th>
+<th>Username</th>
+<th>Durum</th>
+<th>İşlemler</th>
+
+</tr>
+
+${rows}
+
+</table>
+
+</div>
 
 <form method="POST" action="/bots/add">
 
