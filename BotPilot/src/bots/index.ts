@@ -1,8 +1,18 @@
 import { Hono } from "hono";
-import { getBots, deleteBot } from "../database/bots";
+import {
+  getBots,
+  deleteBot,
+  getBotById,
+  updateBotProfile
+} from "../database/bots";
 import { addBot } from "../services/bot.service";
 import { auth } from "../middleware/auth";
 import type { Env } from "../types/env";
+import {
+  setMyName,
+  setMyDescription,
+  setMyShortDescription
+} from "../telegram/api";
 
 const bots = new Hono<Env>();
 
