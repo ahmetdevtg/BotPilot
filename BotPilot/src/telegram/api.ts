@@ -206,3 +206,64 @@ export async function sendMessageWithButton(
   );
 
 }
+export async function sendVideoWithButton(
+  token: string,
+  chatId: number,
+  video: string,
+  caption: string,
+  buttonText: string,
+  buttonUrl: string,
+  parseMode = "HTML"
+) {
+
+  return telegramRequest(
+    token,
+    "sendVideo",
+    {
+      chat_id: chatId,
+      video,
+      caption,
+      parse_mode: parseMode,
+      reply_markup: {
+        inline_keyboard: [[
+          {
+            text: buttonText,
+            url: buttonUrl
+          }
+        ]]
+      }
+    }
+  );
+
+}
+
+export async function sendDocumentWithButton(
+  token: string,
+  chatId: number,
+  document: string,
+  caption: string,
+  buttonText: string,
+  buttonUrl: string,
+  parseMode = "HTML"
+) {
+
+  return telegramRequest(
+    token,
+    "sendDocument",
+    {
+      chat_id: chatId,
+      document,
+      caption,
+      parse_mode: parseMode,
+      reply_markup: {
+        inline_keyboard: [[
+          {
+            text: buttonText,
+            url: buttonUrl
+          }
+        ]]
+      }
+    }
+  );
+
+}
