@@ -16,9 +16,27 @@ const globalSettings = new Hono<Env>();
 
 globalSettings.use("*", auth);
 
-globalSettings.get("/global-settings", async (c) => {
+globalSettings.post("/global-settings", async (c) => {
 
-  const settings = {};
+  const body = await c.req.parseBody();
+
+  await updateBotSettings(c.env.DB, {
+    bot_name: String(body.bot_name || ""),
+    description: String(body.description || ""),
+    short_description: String(body.short_description || ""),
+    start_message: String(body.start_message || ""),
+    photo_url: String(body.photo_url || ""),
+    video_url: String(body.video_url || ""),
+    document_url: String(body.document_url || ""),
+    button_text: String(body.button_text || ""),
+    button_url: String(body.button_url || ""),
+    reply_keyboard: String(body.reply_keyboard || ""),
+    parse_mode: String(body.parse_mode || "HTML")
+  });
+
+  return c.redirect("/global-settings");
+
+});
 
   return c.html(`
 
