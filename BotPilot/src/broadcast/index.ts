@@ -231,10 +231,6 @@ ${options}
 
 Mesaj
 
-<label>
-
-Mesaj
-
 </label>
 
 <textarea
@@ -508,7 +504,16 @@ border-radius:8px;
 
   }
 
-  const stats = await sendBroadcast(
+ const result = await createBroadcast(
+  c.env.DB,
+  Number(botId),
+  message
+);
+
+const broadcastId =
+  Number((result as any).meta?.last_row_id);
+
+const stats = await sendBroadcast(
   c.env.DB,
   bot.token,
   Number(botId),
@@ -523,22 +528,12 @@ border-radius:8px;
   }
 );
 
-  const broadcastId =
-    Number((result as any).meta?.last_row_id);
-
-  const stats = await sendBroadcast(
-    c.env.DB,
-    bot.token,
-    Number(botId),
-    message
-  );
-
-  await finishBroadcast(
-    c.env.DB,
-    broadcastId,
-    stats.success,
-    stats.failed
-  );
+await finishBroadcast(
+  c.env.DB,
+  broadcastId,
+  stats.success,
+  stats.failed
+);
 
   return c.html(`
 
