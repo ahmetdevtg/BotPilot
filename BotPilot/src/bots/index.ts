@@ -353,6 +353,62 @@ Geri Dön
   }
 
 });
+// Bot Düzenle
+bots.post("/bots/edit/:id", async (c) => {
+
+  const id = Number(c.req.param("id"));
+
+  const body = await c.req.parseBody();
+
+  const name = String(body.name || "");
+  const description = String(body.description || "");
+  const shortDescription = String(body.shortDescription || "");
+
+  const bot = await getBotById(
+    c.env.DB,
+    id
+  ) as any;
+
+  if (!bot) {
+
+    return c.html("<h2>Bot bulunamadı.</h2>");
+
+  }
+
+  await updateBotProfile(
+    c.env.DB,
+    id,
+    name,
+    description,
+    shortDescription
+  );
+
+  try {
+
+    await setMyName(
+      bot.token,
+      name
+    );
+
+    await setMyDescription(
+      bot.token,
+      description
+    );
+
+    await setMyShortDescription(
+      bot.token,
+      shortDescription
+    );
+
+  } catch (e) {
+
+    console.error(e);
+
+  }
+
+  return c.redirect("/bots");
+
+});
 // Bot Sil
 bots.post("/bots/delete/:id", async (c) => {
 
