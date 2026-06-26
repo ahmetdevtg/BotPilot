@@ -15,23 +15,36 @@ admin.use("*", auth);
 
 admin.get("/admin", async (c) => {
 
+  const currentUser: any = c.get("user");
+
+  if (currentUser.role !== "super_admin") {
+    return c.text("403 - Yetkisiz Erişim", 403);
+  }
+
   const users = await getUsers(c.env.DB);
 
   let rows = "";
 
   for (const user of users as any[]) {
 
-    rows += `
-<tr>
-<td>${user.id}</td>
-<td>${user.username}</td>
-<td>
+    let button = `
 <form method="POST" action="/admin/delete/${user.id}">
 <button class="delete">
 Sil
 </button>
 </form>
-</td>
+`;
+
+    if (user.id === 1) {
+      button = "👑 Super Admin";
+    }
+
+    rows += `
+<tr>
+<td>${user.id}</td>
+<td>${user.username}</td>
+<td>${user.role}</td>
+<td>${button}</td>
 </tr>
 `;
 
@@ -41,13 +54,14 @@ Sil
 
     rows = `
 <tr>
-<td colspan="3">
+<td colspan="4">
 Henüz admin yok.
 </td>
 </tr>
 `;
 
   }
+
   return c.html(`
 
 <!DOCTYPE html>
@@ -117,6 +131,11 @@ tr:nth-child(even){
 background:#172033;
 }
 
+a{
+color:#60a5fa;
+text-decoration:none;
+}
+
 </style>
 
 </head>
@@ -124,10 +143,15 @@ background:#172033;
 <body>
 
 <h1>👤 Admin Yönetimi</h1>
+
 <p>
-<a href="/admin/password" style="color:#60a5fa;text-decoration:none;">
+
+<a href="/admin/password">
+
 🔐 Şifre Değiştir
+
 </a>
+
 </p>
 
 <div class="card">
@@ -146,7 +170,9 @@ placeholder="Şifre"
 required>
 
 <button>
+
 ➕ Admin Oluştur
+
 </button>
 
 </form>
@@ -160,6 +186,8 @@ required>
 <th>ID</th>
 
 <th>Kullanıcı Adı</th>
+
+<th>Rol</th>
 
 <th>İşlem</th>
 
@@ -176,7 +204,14 @@ ${rows}
 `);
 
 });
+
 admin.post("/admin/create", async (c) => {
+
+  const currentUser: any = c.get("user");
+
+  if (currentUser.role !== "super_admin") {
+    return c.text("403 - Yetkisiz Erişim", 403);
+  }
 
   const body = await c.req.parseBody();
 
@@ -201,7 +236,21 @@ admin.post("/admin/create", async (c) => {
 
 admin.post("/admin/delete/:id", async (c) => {
 
+  const currentUser: any = c.get("user");
+
+  if (currentUser.role !== "super_admin") {
+    return c.text("403 - Yetkisiz Erişim", 403);
+  }
+
   const id = Number(c.req.param("id"));
+
+  if (id === 1) {
+    return c.html("<h2>❌ Super Admin silinemez.</h2>");
+  }
+
+  if (id === currentUser.id) {
+    return c.html("<h2>❌ Kendi hesabınızı silemezsiniz.</h2>");
+  }
 
   await deleteUser(
     c.env.DB,
@@ -211,4 +260,5 @@ admin.post("/admin/delete/:id", async (c) => {
   return c.redirect("/admin");
 
 });
+
 export default admin;
