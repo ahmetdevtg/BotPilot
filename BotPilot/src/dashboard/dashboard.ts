@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { auth } from "../middleware/auth";
 import { getDashboardStats } from "../database/dashboard";
+import { getBots, updateBotStatus } from "../database/bots";
+import { getMe } from "../telegram/api";
 import type { Env } from "../types/env";
 
 const dashboard = new Hono<Env>();
@@ -8,6 +10,33 @@ const dashboard = new Hono<Env>();
 dashboard.use("*", auth);
 
 dashboard.get("/dashboard", async (c) => {
+
+  // Bot durumlarını Telegram üzerinden güncelle
+  const bots = await getBots(c.env.DB);
+
+  for (const bot of bots as any[]) {
+
+    try {
+
+      await getMe(bot.token);
+
+      await updateBotStatus(
+        c.env.DB,
+        bot.id,
+        1
+      );
+
+    } catch {
+
+      await updateBotStatus(
+        c.env.DB,
+        bot.id,
+        0
+      );
+
+    }
+
+  }
 
   const stats = await getDashboardStats(c.env.DB);
 
@@ -236,6 +265,7 @@ Dashboard
 <h3>Online Bot</h3>
 <p>${stats.onlineBots}</p>
 </div>
+
 </div>
 
 <div class="table">
@@ -245,13 +275,9 @@ Dashboard
 <table>
 
 <tr>
-
 <th>Bot</th>
-
 <th>Username</th>
-
 <th>Durum</th>
-
 </tr>
 
 ${botRows}
@@ -267,15 +293,10 @@ ${botRows}
 <table>
 
 <tr>
-
 <th>ID</th>
-
 <th>Başarılı</th>
-
 <th>Başarısız</th>
-
 <th>Tarih</th>
-
 </tr>
 
 ${broadcastRows}
