@@ -202,6 +202,20 @@ border-radius:8px;
 name="message"
 rows="6"></textarea>
 
+<label>Fotoğraf URL</label>
+<input name="photo_url">
+
+<label>Video URL</label>
+<input name="video_url">
+
+<label>Doküman URL</label>
+<input name="document_url">
+
+<label>Alt Buton Yazısı</label>
+<input name="button_text_url">
+
+<label>Alt Buton Linki</label>
+<input name="button_url">
 <button>
 
 Kaydet
@@ -225,11 +239,11 @@ replyButtons.post("/reply-buttons/new", async (c) => {
     button_text: String(body.button_text || ""),
     response_type: String(body.response_type || "text"),
     message: String(body.message || ""),
-    photo_url: "",
-    video_url: "",
-    document_url: "",
-    button_text_url: "",
-    button_url: "",
+    photo_url: String(body.photo_url || ""),
+video_url: String(body.video_url || ""),
+document_url: String(body.document_url || ""),
+button_text_url: String(body.button_text_url || ""),
+button_url: String(body.button_url || ""),
     parse_mode: "HTML",
     reply_keyboard: "",
     sort_order: 0
@@ -320,6 +334,30 @@ value="${button.button_text}">
 <textarea
 name="message"
 rows="6">${button.message||""}</textarea>
+<label>Fotoğraf URL</label>
+<input
+name="photo_url"
+value="${button.photo_url || ""}">
+
+<label>Video URL</label>
+<input
+name="video_url"
+value="${button.video_url || ""}">
+
+<label>Doküman URL</label>
+<input
+name="document_url"
+value="${button.document_url || ""}">
+
+<label>Alt Buton Yazısı</label>
+<input
+name="button_text_url"
+value="${button.button_text_url || ""}">
+
+<label>Alt Buton Linki</label>
+<input
+name="button_url"
+value="${button.button_url || ""}">
 
 <button>
 💾 Kaydet
@@ -346,11 +384,11 @@ replyButtons.post("/reply-buttons/edit/:id", async (c) => {
       button_text: String(body.button_text || ""),
       response_type: String(body.response_type || "text"),
       message: String(body.message || ""),
-      photo_url: "",
-      video_url: "",
-      document_url: "",
-      button_text_url: "",
-      button_url: ""
+      photo_url: String(body.photo_url || ""),
+video_url: String(body.video_url || ""),
+document_url: String(body.document_url || ""),
+button_text_url: String(body.button_text_url || ""),
+button_url: String(body.button_url || "")
     }
   );
 
