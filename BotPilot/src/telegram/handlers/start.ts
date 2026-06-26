@@ -1,3 +1,4 @@
+import { getBotSettings } from "../../database/settings";
 import { sendMessage } from "../send";
 import {
   findTelegramUser,
@@ -29,10 +30,20 @@ export async function handleStart(
 
   }
 
-  await sendMessage(
-    token,
-    message.chat.id,
+  const settings: any = await getBotSettings(
+  db,
+  botId
+);
+
+if (!settings.is_enabled) {
+  return;
+}
+
+await sendMessage(
+  token,
+  message.chat.id,
+  settings.start_message ||
     "👋 BotPilot'a hoş geldiniz."
-  );
+);
 
 }
