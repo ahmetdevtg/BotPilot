@@ -34,16 +34,20 @@ password.get("/admin/password", async (c) => {
 body{
 background:#0f172a;
 color:white;
-font-family:Arial;
+font-family:Arial,sans-serif;
 padding:40px;
 }
 
 .card{
 background:#1e293b;
-padding:25px;
+padding:30px;
 border-radius:12px;
 max-width:550px;
 margin:auto;
+}
+
+h1{
+margin-bottom:25px;
 }
 
 input{
@@ -53,21 +57,30 @@ margin-top:12px;
 margin-bottom:18px;
 border:none;
 border-radius:8px;
+background:#334155;
+color:white;
 }
 
 button{
 width:100%;
 padding:12px;
+background:#2563eb;
 border:none;
 border-radius:8px;
-background:#2563eb;
 color:white;
-cursor:pointer;
 font-size:16px;
+cursor:pointer;
 }
 
 button:hover{
 background:#1d4ed8;
+}
+
+a{
+display:inline-block;
+margin-top:20px;
+color:#60a5fa;
+text-decoration:none;
 }
 
 </style>
@@ -97,16 +110,22 @@ required>
 <input
 type="password"
 name="newPassword2"
-placeholder="Yeni Şifre Tekrar"
+placeholder="Yeni Şifre (Tekrar)"
 required>
 
-<button>
+<button type="submit">
 
-Şifreyi Güncelle
+💾 Şifreyi Güncelle
 
 </button>
 
 </form>
+
+<a href="/admin">
+
+← Admin Yönetimine Dön
+
+</a>
 
 </div>
 
@@ -117,3 +136,63 @@ required>
 `);
 
 });
+
+password.post("/admin/password", async (c) => {
+
+  const body = await c.req.parseBody();
+
+  const oldPassword = String(body.oldPassword || "");
+  const newPassword = String(body.newPassword || "");
+  const newPassword2 = String(body.newPassword2 || "");
+
+  if (newPassword !== newPassword2) {
+    return c.html("<h2>❌ Yeni şifreler uyuşmuyor.</h2>");
+  }
+
+  const user: any = c.get("user");
+
+  const dbUser: any = await getUserById(
+    c.env.DB,
+    Number(user.id)
+  );
+
+  if (!dbUser) {
+    return c.html("<h2>❌ Kullanıcı bulunamadı.</h2>");
+  }
+
+  const ok = await verifyPassword(
+    oldPassword,
+    dbUser.password_hash
+  );
+
+  if (!ok) {
+    return c.html("<h2>❌ Mevcut şifre yanlış.</h2>");
+  }
+
+  const passwordHash = await hashPassword(
+    newPassword
+  );
+
+  await updateUserPassword(
+    c.env.DB,
+    Number(user.id),
+    passwordHash
+  );
+
+  return c.html(`
+
+<h2>✅ Şifreniz başarıyla değiştirildi.</h2>
+
+<br>
+
+<a href="/dashboard">
+
+Dashboard'a Dön
+
+</a>
+
+`);
+
+});
+
+export default password;
