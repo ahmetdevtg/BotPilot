@@ -1,7 +1,9 @@
 import { getBotSettings } from "../../database/settings";
 import {
+  import {
   sendMessage,
-  sendPhotoWithButton
+  sendPhotoWithButton,
+  sendVideoWithButton
 } from "../send";
 import {
   findTelegramUser,
@@ -59,6 +61,24 @@ if (
   );
 
   return;
+if (
+  settings.video &&
+  settings.button_text &&
+  settings.button_url
+) {
+
+  await sendVideoWithButton(
+    token,
+    message.chat.id,
+    settings.video,
+    settings.start_message || "",
+    settings.button_text,
+    settings.button_url
+  );
+
+  return;
+
+}
 
 }
 
