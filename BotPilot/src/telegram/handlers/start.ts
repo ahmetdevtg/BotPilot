@@ -94,3 +94,6 @@ export async function handleStart(
   settings.parse_mode || "HTML",
   settings.reply_keyboard || ""
 );
+return;
+
+  }
