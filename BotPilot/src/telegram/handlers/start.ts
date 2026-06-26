@@ -1,4 +1,4 @@
-import { getBotSettings } from "../../database/settings";
+import { getBotSettings } from "../../database/bot-settings";
 import {
   sendMessage,
   sendPhotoWithButton,
@@ -34,14 +34,8 @@ export async function handleStart(
 
   }
 
-  const settings: any = await getBotSettings(
-    db,
-    botId
-  );
+  const settings: any = await getBotSettings(db);
 
-  if (!settings.is_enabled) {
-    return;
-  }
 
   // Fotoğraf + Buton
   if (
