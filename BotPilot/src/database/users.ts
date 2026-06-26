@@ -76,3 +76,16 @@ export async function deleteUser(
     .bind(id)
     .run();
 }
+export async function getUserById(
+  db: D1Database,
+  id: number
+) {
+  return await db
+    .prepare(`
+      SELECT *
+      FROM users
+      WHERE id=?
+    `)
+    .bind(id)
+    .first();
+}
