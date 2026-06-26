@@ -185,10 +185,6 @@ font-weight:bold;
 Dashboard
 </h1>
 
-<h1 style="margin-bottom:25px;">
-Dashboard
-</h1>
-
 <div class="cards">
 
 <div class="card">
@@ -247,8 +243,6 @@ ${botRows}
 ${broadcastRows}
 
 </table>
-
-</div>
 
 </div>
 
