@@ -11,22 +11,16 @@ export async function handleReplyButton(
   token: string,
   message: any
 ) {
-
   const text = message.text || "";
 
-  const button: any = await getReplyButton(
-    db,
-    text
-  );
+  const button: any = await getReplyButton(db, text);
 
   if (!button) {
     return false;
   }
 
   switch (button.response_type) {
-
     case "photo":
-
       await sendPhotoWithButton(
         token,
         message.chat.id,
@@ -35,11 +29,9 @@ export async function handleReplyButton(
         button.button_text_url || "",
         button.button_url || ""
       );
-
       return true;
 
     case "video":
-
       await sendVideoWithButton(
         token,
         message.chat.id,
@@ -48,11 +40,9 @@ export async function handleReplyButton(
         button.button_text_url || "",
         button.button_url || ""
       );
-
       return true;
 
     case "document":
-
       await sendDocumentWithButton(
         token,
         message.chat.id,
@@ -61,19 +51,14 @@ export async function handleReplyButton(
         button.button_text_url || "",
         button.button_url || ""
       );
-
       return true;
 
     default:
-
       await sendMessage(
         token,
         message.chat.id,
         button.message || ""
       );
-
       return true;
-
   }
-
 }
