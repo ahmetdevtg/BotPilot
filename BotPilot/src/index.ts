@@ -23,6 +23,19 @@ app.route("/", broadcast);
 app.route("/", admin);
 app.route("/", password);
 
+// Çıkış Yap
+app.get("/logout", (c) => {
+
+  c.header(
+    "Set-Cookie",
+    "session=; Path=/; HttpOnly; Max-Age=0"
+  );
+
+  return c.redirect("/login");
+
+});
+
+// Ana Sayfa
 app.get("/", (c) => c.redirect("/login"));
 
 export default app;
