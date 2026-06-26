@@ -147,11 +147,13 @@ export async function sendBroadcast(
 
       success++;
 
-    } catch {
+    } catch (e) {
 
-      failed++;
+  console.log("Broadcast Error:", e);
 
-    }
+  failed++;
+
+}
 
   }
 
