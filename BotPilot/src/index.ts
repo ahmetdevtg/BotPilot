@@ -7,11 +7,13 @@ import type { Env } from "./types/env";
 import webhook from "./telegram/webhook";
 import broadcast from "./broadcast";
 import users from "./users";
+import settings from "./settings";
 
 const app = new Hono<Env>();
 
 app.route("/", login);
 app.route("/", dashboard);
+app.route("/", settings);
 app.route("/", bots);
 app.route("/", users);
 app.route("/", webhook);
