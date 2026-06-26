@@ -53,3 +53,46 @@ export async function deleteBot(
     .bind(id)
     .run();
 }
+export async function getBotById(
+  db: D1Database,
+  id: number
+) {
+  return await db
+    .prepare(`
+      SELECT *
+      FROM bots
+      WHERE id=?
+    `)
+    .bind(id)
+    .first();
+}
+
+export async function updateBot(
+  db: D1Database,
+  id: number,
+  name: string
+) {
+  return await db
+    .prepare(`
+      UPDATE bots
+      SET name=?
+      WHERE id=?
+    `)
+    .bind(name, id)
+    .run();
+}
+
+export async function updateBotStatus(
+  db: D1Database,
+  id: number,
+  status: number
+) {
+  return await db
+    .prepare(`
+      UPDATE bots
+      SET status=?
+      WHERE id=?
+    `)
+    .bind(status, id)
+    .run();
+}
