@@ -28,6 +28,21 @@ export async function auth(
     return c.redirect("/login");
   }
 
+  const user = await (c.env as any).DB
+    .prepare(`
+      SELECT *
+      FROM users
+      WHERE id=?
+    `)
+    .bind((session as any).user_id)
+    .first();
+
+  if (!user) {
+    return c.redirect("/login");
+  }
+
+  c.set("user", user);
+
   await next();
 
 }
