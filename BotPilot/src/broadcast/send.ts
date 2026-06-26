@@ -1,10 +1,23 @@
-import { sendMessage } from "../telegram/send";
+import {
+  sendText,
+  sendPhoto,
+  sendVideo,
+  sendDocument
+} from "../telegram/api";
+
+export interface BroadcastOptions {
+  message: string;
+  photo?: string;
+  video?: string;
+  document?: string;
+  parseMode?: string;
+}
 
 export async function sendBroadcast(
   db: D1Database,
   token: string,
   botId: number,
-  message: string
+  options: BroadcastOptions
 ) {
 
   const { results } = await db
@@ -23,17 +36,48 @@ export async function sendBroadcast(
 
     try {
 
-      const res: any = await sendMessage(
-        token,
-        user.telegram_id,
-        message
-      );
+      if (options.photo) {
 
-      if (res.ok) {
-        success++;
+        await sendPhoto(
+          token,
+          user.telegram_id,
+          options.photo,
+          options.message,
+          options.parseMode || "HTML"
+        );
+
+      } else if (options.video) {
+
+        await sendVideo(
+          token,
+          user.telegram_id,
+          options.video,
+          options.message,
+          options.parseMode || "HTML"
+        );
+
+      } else if (options.document) {
+
+        await sendDocument(
+          token,
+          user.telegram_id,
+          options.document,
+          options.message,
+          options.parseMode || "HTML"
+        );
+
       } else {
-        failed++;
+
+        await sendText(
+          token,
+          user.telegram_id,
+          options.message,
+          options.parseMode || "HTML"
+        );
+
       }
+
+      success++;
 
     } catch {
 
@@ -52,7 +96,7 @@ export async function sendBroadcast(
 
 export async function sendBroadcastAllBots(
   db: D1Database,
-  message: string
+  options: BroadcastOptions
 ) {
 
   const { results } = await db
@@ -72,7 +116,7 @@ export async function sendBroadcastAllBots(
       db,
       bot.token,
       bot.telegram_id,
-      message
+      options
     );
 
     totalSuccess += result.success;
@@ -81,11 +125,8 @@ export async function sendBroadcastAllBots(
   }
 
   return {
-
     success: totalSuccess,
-
     failed: totalFailed
-
   };
 
 }
