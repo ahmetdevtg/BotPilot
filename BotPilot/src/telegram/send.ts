@@ -73,14 +73,16 @@ if (keyboard && keyboard.trim() !== "") {
         photo,
         caption,
         parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [[
-            {
-              text: buttonText,
-              url: buttonUrl
-            }
-          ]]
-        }
+    reply_markup: {
+  inline_keyboard: [[
+    {
+      text: buttonText,
+      url: buttonUrl
+    }
+  ]],
+  keyboard: replyKeyboard?.keyboard,
+  resize_keyboard: true
+}
       })
     }
   );
