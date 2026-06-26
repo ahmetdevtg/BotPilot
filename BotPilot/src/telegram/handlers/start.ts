@@ -88,9 +88,9 @@ export async function handleStart(
 
   // Normal Mesaj
   await sendMessage(
-    token,
-    message.chat.id,
-    settings.start_message || "👋 BotPilot'a hoş geldiniz."
-  );
-
-}
+  token,
+  message.chat.id,
+  settings.start_message || "👋 BotPilot'a hoş geldiniz.",
+  settings.parse_mode || "HTML",
+  settings.reply_keyboard || ""
+);
