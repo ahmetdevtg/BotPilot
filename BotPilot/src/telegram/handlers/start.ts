@@ -26,19 +26,16 @@ export async function handleStart(
   );
 
   if (!exists) {
-
     await createTelegramUser(
       db,
       botId,
       user
     );
-
   }
 
   const settings: any = await getBotSettings(db);
 
-
-    // Fotoğraf
+  // FOTOĞRAF
   if (settings.photo_url) {
 
     await sendPhotoWithButton(
@@ -50,11 +47,21 @@ export async function handleStart(
       settings.button_url || ""
     );
 
+    if (settings.reply_keyboard) {
+      await sendMessage(
+        token,
+        message.chat.id,
+        "‎",
+        settings.parse_mode || "HTML",
+        settings.reply_keyboard
+      );
+    }
+
     return;
 
   }
 
-  // Video
+  // VİDEO
   if (settings.video_url) {
 
     await sendVideoWithButton(
@@ -66,11 +73,21 @@ export async function handleStart(
       settings.button_url || ""
     );
 
+    if (settings.reply_keyboard) {
+      await sendMessage(
+        token,
+        message.chat.id,
+        "‎",
+        settings.parse_mode || "HTML",
+        settings.reply_keyboard
+      );
+    }
+
     return;
 
   }
 
-  // Doküman
+  // DOKÜMAN
   if (settings.document_url) {
 
     await sendDocumentWithButton(
@@ -82,18 +99,27 @@ export async function handleStart(
       settings.button_url || ""
     );
 
+    if (settings.reply_keyboard) {
+      await sendMessage(
+        token,
+        message.chat.id,
+        "‎",
+        settings.parse_mode || "HTML",
+        settings.reply_keyboard
+      );
+    }
+
     return;
 
   }
 
-  // Normal Mesaj
+  // NORMAL MESAJ
   await sendMessage(
-  token,
-  message.chat.id,
-  settings.start_message || "👋 BotPilot'a hoş geldiniz.",
-  settings.parse_mode || "HTML",
-  settings.reply_keyboard || ""
-);
-return;
+    token,
+    message.chat.id,
+    settings.start_message || "👋 BotPilot'a hoş geldiniz.",
+    settings.parse_mode || "HTML",
+    settings.reply_keyboard || ""
+  );
 
-  }
+}
