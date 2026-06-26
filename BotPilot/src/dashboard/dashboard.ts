@@ -236,3 +236,62 @@ Dashboard
 <h3>Online Bot</h3>
 <p>${stats.onlineBots}</p>
 </div>
+</div>
+
+<div class="table">
+
+<h2>🤖 Son Eklenen Botlar</h2>
+
+<table>
+
+<tr>
+
+<th>Bot</th>
+
+<th>Username</th>
+
+<th>Durum</th>
+
+</tr>
+
+${botRows}
+
+</table>
+
+</div>
+
+<div class="table">
+
+<h2>📢 Son Broadcastlar</h2>
+
+<table>
+
+<tr>
+
+<th>ID</th>
+
+<th>Başarılı</th>
+
+<th>Başarısız</th>
+
+<th>Tarih</th>
+
+</tr>
+
+${broadcastRows}
+
+</table>
+
+</div>
+
+</div>
+
+</body>
+
+</html>
+
+`);
+
+});
+
+export default dashboard;
