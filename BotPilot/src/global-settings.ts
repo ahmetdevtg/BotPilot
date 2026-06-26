@@ -81,6 +81,18 @@ border-radius:8px;
 
 <body>
 
+<form method="POST" action="/global-settings">
+
+... tüm inputlar ...
+
+<button>
+💾 Kaydet
+</button>
+
+</form>
+
+</body>
+
 <h1>
 
 ⚙ Genel Bot Ayarları
@@ -171,4 +183,25 @@ placeholder="Kısa Açıklama">${settings?.short_description || ""}</textarea>
 
 });
 
+globalSettings.post("/global-settings", async (c) => {
+
+  const body = await c.req.parseBody();
+
+  await updateBotSettings(c.env.DB, {
+    bot_name: String(body.bot_name || ""),
+    description: String(body.description || ""),
+    short_description: String(body.short_description || ""),
+    start_message: String(body.start_message || ""),
+    photo_url: String(body.photo_url || ""),
+    video_url: String(body.video_url || ""),
+    document_url: String(body.document_url || ""),
+    button_text: String(body.button_text || ""),
+    button_url: String(body.button_url || ""),
+    reply_keyboard: String(body.reply_keyboard || ""),
+    parse_mode: "HTML"
+  });
+
+  return c.redirect("/global-settings");
+
+});
 export default globalSettings;
