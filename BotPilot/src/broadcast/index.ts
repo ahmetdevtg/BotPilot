@@ -6,7 +6,10 @@ import {
   finishBroadcast,
   getBroadcasts
 } from "../database/broadcast";
-import { sendBroadcast } from "./send";
+import {
+  sendBroadcast,
+  sendBroadcastAllBots
+} from "./send";
 
 import type { Env } from "../types/env";
 
@@ -14,21 +17,24 @@ const broadcast = new Hono<Env>();
 
 broadcast.use("*", auth);
 
-// Broadcast Panel
 broadcast.get("/broadcast", async (c) => {
 
   const bots = await getBots(c.env.DB);
   const history = await getBroadcasts(c.env.DB);
 
-  let botOptions = "";
+  let options = `
+<option value="all">
+🌍 Tüm Botlar
+</option>
+`;
 
   for (const bot of bots as any[]) {
 
-    botOptions += `
-      <option value="${bot.telegram_id}">
-        ${bot.name} (@${bot.username})
-      </option>
-    `;
+    options += `
+<option value="${bot.telegram_id}">
+${bot.name} (@${bot.username})
+</option>
+`;
 
   }
 
@@ -37,6 +43,7 @@ broadcast.get("/broadcast", async (c) => {
   for (const item of history as any[]) {
 
     rows += `
+
 <tr>
 
 <td>${item.id}</td>
@@ -50,23 +57,30 @@ broadcast.get("/broadcast", async (c) => {
 <td>${item.created_at}</td>
 
 </tr>
+
 `;
 
   }
 
-  if (rows === "") {
+  if(rows===""){
 
-    rows = `
+rows=`
+
 <tr>
-<td colspan="5" style="text-align:center;">
-Henüz yayın yapılmadı.
+
+<td colspan="5">
+
+Henüz yayın yok.
+
 </td>
+
 </tr>
+
 `;
 
-  }
+}
 
-  return c.html(`
+return c.html(`
 
 <!DOCTYPE html>
 
@@ -80,72 +94,108 @@ Henüz yayın yapılmadı.
 
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
-}
-
 body{
+
 background:#0f172a;
+
 color:white;
+
+font-family:Arial,sans-serif;
+
 padding:40px;
+
 }
 
 .card{
+
 background:#1e293b;
+
 padding:25px;
+
 border-radius:12px;
+
 margin-bottom:25px;
+
 }
 
 select,
-textarea{
+
+textarea,
+
+input{
+
 width:100%;
-padding:14px;
+
+padding:12px;
+
 border:none;
+
 border-radius:8px;
-margin-top:15px;
-margin-bottom:15px;
+
+margin-top:12px;
+
+margin-bottom:18px;
+
 }
 
 textarea{
+
 height:220px;
+
 resize:vertical;
+
 }
 
 button{
+
 padding:12px 22px;
+
 background:#2563eb;
+
 border:none;
+
 color:white;
+
 border-radius:8px;
+
 cursor:pointer;
+
 }
 
 button:hover{
+
 background:#1d4ed8;
+
 }
 
 table{
+
 width:100%;
+
 border-collapse:collapse;
+
 margin-top:20px;
+
 }
 
 th,td{
+
 padding:14px;
+
 border:1px solid #334155;
-text-align:left;
+
 }
 
 th{
+
 background:#111827;
+
 }
 
 tr:nth-child(even){
+
 background:#172033;
+
 }
 
 </style>
@@ -154,29 +204,37 @@ background:#172033;
 
 <body>
 
-<h1 style="margin-bottom:25px;">
+<h1>
+
 📢 Broadcast
+
 </h1>
 
 <div class="card">
 
 <form method="POST" action="/broadcast/send">
 
+<label>
+
+Bot
+
+</label>
+
 <select
-name="botId"
-required>
+name="botId">
 
-<option value="">
-Bot Seçiniz
-</option>
-
-${botOptions}
+${options}
 
 </select>
 
+<label>
+
+Mesaj
+
+</label>
+
 <textarea
 name="message"
-placeholder="Göndermek istediğiniz mesaj..."
 required></textarea>
 
 <button>
@@ -191,8 +249,10 @@ required></textarea>
 
 <div class="card">
 
-<h2 style="margin-bottom:15px;">
+<h2>
+
 Yayın Geçmişi
+
 </h2>
 
 <table>
@@ -224,56 +284,31 @@ ${rows}
 `);
 
 });
-// Yayın Başlat
 broadcast.post("/broadcast/send", async (c) => {
 
   const body = await c.req.parseBody();
 
-  const botId = Number(body.botId);
+  const botId = String(body.botId || "");
   const message = String(body.message || "");
 
-  const bot: any = await c.env.DB
-    .prepare(`
-      SELECT *
-      FROM bots
-      WHERE telegram_id=?
-    `)
-    .bind(botId)
-    .first();
-
-  if (!bot) {
+  if (message.trim() === "") {
 
     return c.html(`
-      <h2>Bot bulunamadı.</h2>
+      <h2>Mesaj boş olamaz.</h2>
       <a href="/broadcast">Geri Dön</a>
     `);
 
   }
 
-  const result = await createBroadcast(
-    c.env.DB,
-    botId,
-    message
-  );
+  // TÜM BOTLAR
+  if (botId === "all") {
 
-  const broadcastId =
-    Number((result as any).meta?.last_row_id);
+    const stats = await sendBroadcastAllBots(
+      c.env.DB,
+      message
+    );
 
-  const stats = await sendBroadcast(
-    c.env.DB,
-    bot.token,
-    botId,
-    message
-  );
-
-  await finishBroadcast(
-    c.env.DB,
-    broadcastId,
-    stats.success,
-    stats.failed
-  );
-
-  return c.html(`
+    return c.html(`
 
 <!DOCTYPE html>
 
@@ -291,9 +326,9 @@ body{
 
 background:#0f172a;
 
-font-family:Arial;
-
 color:white;
+
+font-family:Arial;
 
 padding:40px;
 
@@ -311,21 +346,13 @@ max-width:700px;
 
 }
 
-.success{
+.ok{
+
+font-size:24px;
 
 color:#22c55e;
 
-font-size:22px;
-
 margin-bottom:20px;
-
-}
-
-.info{
-
-margin-top:12px;
-
-font-size:18px;
 
 }
 
@@ -333,9 +360,9 @@ a{
 
 display:inline-block;
 
-margin-top:25px;
+margin-top:20px;
 
-padding:12px 20px;
+padding:12px 22px;
 
 background:#2563eb;
 
@@ -355,27 +382,15 @@ border-radius:8px;
 
 <div class="card">
 
-<div class="success">
+<div class="ok">
 
-✅ Broadcast tamamlandı
-
-</div>
-
-<div class="info">
-
-Başarılı:
-
-<b>${stats.success}</b>
+✅ Yayın tamamlandı
 
 </div>
 
-<div class="info">
+<p>Başarılı: <b>${stats.success}</b></p>
 
-Başarısız:
-
-<b>${stats.failed}</b>
-
-</div>
+<p>Başarısız: <b>${stats.failed}</b></p>
 
 <a href="/broadcast">
 
@@ -388,6 +403,68 @@ Başarısız:
 </body>
 
 </html>
+
+`);
+
+  }
+
+  // TEK BOT
+  const bot: any = await c.env.DB
+    .prepare(`
+      SELECT *
+      FROM bots
+      WHERE telegram_id=?
+    `)
+    .bind(Number(botId))
+    .first();
+
+  if (!bot) {
+
+    return c.html(`
+      <h2>Bot bulunamadı.</h2>
+      <a href="/broadcast">Geri Dön</a>
+    `);
+
+  }
+
+  const result = await createBroadcast(
+    c.env.DB,
+    Number(botId),
+    message
+  );
+
+  const broadcastId =
+    Number((result as any).meta?.last_row_id);
+
+  const stats = await sendBroadcast(
+    c.env.DB,
+    bot.token,
+    Number(botId),
+    message
+  );
+
+  await finishBroadcast(
+    c.env.DB,
+    broadcastId,
+    stats.success,
+    stats.failed
+  );
+
+  return c.html(`
+
+<h2>✅ Broadcast tamamlandı.</h2>
+
+<p>Başarılı: ${stats.success}</p>
+
+<p>Başarısız: ${stats.failed}</p>
+
+<br>
+
+<a href="/broadcast">
+
+← Geri Dön
+
+</a>
 
 `);
 
