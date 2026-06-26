@@ -43,3 +43,13 @@ export async function createBot(
     )
     .run();
 }
+
+export async function deleteBot(
+  db: D1Database,
+  id: number
+) {
+  return await db
+    .prepare("DELETE FROM bots WHERE id=?")
+    .bind(id)
+    .run();
+}
