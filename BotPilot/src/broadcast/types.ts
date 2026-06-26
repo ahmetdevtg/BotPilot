@@ -1,12 +1,13 @@
-export interface BroadcastButton {
-  text: string;
-  url: string;
+export interface BroadcastResult {
+  success: number;
+  failed: number;
 }
 
-export interface BroadcastMessage {
-  text: string;
-  photo?: string;
-  video?: string;
-  document?: string;
-  buttons?: BroadcastButton[];
+export interface BroadcastRecord {
+  id: number;
+  bot_id: number;
+  message: string;
+  success_count: number;
+  failed_count: number;
+  created_at: string;
 }
