@@ -357,6 +357,12 @@ broadcast.post("/broadcast/send", async (c) => {
 
   const botId = String(body.botId || "");
   const message = String(body.message || "");
+const photo = String(body.photo || "");
+const video = String(body.video || "");
+const document = String(body.document || "");
+const buttonText = String(body.buttonText || "");
+const buttonUrl = String(body.buttonUrl || "");
+const parseMode = String(body.parseMode || "HTML");
 
   if (message.trim() === "") {
 
