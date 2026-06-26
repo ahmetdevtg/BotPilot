@@ -89,3 +89,20 @@ export async function getUserById(
     .bind(id)
     .first();
 }
+export async function updateUserPassword(
+  db: D1Database,
+  id: number,
+  passwordHash: string
+) {
+  return await db
+    .prepare(`
+      UPDATE users
+      SET password_hash=?
+      WHERE id=?
+    `)
+    .bind(
+      passwordHash,
+      id
+    )
+    .run();
+}
