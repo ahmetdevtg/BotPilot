@@ -11,6 +11,33 @@ export interface TelegramBotInfo {
   };
 }
 
+async function telegramRequest(
+  token: string,
+  method: string,
+  body: any
+) {
+
+  const res = await fetch(
+    `https://api.telegram.org/bot${token}/${method}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    }
+  );
+
+  const json = await res.json() as any;
+
+  if (!json.ok) {
+    throw new Error(json.description || "Telegram API Hatası");
+  }
+
+  return json;
+
+}
+
 export async function getMe(
   token: string
 ): Promise<TelegramBotInfo> {
@@ -26,28 +53,98 @@ export async function getMe(
   return await res.json() as TelegramBotInfo;
 
 }
+
 export async function setWebhook(
   token: string,
   url: string
 ) {
 
-  const res = await fetch(
-    `https://api.telegram.org/bot${token}/setWebhook`,
+  return telegramRequest(
+    token,
+    "setWebhook",
+    { url }
+  );
+
+}
+
+export async function sendText(
+  token: string,
+  chatId: number,
+  text: string,
+  parseMode = "HTML"
+) {
+
+  return telegramRequest(
+    token,
+    "sendMessage",
     {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        url
-      })
+      chat_id: chatId,
+      text,
+      parse_mode: parseMode
     }
   );
 
-  if (!res.ok) {
-    throw new Error("Webhook kurulamadı.");
-  }
+}
 
-  return await res.json();
+export async function sendPhoto(
+  token: string,
+  chatId: number,
+  photo: string,
+  caption = "",
+  parseMode = "HTML"
+) {
+
+  return telegramRequest(
+    token,
+    "sendPhoto",
+    {
+      chat_id: chatId,
+      photo,
+      caption,
+      parse_mode: parseMode
+    }
+  );
+
+}
+
+export async function sendVideo(
+  token: string,
+  chatId: number,
+  video: string,
+  caption = "",
+  parseMode = "HTML"
+) {
+
+  return telegramRequest(
+    token,
+    "sendVideo",
+    {
+      chat_id: chatId,
+      video,
+      caption,
+      parse_mode: parseMode
+    }
+  );
+
+}
+
+export async function sendDocument(
+  token: string,
+  chatId: number,
+  document: string,
+  caption = "",
+  parseMode = "HTML"
+) {
+
+  return telegramRequest(
+    token,
+    "sendDocument",
+    {
+      chat_id: chatId,
+      document,
+      caption,
+      parse_mode: parseMode
+    }
+  );
 
 }
