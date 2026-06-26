@@ -1,71 +1,51 @@
-import type { BroadcastMessage } from "./types";
+import { sendMessage } from "../telegram/send";
 
 export async function sendBroadcast(
+  db: D1Database,
   token: string,
-  chatId: number,
-  message: BroadcastMessage
+  botId: number,
+  message: string
 ) {
 
-  let method = "sendMessage";
+  const { results } = await db
+    .prepare(`
+      SELECT telegram_id
+      FROM telegram_users
+      WHERE bot_id=?
+    `)
+    .bind(botId)
+    .all();
 
-  const body: any = {
-    chat_id: chatId
-  };
+  let success = 0;
+  let failed = 0;
 
-  if (message.photo) {
+  for (const user of results as any[]) {
 
-    method = "sendPhoto";
+    try {
 
-    body.photo = message.photo;
+      const res: any = await sendMessage(
+        token,
+        user.telegram_id,
+        message
+      );
 
-    body.caption = message.text;
+      if (res.ok) {
+        success++;
+      } else {
+        failed++;
+      }
 
-  } else if (message.video) {
+    } catch {
 
-    method = "sendVideo";
+      failed++;
 
-    body.video = message.video;
-
-    body.caption = message.text;
-
-  } else if (message.document) {
-
-    method = "sendDocument";
-
-    body.document = message.document;
-
-    body.caption = message.text;
-
-  } else {
-
-    body.text = message.text;
-
-  }
-
-  if (message.buttons && message.buttons.length > 0) {
-
-    body.reply_markup = {
-      inline_keyboard: [
-        message.buttons.map(btn => ({
-          text: btn.text,
-          url: btn.url
-        }))
-      ]
-    };
-
-  }
-
-  const response = await fetch(
-    `https://api.telegram.org/bot${token}/${method}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(body)
     }
-  );
 
-  return await response.json();
+  }
+
+  return {
+    success,
+    failed
+  };
 
 }
