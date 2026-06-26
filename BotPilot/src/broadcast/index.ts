@@ -209,6 +209,25 @@ background:#172033;
 📢 Broadcast
 
 </h1>
+<div style="margin-bottom:20px;">
+
+<a
+href="/dashboard"
+style="
+display:inline-block;
+padding:10px 18px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+font-weight:bold;
+">
+
+🏠 Anasayfaya Dön
+
+</a>
+
+</div>
 
 <div class="card">
 
