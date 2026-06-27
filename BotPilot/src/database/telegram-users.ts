@@ -4,9 +4,17 @@ export async function getTelegramUsers(
 
   const { results } = await db
     .prepare(`
-      SELECT *
+      SELECT
+        telegram_id,
+        username,
+        first_name,
+        last_name,
+        language_code,
+        is_premium,
+        is_bot
       FROM telegram_users
-      ORDER BY id DESC
+      GROUP BY telegram_id
+      ORDER BY telegram_id DESC
     `)
     .all();
 
@@ -39,7 +47,7 @@ export async function countTelegramUsers(
 
   const result = await db
     .prepare(`
-      SELECT COUNT(*) AS total
+      SELECT COUNT(DISTINCT telegram_id) AS total
       FROM telegram_users
     `)
     .first();
@@ -103,6 +111,7 @@ export async function createTelegramUser(
 
 export async function deleteTelegramUser(
   db: D1Database,
+  botId: number,
   telegramId: number
 ) {
 
@@ -110,9 +119,13 @@ export async function deleteTelegramUser(
     .prepare(`
       DELETE
       FROM telegram_users
-      WHERE telegram_id=?
+      WHERE bot_id=?
+      AND telegram_id=?
     `)
-    .bind(telegramId)
+    .bind(
+      botId,
+      telegramId
+    )
     .run();
 
 }
