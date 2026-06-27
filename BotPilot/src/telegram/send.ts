@@ -48,6 +48,25 @@ export async function sendPhotoWithButton(
   keyboard?: string
 ) {
 
+  const replyMarkup =
+    keyboard && keyboard.trim() !== ""
+      ? {
+          keyboard: keyboard
+            .split("\n")
+            .map(x => [{ text: x.trim() }]),
+          resize_keyboard: true
+        }
+      : buttonText && buttonUrl
+      ? {
+          inline_keyboard: [[
+            {
+              text: buttonText,
+              url: buttonUrl
+            }
+          ]]
+        }
+      : undefined;
+
   const res = await fetch(
     `https://api.telegram.org/bot${token}/sendPhoto`,
     {
@@ -55,27 +74,13 @@ export async function sendPhotoWithButton(
       headers: {
         "Content-Type": "application/json"
       },
- body: JSON.stringify({
-  chat_id: chatId,
-  photo,
-  caption,
-  parse_mode: parseMode === "None" ? undefined : parseMode,
-  reply_markup: keyboard && keyboard.trim() !== ""
-    ? {
-        keyboard: keyboard
-          .split("\n")
-          .map(x => [{ text: x.trim() }]),
-        resize_keyboard: true
-      }
-    : {
-        inline_keyboard: [[
-          {
-            text: buttonText,
-            url: buttonUrl
-          }
-        ]]
-      }
-})
+      body: JSON.stringify({
+        chat_id: chatId,
+        photo,
+        caption,
+        parse_mode: parseMode === "None" ? undefined : parseMode,
+        reply_markup: replyMarkup
+      })
     }
   );
 
@@ -89,8 +94,29 @@ export async function sendVideoWithButton(
   video: string,
   caption: string,
   buttonText: string,
-  buttonUrl: string
+  buttonUrl: string,
+  parseMode: string = "HTML",
+  keyboard?: string
 ) {
+
+  const replyMarkup =
+    keyboard && keyboard.trim() !== ""
+      ? {
+          keyboard: keyboard
+            .split("\n")
+            .map(x => [{ text: x.trim() }]),
+          resize_keyboard: true
+        }
+      : buttonText && buttonUrl
+      ? {
+          inline_keyboard: [[
+            {
+              text: buttonText,
+              url: buttonUrl
+            }
+          ]]
+        }
+      : undefined;
 
   const res = await fetch(
     `https://api.telegram.org/bot${token}/sendVideo`,
@@ -103,15 +129,8 @@ export async function sendVideoWithButton(
         chat_id: chatId,
         video,
         caption,
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [[
-            {
-              text: buttonText,
-              url: buttonUrl
-            }
-          ]]
-        }
+        parse_mode: parseMode === "None" ? undefined : parseMode,
+        reply_markup: replyMarkup
       })
     }
   );
@@ -126,8 +145,29 @@ export async function sendDocumentWithButton(
   document: string,
   caption: string,
   buttonText: string,
-  buttonUrl: string
+  buttonUrl: string,
+  parseMode: string = "HTML",
+  keyboard?: string
 ) {
+
+  const replyMarkup =
+    keyboard && keyboard.trim() !== ""
+      ? {
+          keyboard: keyboard
+            .split("\n")
+            .map(x => [{ text: x.trim() }]),
+          resize_keyboard: true
+        }
+      : buttonText && buttonUrl
+      ? {
+          inline_keyboard: [[
+            {
+              text: buttonText,
+              url: buttonUrl
+            }
+          ]]
+        }
+      : undefined;
 
   const res = await fetch(
     `https://api.telegram.org/bot${token}/sendDocument`,
@@ -140,15 +180,8 @@ export async function sendDocumentWithButton(
         chat_id: chatId,
         document,
         caption,
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [[
-            {
-              text: buttonText,
-              url: buttonUrl
-            }
-          ]]
-        }
+        parse_mode: parseMode === "None" ? undefined : parseMode,
+        reply_markup: replyMarkup
       })
     }
   );
