@@ -31,7 +31,12 @@ bots.get("/bots", async (c) => {
 <td>${bot.id}</td>
 <td>${bot.name}</td>
 <td>@${bot.username}</td>
-<td>${bot.status ? "🟢 Online" : "🔴 Offline"}</td>
+<<td>${bot.status ? "🟢 Online" : "🔴 Offline"}</td>
+
+<td>${bot.users ?? 0}</td>
+
+<td>${bot.broadcasts ?? 0}</td>
+
 <td>
 
 <a
@@ -75,7 +80,7 @@ type="submit">
 
     rows = `
 <tr>
-<td colspan="5" style="text-align:center;">
+<td colspan="7" style="text-align:center;">
 Henüz bot eklenmedi.
 </td>
 </tr>
@@ -208,15 +213,12 @@ margin-left:10px;
 <tr>
 
 <th>ID</th>
-
-<th>Bot Adı</th>
-
-<th>Username</th>
-
-<th>Durum</th>
-
-<th>İşlemler</th>
-
+<th>🤖 Bot Adı</th>
+<th>👤 Username</th>
+<th>🟢 Durum</th>
+<th>👥 Kullanıcı</th>
+<th>📢 Broadcast</th>
+<th>⚙️ İşlemler</th>
 </tr>
 
 ${rows}
