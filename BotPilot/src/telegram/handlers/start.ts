@@ -1,5 +1,6 @@
 import { getBotSettings } from "../../database/settings";
 import { getEnabledReplyButtons } from "../../database/reply-buttons";
+
 import {
   sendMessage,
   sendPhotoWithButton,
@@ -18,6 +19,7 @@ export async function handleStart(
   botId: number,
   message: any
 ) {
+
   try {
 
     const user = message.from;
@@ -29,50 +31,20 @@ export async function handleStart(
     );
 
     if (!exists) {
+
       await createTelegramUser(
         db,
         botId,
         user
       );
+
     }
 
-    const settings: any = await getBotSettings(
-      db,
-      botId
-    );
-console.log("BOT ID");
-console.log(botId);
-
-console.log("SETTINGS");
-console.log(JSON.stringify(settings));
-
-console.log("START MESSAGE");
-console.log(settings.start_message);
-console.log("SENDING:", settings.start_message);
-
-return await sendMessage(
-  token,
-  message.chat.id,
-  settings.start_message,
-  "HTML"
-);
-return;
-
-    const buttons: any[] =
-      (await getEnabledReplyButtons(db)) || [];
-
-    const keyboard = buttons
-      .map((x: any) => x.button_text)
-      .join("\n");
-
-    console.log("SETTINGS");
-    console.log(JSON.stringify(settings));
-
-    console.log("BUTTONS");
-    console.log(JSON.stringify(buttons));
-
-    console.log("KEYBOARD");
-    console.log(keyboard);
+    const settings: any =
+      await getBotSettings(
+        db,
+        botId
+      );
 
     if (!settings) {
 
@@ -86,9 +58,16 @@ return;
 
     }
 
+    const buttons: any[] =
+      await getEnabledReplyButtons(db) || [];
+
+    const keyboard =
+      buttons
+        .map((x: any) => x.button_text)
+        .join("\n");
     // FOTOĞRAF
 
-    if (settings.photo) {
+    if (settings.photo && settings.photo.trim() !== "") {
 
       await sendPhotoWithButton(
         token,
@@ -107,7 +86,7 @@ return;
 
     // VİDEO
 
-    if (settings.video) {
+    if (settings.video && settings.video.trim() !== "") {
 
       await sendVideoWithButton(
         token,
@@ -126,7 +105,10 @@ return;
 
     // DOKÜMAN
 
-    if (settings.document_url) {
+    if (
+      settings.document_url &&
+      settings.document_url.trim() !== ""
+    ) {
 
       await sendDocumentWithButton(
         token,
@@ -142,23 +124,34 @@ return;
       return;
 
     }
+    // NORMAL MESAJ
 
-   await sendMessage(
-  token,
-  message.chat.id,
-  "🚨 DENEME-999999 🚨",
-  "HTML",
-  keyboard
-);
+    await sendMessage(
+      token,
+      message.chat.id,
+      settings.start_message || "👋 Hoş geldiniz.",
+      settings.parse_mode || "HTML",
+      keyboard
+    );
 
-return;
+    return;
 
   } catch (e: any) {
 
-    console.error(
-      "HANDLE START ERROR:",
-      e
-    );
+    console.error("HANDLE START ERROR");
+    console.error(e);
+    console.error(e?.stack);
+
+    try {
+
+      await sendMessage(
+        token,
+        message.chat.id,
+        "❌ Start mesajı gönderilirken hata oluştu."
+      );
+
+    } catch {}
 
   }
+
 }
