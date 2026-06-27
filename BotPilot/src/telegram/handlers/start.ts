@@ -40,6 +40,14 @@ export async function handleStart(
       db,
       botId
     );
+console.log("BOT ID");
+console.log(botId);
+
+console.log("SETTINGS");
+console.log(JSON.stringify(settings));
+
+console.log("START MESSAGE");
+console.log(settings.start_message);
 console.log("SENDING:", settings.start_message);
 
 return await sendMessage(
