@@ -119,3 +119,17 @@ export async function updateReplyButton(
     )
     .run();
 }
+export async function getEnabledReplyButtons(
+  db: D1Database
+) {
+  const result = await db
+    .prepare(`
+      SELECT *
+      FROM reply_buttons
+      WHERE is_enabled = 1
+      ORDER BY sort_order ASC, id ASC
+    `)
+    .all();
+
+  return result.results;
+}
