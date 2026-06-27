@@ -499,6 +499,130 @@ placeholder="123456:AAxxxxxxxxxxxxxxxx
 `);
 
 });
+bots.get("/bots/update-all", async (c) => {
+
+  return c.html(`
+
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Tüm Bot Bilgilerini Güncelle</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial,sans-serif;
+padding:40px;
+}
+
+.container{
+max-width:800px;
+margin:auto;
+}
+
+.card{
+background:#1e293b;
+padding:25px;
+border-radius:12px;
+}
+
+.back{
+display:inline-block;
+margin-bottom:20px;
+padding:12px 20px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+}
+
+input,textarea{
+
+width:100%;
+padding:12px;
+margin-top:10px;
+margin-bottom:20px;
+border:none;
+border-radius:8px;
+
+}
+
+button{
+
+padding:14px 24px;
+background:#16a34a;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-size:16px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<a class="back" href="/bots">
+
+⬅ Botlara Dön
+
+</a>
+
+<div class="card">
+
+<h1>🤖 Tüm Bot Bilgilerini Güncelle</h1>
+
+<form method="POST" action="/bots/update-all">
+
+<label>Bot Adı</label>
+
+<input
+name="name"
+required>
+
+<label>Açıklama</label>
+
+<textarea
+name="description"
+rows="5"></textarea>
+
+<label>Kısa Açıklama</label>
+
+<textarea
+name="shortDescription"
+rows="3"></textarea>
+
+<button type="submit">
+
+🚀 Tüm Botları Güncelle
+
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+</body>
+
+</html>
+
+`);
+
+});
 bots.post("/bots/add", async (c) => {
 
   const body = await c.req.parseBody();
@@ -708,6 +832,127 @@ bots.post("/bots/edit/:id", async (c) => {
 `);
 
   }
+
+});
+bots.post("/bots/update-all", async (c) => {
+
+  const body = await c.req.parseBody();
+
+  const name = String(body.name || "");
+  const description = String(body.description || "");
+  const shortDescription = String(body.shortDescription || "");
+
+  const botlar = await getBots(c.env.DB) as any[];
+
+  let success = 0;
+  let failed = 0;
+
+  for (const bot of botlar) {
+
+    try {
+
+      await setMyName(
+        bot.token,
+        name
+      );
+
+      await setMyDescription(
+        bot.token,
+        description
+      );
+
+      await setMyShortDescription(
+        bot.token,
+        shortDescription
+      );
+
+      await updateBotProfile(
+        c.env.DB,
+        bot.id,
+        name,
+        description,
+        shortDescription
+      );
+
+      success++;
+
+    } catch (e) {
+
+      console.error(e);
+
+      failed++;
+
+    }
+
+  }
+
+  return c.html(`
+
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>İşlem Tamamlandı</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial,sans-serif;
+padding:40px;
+}
+
+.card{
+max-width:600px;
+margin:auto;
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+text-align:center;
+}
+
+a{
+display:inline-block;
+margin-top:20px;
+padding:12px 20px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>✅ Güncelleme Tamamlandı</h1>
+
+<p>Başarılı: ${success}</p>
+
+<p>Başarısız: ${failed}</p>
+
+<a href="/bots">
+
+⬅ Bot Yönetimine Dön
+
+</a>
+
+</div>
+
+</body>
+
+</html>
+
+`);
 
 });
 
