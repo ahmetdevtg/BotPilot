@@ -18,7 +18,7 @@ settings.use("*", auth);
 
 settings.get("/settings", async (c) => {
 
-  const bots: any = await getBots(c.env.DB);
+  const bots: any[] = await getBots(c.env.DB);
 
   let rows = "";
 
@@ -46,12 +46,7 @@ Henüz bot eklenmemiş.
 <td>
 
 <a
-href="/settings/${bot.telegram_id}"
-style="
-color:#60a5fa;
-text-decoration:none;
-font-weight:bold;
-">
+href="/settings/${bot.telegram_id}">
 
 ⚙️ Ayarlar
 
@@ -81,59 +76,30 @@ font-weight:bold;
 <style>
 
 body{
-
 background:#0f172a;
-
 color:white;
-
 font-family:Arial;
-
 padding:40px;
-
 }
 
 table{
-
 width:100%;
-
 border-collapse:collapse;
-
-margin-top:20px;
-
 }
 
 th,td{
-
 padding:14px;
-
 border:1px solid #334155;
-
 }
 
 th{
-
 background:#111827;
-
 }
 
-.btn{
-
-display:inline-block;
-
-padding:12px 18px;
-
-background:#2563eb;
-
-color:white;
-
-border-radius:8px;
-
+a{
+color:#60a5fa;
 text-decoration:none;
-
-margin-bottom:20px;
-
 font-weight:bold;
-
 }
 
 </style>
@@ -144,13 +110,15 @@ font-weight:bold;
 
 <h1>⚙️ Bot Ayarları</h1>
 
-<a
-class="btn"
-href="/dashboard">
+<p>
+
+<a href="/dashboard">
 
 🏠 Dashboard
 
 </a>
+
+</p>
 
 <table>
 
@@ -167,7 +135,6 @@ href="/dashboard">
 ${rows}
 
 </table>
-
 </body>
 
 </html>
@@ -175,8 +142,9 @@ ${rows}
 `);
 
 });
+
 /* ===========================
-   BOT AYARLARI SAYFASI
+   BOT AYARLARI
 =========================== */
 
 settings.get("/settings/:botId", async (c) => {
@@ -230,14 +198,19 @@ padding:30px;
 border-radius:12px;
 }
 
+label{
+display:block;
+margin-top:18px;
+margin-bottom:8px;
+font-weight:bold;
+}
+
 input,
 textarea,
 select{
 
 width:100%;
 padding:12px;
-margin-top:8px;
-margin-bottom:20px;
 
 background:#0f172a;
 color:white;
@@ -257,7 +230,9 @@ resize:vertical;
 button{
 
 width:100%;
-padding:15px;
+margin-top:25px;
+
+padding:14px;
 
 background:#2563eb;
 color:white;
@@ -273,8 +248,7 @@ cursor:pointer;
 .back{
 
 display:inline-block;
-
-margin-bottom:25px;
+margin-bottom:20px;
 
 color:#60a5fa;
 text-decoration:none;
@@ -289,9 +263,7 @@ text-decoration:none;
 
 <div class="card">
 
-<a
-class="back"
-href="/settings">
+<a class="back" href="/settings">
 
 ⬅ Geri
 
@@ -304,129 +276,89 @@ href="/settings">
 <form
 method="POST"
 action="/settings/${botId}">
-
-<label>
-
-Start Mesajı
-
-</label>
+<label>Start Mesajı</label>
 
 <textarea
 name="start_message">${s.start_message || ""}</textarea>
 
-<label>
-
-Fotoğraf URL
-
-</label>
+<label>Fotoğraf URL</label>
 
 <input
+type="text"
 name="photo"
 value="${s.photo || ""}">
 
-<label>
-
-Video URL
-
-</label>
+<label>Video URL</label>
 
 <input
+type="text"
 name="video"
 value="${s.video || ""}">
 
-<label>
-
-Doküman URL
-
-</label>
+<label>Doküman URL</label>
 
 <input
+type="text"
 name="document_url"
 value="${s.document_url || ""}">
 
-<label>
-
-Inline Buton Yazısı
-
-</label>
+<label>Inline Buton Yazısı</label>
 
 <input
+type="text"
 name="button_text"
 value="${s.button_text || ""}">
 
-<label>
-
-Inline Buton Linki
-
-</label>
+<label>Inline Buton Linki</label>
 
 <input
+type="text"
 name="button_url"
 value="${s.button_url || ""}">
 
-<label>
+<label>Parse Mode</label>
 
-Parse Mode
-
-</label>
-
-<select
-name="parse_mode">
+<select name="parse_mode">
 
 <option
 value="HTML"
 ${s.parse_mode==="HTML"?"selected":""}>
-
 HTML
-
 </option>
 
 <option
 value="MarkdownV2"
 ${s.parse_mode==="MarkdownV2"?"selected":""}>
-
 MarkdownV2
-
 </option>
 
 <option
 value="None"
 ${s.parse_mode==="None"?"selected":""}>
-
 None
-
 </option>
 
 </select>
 
-<label>
+<label>Bot Durumu</label>
 
-Bot Durumu
-
-</label>
-
-<select
-name="is_enabled">
+<select name="is_enabled">
 
 <option
 value="1"
-${s.is_enabled ? "selected":""}>
-
+${s.is_enabled ? "selected" : ""}>
 Aktif
-
 </option>
 
 <option
 value="0"
-${!s.is_enabled ? "selected":""}>
-
+${!s.is_enabled ? "selected" : ""}>
 Pasif
-
 </option>
 
 </select>
 
-<button>
+<button type="submit">
 
 💾 Ayarları Kaydet
 
@@ -449,56 +381,28 @@ Pasif
 
 settings.post("/settings/:botId", async (c) => {
 
-  try {
+  const botId = Number(c.req.param("botId"));
 
-    const botId = Number(c.req.param("botId"));
+  const body = await c.req.parseBody();
 
-    const body = await c.req.parseBody();
+  const data = {
+    start_message: String(body.start_message || ""),
+    photo: String(body.photo || ""),
+    video: String(body.video || ""),
+    document_url: String(body.document_url || ""),
+    button_text: String(body.button_text || ""),
+    button_url: String(body.button_url || ""),
+    parse_mode: String(body.parse_mode || "HTML"),
+    is_enabled: Number(body.is_enabled || 1)
+  };
 
-    console.log("========== SETTINGS SAVE ==========");
-    console.log("BOT ID:", botId);
-    console.log("BODY:", JSON.stringify(body));
+  await updateBotSettings(
+    c.env.DB,
+    botId,
+    data
+  );
 
-    const result = await updateBotSettings(
-      c.env.DB,
-      botId,
-      {
-        start_message: String(body.start_message || ""),
-        photo: String(body.photo || ""),
-        video: String(body.video || ""),
-        document_url: String(body.document_url || ""),
-        button_text: String(body.button_text || ""),
-        button_url: String(body.button_url || ""),
-        parse_mode: String(body.parse_mode || "HTML"),
-        is_enabled: Number(body.is_enabled || 1)
-      }
-    );
-
-    console.log("UPDATE RESULT");
-    console.log(JSON.stringify(result));
-
-    const check = await getBotSettings(
-      c.env.DB,
-      botId
-    );
-
-    console.log("DATABASE AFTER UPDATE");
-    console.log(JSON.stringify(check));
-
-    return c.redirect(`/settings/${botId}`);
-
-  } catch (e: any) {
-
-    console.error("SETTINGS SAVE ERROR");
-    console.error(e);
-    console.error(e?.stack);
-
-    return c.text(
-      e?.message || "Kaydetme hatası",
-      500
-    );
-
-  }
+  return c.redirect(`/settings/${botId}`);
 
 });
 
