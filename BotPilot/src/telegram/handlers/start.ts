@@ -126,13 +126,15 @@ export async function handleStart(
 
     }
 
-    await sendMessage(
-      token,
-      message.chat.id,
-      settings.start_message || "👋 Hoş geldiniz.",
-      settings.parse_mode || "HTML",
-      keyboard
-    );
+   await sendMessage(
+  token,
+  message.chat.id,
+  "🚨 DENEME-999999 🚨",
+  "HTML",
+  keyboard
+);
+
+return;
 
   } catch (e: any) {
 
