@@ -40,6 +40,13 @@ export async function handleStart(
       db,
       botId
     );
+await sendMessage(
+  token,
+  message.chat.id,
+  JSON.stringify(settings)
+);
+
+return;
 
     const buttons: any[] =
       (await getEnabledReplyButtons(db)) || [];
