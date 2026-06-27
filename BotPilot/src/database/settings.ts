@@ -2,11 +2,13 @@ export async function getBotSettings(
   db: D1Database,
   botId: number
 ) {
+
   let settings = await db
     .prepare(`
       SELECT *
       FROM bot_settings
       WHERE bot_id=?
+      LIMIT 1
     `)
     .bind(botId)
     .first();
@@ -15,10 +17,7 @@ export async function getBotSettings(
 
     await db
       .prepare(`
-        INSERT INTO bot_settings
-        (
-          bot_id
-        )
+        INSERT INTO bot_settings(bot_id)
         VALUES(?)
       `)
       .bind(botId)
@@ -29,6 +28,7 @@ export async function getBotSettings(
         SELECT *
         FROM bot_settings
         WHERE bot_id=?
+        LIMIT 1
       `)
       .bind(botId)
       .first();
@@ -36,13 +36,14 @@ export async function getBotSettings(
   }
 
   return settings;
-}
 
+}
 export async function updateBotSettings(
   db: D1Database,
   botId: number,
   data: any
 ) {
+
   return await db
     .prepare(`
       UPDATE bot_settings
@@ -70,4 +71,5 @@ export async function updateBotSettings(
       botId
     )
     .run();
+
 }
