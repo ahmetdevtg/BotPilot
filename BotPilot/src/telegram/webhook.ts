@@ -6,29 +6,39 @@ const webhook = new Hono<Env>();
 
 webhook.post("/webhook/:botId", async (c) => {
 
-  const botId = Number(c.req.param("botId"));
+  try {
 
-  const update = await c.req.json();
+    const botId = Number(c.req.param("botId"));
 
-  const bot = await c.env.DB
-    .prepare(
-      "SELECT * FROM bots WHERE telegram_id=?"
-    )
-    .bind(botId)
-    .first();
+    const update = await c.req.json();
 
-  if (!bot) {
-    return c.text("Bot bulunamadı.", 404);
+    const bot = await c.env.DB
+      .prepare("SELECT * FROM bots WHERE telegram_id=?")
+      .bind(botId)
+      .first();
+
+    if (!bot) {
+      return c.text("Bot bulunamadı.", 404);
+    }
+
+    await handleUpdate(
+      c.env.DB,
+      String((bot as any).token),
+      botId,
+      update
+    );
+
+    return c.text("OK");
+
+  } catch (e: any) {
+
+    console.error("WEBHOOK ERROR");
+    console.error(e);
+    console.error(e?.stack);
+
+    return c.text(e?.message || "Worker Error", 500);
+
   }
-
-  await handleUpdate(
-    c.env.DB,
-    String((bot as any).token),
-    botId,
-    update
-  );
-
-  return c.text("OK");
 
 });
 
