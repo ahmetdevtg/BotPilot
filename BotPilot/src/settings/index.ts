@@ -308,8 +308,12 @@ settings.post("/settings/:botId", async (c) => {
   const botId = Number(c.req.param("botId"));
 
   const body = await c.req.parseBody();
+console.log("BODY");
+console.log(JSON.stringify(body));
 
-  await updateBotSettings(
+  const result = await updateBotSettings(
+console.log("UPDATE RESULT");
+console.log(JSON.stringify(result));
     c.env.DB,
     botId,
     {
