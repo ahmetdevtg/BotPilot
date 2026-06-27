@@ -33,7 +33,12 @@ export async function sendMessage(
     }
   );
 
-  return await res.json();
+  const json = await res.json();
+
+  console.log("SEND MESSAGE RESULT");
+  console.log(JSON.stringify(json));
+
+  return json;
 
 }
 
@@ -84,7 +89,12 @@ export async function sendPhotoWithButton(
     }
   );
 
-  return await res.json();
+  const json = await res.json();
+
+  console.log("SEND PHOTO RESULT");
+  console.log(JSON.stringify(json));
+
+  return json;
 
 }
 
@@ -135,7 +145,12 @@ export async function sendVideoWithButton(
     }
   );
 
-  return await res.json();
+  const json = await res.json();
+
+  console.log("SEND VIDEO RESULT");
+  console.log(JSON.stringify(json));
+
+  return json;
 
 }
 
@@ -186,6 +201,11 @@ export async function sendDocumentWithButton(
     }
   );
 
-  return await res.json();
+  const json = await res.json();
+
+  console.log("SEND DOCUMENT RESULT");
+  console.log(JSON.stringify(json));
+
+  return json;
 
 }
