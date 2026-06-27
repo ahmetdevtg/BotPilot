@@ -42,4 +42,4 @@ app.get("/logout", (c) => {
 // Ana Sayfa
 app.get("/", (c) => c.redirect("/login"));
 
-export default app;
+export default app; 
