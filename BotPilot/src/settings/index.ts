@@ -355,6 +355,10 @@ settings.post("/settings/:botId", async (c) => {
     );
 
     const body = await c.req.parseBody();
+console.log({
+  botId,
+  body
+});
 
     await updateBotSettings(
       c.env.DB,
