@@ -273,42 +273,48 @@ globalSettings.post("/global-settings/apply", async (c) => {
         settings.bot_name || ""
       );
 
-    } catch (e: any) {
-
-      console.error("setMyName:", e);
-      failed++;
-
-    }
-
-    try {
-
       await setMyDescription(
         bot.token,
         settings.description || ""
       );
-
-    } catch (e: any) {
-
-      console.error("setMyDescription:", e);
-      failed++;
-
-    }
-
-    try {
 
       await setMyShortDescription(
         bot.token,
         settings.short_description || ""
       );
 
+      success++;
+
     } catch (e: any) {
 
-      console.error("setMyShortDescription:", e);
       failed++;
 
-    }
+      return c.html(`
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Hata</title>
+</head>
+<body style="background:#0f172a;color:white;font-family:Arial;padding:40px;">
 
-    success++;
+<h2>Telegram API Hatası</h2>
+
+<p><b>Bot:</b> ${bot.name}</p>
+
+<pre>${e.message}</pre>
+
+<br>
+
+<a href="/global-settings" style="color:#60a5fa;">
+← Geri Dön
+</a>
+
+</body>
+</html>
+`);
+
+    }
 
   }
 
@@ -382,4 +388,5 @@ font-weight:bold;
 `);
 
 });
+
 export default globalSettings;
