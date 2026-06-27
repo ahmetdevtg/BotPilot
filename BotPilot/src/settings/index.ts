@@ -3,6 +3,7 @@ import { auth } from "../middleware/auth";
 import type { Env } from "../types/env";
 
 import { getBots } from "../database/bots";
+
 import {
   getBotSettings,
   updateBotSettings
@@ -11,11 +12,15 @@ import {
 const settings = new Hono<Env>();
 
 settings.use("*", auth);
+/*
+|--------------------------------------------------------------------------
+| BOT LİSTESİ
+|--------------------------------------------------------------------------
+*/
 
 settings.get("/settings", async (c) => {
 
-  const bots: any[] =
-    await getBots(c.env.DB);
+  const bots: any[] = await getBots(c.env.DB);
 
   let rows = "";
 
@@ -42,11 +47,8 @@ Henüz bot bulunamadı.
 
 <td>
 
-<a
-href="/settings/${bot.telegram_id}">
-
+<a href="/settings/${bot.telegram_id}">
 ⚙️ Ayarlar
-
 </a>
 
 </td>
@@ -73,39 +75,30 @@ href="/settings/${bot.telegram_id}">
 <style>
 
 body{
-
 background:#0f172a;
 color:white;
 font-family:Arial;
 padding:40px;
-
 }
 
 table{
-
 width:100%;
 border-collapse:collapse;
-
 }
 
-th,td{
-
+th,
+td{
 padding:14px;
 border:1px solid #334155;
-
 }
 
 th{
-
 background:#111827;
-
 }
 
 a{
-
 color:#60a5fa;
 text-decoration:none;
-
 }
 
 </style>
@@ -131,6 +124,7 @@ text-decoration:none;
 ${rows}
 
 </table>
+
 </body>
 
 </html>
@@ -138,10 +132,11 @@ ${rows}
 `);
 
 });
-
-/* ==========================
-   BOT AYAR SAYFASI
-========================== */
+/*
+|--------------------------------------------------------------------------
+| BOT AYAR SAYFASI
+|--------------------------------------------------------------------------
+*/
 
 settings.get("/settings/:botId", async (c) => {
 
@@ -151,7 +146,8 @@ settings.get("/settings/:botId", async (c) => {
     .prepare(`
       SELECT *
       FROM bots
-      WHERE telegram_id=?
+      WHERE telegram_id = ?
+      LIMIT 1
     `)
     .bind(botId)
     .first();
@@ -160,11 +156,10 @@ settings.get("/settings/:botId", async (c) => {
     return c.text("Bot bulunamadı.", 404);
   }
 
-  const s: any =
-    await getBotSettings(
-      c.env.DB,
-      botId
-    );
+  const s: any = await getBotSettings(
+    c.env.DB,
+    botId
+  );
 
   return c.html(`
 
@@ -181,25 +176,18 @@ settings.get("/settings/:botId", async (c) => {
 <style>
 
 body{
-
 background:#0f172a;
 color:white;
 font-family:Arial;
 padding:40px;
-
 }
 
 .card{
-
 max-width:900px;
 margin:auto;
-
 background:#1e293b;
-
 padding:30px;
-
 border-radius:12px;
-
 }
 
 input,
@@ -207,9 +195,7 @@ textarea,
 select{
 
 width:100%;
-
 padding:12px;
-
 margin-top:8px;
 margin-bottom:20px;
 
@@ -223,16 +209,13 @@ border-radius:8px;
 }
 
 textarea{
-
 height:220px;
 resize:vertical;
-
 }
 
 button{
 
 width:100%;
-
 padding:14px;
 
 background:#2563eb;
@@ -243,9 +226,9 @@ border-radius:8px;
 
 color:white;
 
-cursor:pointer;
-
 font-size:16px;
+
+cursor:pointer;
 
 }
 
@@ -261,9 +244,8 @@ font-size:16px;
 
 <p>@${bot.username}</p>
 
-<form
-method="POST"
-action="/settings/${botId}">
+<form method="POST" action="/settings/${botId}">
+
 <label>Start Mesajı</label>
 
 <textarea
@@ -308,21 +290,18 @@ value="${s.button_url || ""}">
 
 <select name="parse_mode">
 
-<option
-value="HTML"
-${s.parse_mode === "HTML" ? "selected" : ""}>
+<option value="HTML"
+${s.parse_mode==="HTML"?"selected":""}>
 HTML
 </option>
 
-<option
-value="MarkdownV2"
-${s.parse_mode === "MarkdownV2" ? "selected" : ""}>
+<option value="MarkdownV2"
+${s.parse_mode==="MarkdownV2"?"selected":""}>
 MarkdownV2
 </option>
 
-<option
-value="None"
-${s.parse_mode === "None" ? "selected" : ""}>
+<option value="None"
+${s.parse_mode==="None"?"selected":""}>
 None
 </option>
 
@@ -332,14 +311,12 @@ None
 
 <select name="is_enabled">
 
-<option
-value="1"
+<option value="1"
 ${s.is_enabled ? "selected" : ""}>
 Aktif
 </option>
 
-<option
-value="0"
+<option value="0"
 ${!s.is_enabled ? "selected" : ""}>
 Pasif
 </option>
@@ -363,9 +340,11 @@ Pasif
 `);
 
 });
-/* ==========================
-   AYARLARI KAYDET
-========================== */
+/*
+|--------------------------------------------------------------------------
+| AYARLARI KAYDET
+|--------------------------------------------------------------------------
+*/
 
 settings.post("/settings/:botId", async (c) => {
 
@@ -398,15 +377,15 @@ settings.post("/settings/:botId", async (c) => {
 
   } catch (e: any) {
 
+    console.error("SETTINGS SAVE ERROR");
     console.error(e);
 
     return c.text(
-      e?.message || "Kayıt hatası",
+      e?.message || "Kayıt sırasında hata oluştu.",
       500
     );
 
   }
 
 });
-
 export default settings;
