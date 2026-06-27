@@ -389,22 +389,39 @@ const parseMode = String(body.parseMode || "HTML");
   }
 
   // TÜM BOTLAR
-  if (botId === "all") {
+if (botId === "all") {
 
-    const stats = await sendBroadcastAllBots(
-  c.env.DB,
-  {
-    message,
-    photo,
-    video,
-    document,
-    buttonText,
-    buttonUrl,
-    parseMode
-  }
-);
+  const result = await createBroadcast(
+    c.env.DB,
+    0,
+    message
+  );
 
-    return c.html(`
+  const broadcastId = Number(
+    (result as any).meta?.last_row_id || 0
+  );
+
+  const stats = await sendBroadcastAllBots(
+    c.env.DB,
+    {
+      message,
+      photo,
+      video,
+      document,
+      buttonText,
+      buttonUrl,
+      parseMode
+    }
+  );
+
+  await finishBroadcast(
+    c.env.DB,
+    broadcastId,
+    stats.success,
+    stats.failed
+  );
+
+  return c.html(`
 
 <!DOCTYPE html>
 
