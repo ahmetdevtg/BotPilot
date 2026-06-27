@@ -43,7 +43,9 @@ export async function handleStart(
 await sendMessage(
   token,
   message.chat.id,
-  JSON.stringify(settings)
+  settings.start_message || "👋 Hoş geldiniz.",
+  settings.parse_mode || "HTML",
+  keyboard
 );
 
 return;
