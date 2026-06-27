@@ -259,7 +259,6 @@ globalSettings.post("/global-settings", async (c) => {
 globalSettings.post("/global-settings/apply", async (c) => {
 
   const settings: any = await getBotSettings(c.env.DB);
-
   const bots: any[] = await getBots(c.env.DB);
 
   let success = 0;
@@ -267,52 +266,49 @@ globalSettings.post("/global-settings/apply", async (c) => {
 
   for (const bot of bots) {
 
-  try {
-    await setMyName(
-      bot.token,
-      settings.bot_name || ""
-    );
-  } catch (e: any) {
-  console.error("setMyName:", e);
-}
- 
+    try {
 
-  try {
-    await setMyDescription(
-      bot.token,
-      settings.description || ""
-    );
-  } catch (e: any) {
-  console.error("setMyName:", e);
-    console.error("setMyDescription:", e);
-  }
+      await setMyName(
+        bot.token,
+        settings.bot_name || ""
+      );
 
-  try {
-    await setMyShortDescription(
-      bot.token,
-      settings.short_description || ""
-    );
-  } catch (e: any) {
-  console.error("setMyName:", e);
+    } catch (e: any) {
 
-   console.error("setMyShortDescription:", e);
-  }
+      console.error("setMyName:", e);
+      failed++;
 
-  success++;
+    }
 
-} catch (e: any) {
+    try {
 
-  return c.html(`
-    <h2>Hata</h2>
+      await setMyDescription(
+        bot.token,
+        settings.description || ""
+      );
 
-    <pre>${e?.message}</pre>
+    } catch (e: any) {
 
-    <p>Bot: ${bot.name}</p>
+      console.error("setMyDescription:", e);
+      failed++;
 
-    <a href="/global-settings">Geri Dön</a>
-  `);
+    }
 
-}
+    try {
+
+      await setMyShortDescription(
+        bot.token,
+        settings.short_description || ""
+      );
+
+    } catch (e: any) {
+
+      console.error("setMyShortDescription:", e);
+      failed++;
+
+    }
+
+    success++;
 
   }
 
@@ -386,5 +382,4 @@ font-weight:bold;
 `);
 
 });
-
 export default globalSettings;
