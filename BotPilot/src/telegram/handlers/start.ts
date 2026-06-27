@@ -67,7 +67,10 @@ export async function handleStart(
         .join("\n");
     // FOTOĞRAF
 
-    if (settings.photo && settings.photo.trim() !== "") {
+    if (
+      settings.photo &&
+      settings.photo.trim() !== ""
+    ) {
 
       await sendPhotoWithButton(
         token,
@@ -86,7 +89,10 @@ export async function handleStart(
 
     // VİDEO
 
-    if (settings.video && settings.video.trim() !== "") {
+    if (
+      settings.video &&
+      settings.video.trim() !== ""
+    ) {
 
       await sendVideoWithButton(
         token,
@@ -124,6 +130,7 @@ export async function handleStart(
       return;
 
     }
+
     // NORMAL MESAJ
 
     await sendMessage(
@@ -135,7 +142,6 @@ export async function handleStart(
     );
 
     return;
-
   } catch (e: any) {
 
     console.error("HANDLE START ERROR");
@@ -150,7 +156,12 @@ export async function handleStart(
         "❌ Start mesajı gönderilirken hata oluştu."
       );
 
-    } catch {}
+    } catch (err) {
+
+      console.error("FAILED TO SEND ERROR MESSAGE");
+      console.error(err);
+
+    }
 
   }
 
