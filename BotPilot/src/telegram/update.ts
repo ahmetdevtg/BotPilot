@@ -1,3 +1,4 @@
+
 import { getReplyButton } from "../database/reply-buttons";
 import { handleStart } from "./handlers/start";
 import { handleReplyButton } from "./handlers/reply-button";
@@ -10,34 +11,17 @@ export async function handleUpdate(
   update: any
 ) {
 
+  console.log("UPDATE:", JSON.stringify(update));
+
   if (!update.message) {
     return;
   }
 
   const text = update.message.text || "";
-const handled = await handleReplyButton(
-  db,
-  token,
-  update.message
-);
 
-if (handled) {
-  return;
-}
-const reply: any = await getReplyButton(db, text);
+  console.log("TEXT:", text);
 
-if (reply) {
-
-  await sendMessage(
-    token,
-    update.message.chat.id,
-    reply.message || ""
-  );
-
-  return;
-
-}
-
+  // Önce /start çalışsın
   if (text === "/start") {
 
     await handleStart(
@@ -47,32 +31,71 @@ if (reply) {
       update.message
     );
 
+    return;
   }
-if (text === "📢 Kanal") {
-  await sendMessage(
-    token,
-    update.message.chat.id,
-    "Kanalımız:\nhttps://t.me/kanaliniz"
-  );
-  return;
-}
 
-if (text === "👤 Profil") {
-  await sendMessage(
+  // Sonra Reply Button kontrolü
+  const handled = await handleReplyButton(
+    db,
     token,
-    update.message.chat.id,
-    `ID: ${update.message.from.id}\nAd: ${update.message.from.first_name}`
+    update.message
   );
-  return;
-}
 
-if (text === "ℹ️ Yardım") {
-  await sendMessage(
-    token,
-    update.message.chat.id,
-    "Yardım menüsü yakında eklenecek."
+  if (handled) {
+    return;
+  }
+
+  const reply: any = await getReplyButton(
+    db,
+    text
   );
-  return;
-}
+
+  if (reply) {
+
+    await sendMessage(
+      token,
+      update.message.chat.id,
+      reply.message || ""
+    );
+
+    return;
+
+  }
+
+  if (text === "📢 Kanal") {
+
+    await sendMessage(
+      token,
+      update.message.chat.id,
+      "Kanalımız:\nhttps://t.me/kanaliniz"
+    );
+
+    return;
+
+  }
+
+  if (text === "👤 Profil") {
+
+    await sendMessage(
+      token,
+      update.message.chat.id,
+      `ID: ${update.message.from.id}\nAd: ${update.message.from.first_name}`
+    );
+
+    return;
+
+  }
+
+  if (text === "ℹ️ Yardım") {
+
+    await sendMessage(
+      token,
+      update.message.chat.id,
+      "Yardım menüsü yakında eklenecek."
+    );
+
+    return;
+
+  }
 
 }
