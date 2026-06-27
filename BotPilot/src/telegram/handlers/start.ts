@@ -1,4 +1,4 @@
-import { getBotSettings } from "../../database/bot-settings";
+import { getBotSettings } from "../../database/settings";
 import { getEnabledReplyButtons } from "../../database/reply-buttons";
 import {
   sendMessage,
@@ -6,6 +6,7 @@ import {
   sendVideoWithButton,
   sendDocumentWithButton
 } from "../send";
+
 import {
   findTelegramUser,
   createTelegramUser
@@ -17,103 +18,128 @@ export async function handleStart(
   botId: number,
   message: any
 ) {
+  try {
 
-  const user = message.from;
+    const user = message.from;
 
-  const exists = await findTelegramUser(
-    db,
-    botId,
-    user.id
-  );
-
-  if (!exists) {
-    await createTelegramUser(
+    const exists = await findTelegramUser(
       db,
       botId,
-      user
+      user.id
     );
-  }
 
-  const settings: any = await getBotSettings(
-  db,
-  botId
-);
-console.log("SETTINGS");
-console.log(JSON.stringify(settings));
+    if (!exists) {
+      await createTelegramUser(
+        db,
+        botId,
+        user
+      );
+    }
 
-console.log("BUTTONS");
-console.log(JSON.stringify(buttons));
+    const settings: any = await getBotSettings(
+      db,
+      botId
+    );
 
-console.log("KEYBOARD");
-console.log(keyboard);
+    const buttons: any[] =
+      (await getEnabledReplyButtons(db)) || [];
 
-  const buttons: any[] = await getEnabledReplyButtons(db);
+    const keyboard = buttons
+      .map((x: any) => x.button_text)
+      .join("\n");
 
-  const keyboard = buttons
-    .map((x: any) => x.button_text)
-    .join("\n");
+    console.log("SETTINGS");
+    console.log(JSON.stringify(settings));
 
-  // FOTOĞRAF
-  if (settings.photo_url) {
+    console.log("BUTTONS");
+    console.log(JSON.stringify(buttons));
 
-    await sendPhotoWithButton(
+    console.log("KEYBOARD");
+    console.log(keyboard);
+
+    if (!settings) {
+
+      await sendMessage(
+        token,
+        message.chat.id,
+        "Bot ayarları bulunamadı."
+      );
+
+      return;
+
+    }
+
+    // FOTOĞRAF
+
+    if (settings.photo) {
+
+      await sendPhotoWithButton(
+        token,
+        message.chat.id,
+        settings.photo,
+        settings.start_message || "",
+        settings.button_text || "",
+        settings.button_url || "",
+        settings.parse_mode || "HTML",
+        keyboard
+      );
+
+      return;
+
+    }
+
+    // VİDEO
+
+    if (settings.video) {
+
+      await sendVideoWithButton(
+        token,
+        message.chat.id,
+        settings.video,
+        settings.start_message || "",
+        settings.button_text || "",
+        settings.button_url || "",
+        settings.parse_mode || "HTML",
+        keyboard
+      );
+
+      return;
+
+    }
+
+    // DOKÜMAN
+
+    if (settings.document_url) {
+
+      await sendDocumentWithButton(
+        token,
+        message.chat.id,
+        settings.document_url,
+        settings.start_message || "",
+        settings.button_text || "",
+        settings.button_url || "",
+        settings.parse_mode || "HTML",
+        keyboard
+      );
+
+      return;
+
+    }
+
+    await sendMessage(
       token,
       message.chat.id,
-      settings.photo_url,
-      settings.start_message || "",
-      settings.button_text || "",
-      settings.button_url || "",
+      settings.start_message || "👋 Hoş geldiniz.",
       settings.parse_mode || "HTML",
       keyboard
     );
 
-    return;
+  } catch (e: any) {
 
-  }
-
-  // VİDEO
-  if (settings.video_url) {
-
-    await sendVideoWithButton(
-      token,
-      message.chat.id,
-      settings.video_url,
-      settings.start_message || "",
-      settings.button_text || "",
-      settings.button_url || "",
-      settings.parse_mode || "HTML",
-      keyboard
+    console.error(
+      "HANDLE START ERROR:",
+      e
     );
 
-    return;
-
   }
-
-  // DOKÜMAN
-  if (settings.document_url) {
-
-    await sendDocumentWithButton(
-      token,
-      message.chat.id,
-      settings.document_url,
-      settings.start_message || "",
-      settings.button_text || "",
-      settings.button_url || "",
-      settings.parse_mode || "HTML",
-      keyboard
-    );
-
-    return;
-
-  }
-
-  // NORMAL MESAJ
-  await sendMessage(
-    token,
-    message.chat.id,
-    settings.start_message || "👋 BotPilot'a hoş geldiniz.",
-    settings.parse_mode || "HTML",
-    keyboard
-  );
-
 }
