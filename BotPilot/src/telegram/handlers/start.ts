@@ -1,4 +1,5 @@
 import { getBotSettings } from "../../database/bot-settings";
+import { getEnabledReplyButtons } from "../../database/reply-buttons";
 import {
   sendMessage,
   sendPhotoWithButton,
@@ -35,29 +36,25 @@ export async function handleStart(
 
   const settings: any = await getBotSettings(db);
 
+  const buttons: any[] = await getEnabledReplyButtons(db);
+
+  const keyboard = buttons
+    .map((x: any) => x.button_text)
+    .join("\n");
+
   // FOTOĞRAF
   if (settings.photo_url) {
 
-await sendPhotoWithButton(
-  token,
-  message.chat.id,
-  settings.photo_url,
-  settings.start_message || "",
-  settings.button_text || "",
-  settings.button_url || "",
-  settings.parse_mode || "HTML",
-  settings.reply_keyboard || ""
-);
-
-    if (settings.reply_keyboard) {
-      await sendMessage(
-        token,
-        message.chat.id,
-        "‎",
-        settings.parse_mode || "HTML",
-        settings.reply_keyboard
-      );
-    }
+    await sendPhotoWithButton(
+      token,
+      message.chat.id,
+      settings.photo_url,
+      settings.start_message || "",
+      settings.button_text || "",
+      settings.button_url || "",
+      settings.parse_mode || "HTML",
+      keyboard
+    );
 
     return;
 
@@ -72,18 +69,10 @@ await sendPhotoWithButton(
       settings.video_url,
       settings.start_message || "",
       settings.button_text || "",
-      settings.button_url || ""
+      settings.button_url || "",
+      settings.parse_mode || "HTML",
+      keyboard
     );
-
-    if (settings.reply_keyboard) {
-      await sendMessage(
-        token,
-        message.chat.id,
-        "‎",
-        settings.parse_mode || "HTML",
-        settings.reply_keyboard
-      );
-    }
 
     return;
 
@@ -98,18 +87,10 @@ await sendPhotoWithButton(
       settings.document_url,
       settings.start_message || "",
       settings.button_text || "",
-      settings.button_url || ""
+      settings.button_url || "",
+      settings.parse_mode || "HTML",
+      keyboard
     );
-
-    if (settings.reply_keyboard) {
-      await sendMessage(
-        token,
-        message.chat.id,
-        "‎",
-        settings.parse_mode || "HTML",
-        settings.reply_keyboard
-      );
-    }
 
     return;
 
@@ -121,7 +102,7 @@ await sendPhotoWithButton(
     message.chat.id,
     settings.start_message || "👋 BotPilot'a hoş geldiniz.",
     settings.parse_mode || "HTML",
-    settings.reply_keyboard || ""
+    keyboard
   );
 
 }
