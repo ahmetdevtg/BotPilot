@@ -273,16 +273,19 @@ globalSettings.post("/global-settings/apply", async (c) => {
         bot.token,
         settings.bot_name || ""
       );
+await sleep(1200);
 
       await setMyDescription(
         bot.token,
         settings.description || ""
       );
+await sleep(1200);
 
       await setMyShortDescription(
         bot.token,
         settings.short_description || ""
       );
+await sleep(1200);
 
       success++;
 
