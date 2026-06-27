@@ -207,13 +207,13 @@ href="/bots/update-all"
 style="
 display:inline-block;
 padding:12px 18px;
-background:#ea580c;
+background:#16a34a;
 color:white;
 text-decoration:none;
 border-radius:8px;
 margin-left:10px;">
 
-🤖 Tüm Bot Bilgilerini Güncelle
+🤖 Tüm Botları Güncelle
 
 </a>
 
