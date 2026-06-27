@@ -214,7 +214,7 @@ font-weight:bold;
 
 <a href="/broadcast">📢 Broadcast</a>
 
-<a href="/global-settings">⚙️ Genel Bot Ayarları</a>
+<a href="/global-settings">🚀 /start Ayarları</a>
 <a href="/reply-buttons">⌨️ Reply Keyboard</a>
 
 <a href="/admin">👤 Admin</a>
