@@ -12,13 +12,10 @@ const settings = new Hono<Env>();
 
 settings.use("*", auth);
 
-/* ===========================
-   BOT LİSTESİ
-=========================== */
-
 settings.get("/settings", async (c) => {
 
-  const bots: any[] = await getBots(c.env.DB);
+  const bots: any[] =
+    await getBots(c.env.DB);
 
   let rows = "";
 
@@ -27,7 +24,7 @@ settings.get("/settings", async (c) => {
     rows = `
 <tr>
 <td colspan="3">
-Henüz bot eklenmemiş.
+Henüz bot bulunamadı.
 </td>
 </tr>
 `;
@@ -76,30 +73,39 @@ href="/settings/${bot.telegram_id}">
 <style>
 
 body{
+
 background:#0f172a;
 color:white;
 font-family:Arial;
 padding:40px;
+
 }
 
 table{
+
 width:100%;
 border-collapse:collapse;
+
 }
 
 th,td{
+
 padding:14px;
 border:1px solid #334155;
+
 }
 
 th{
+
 background:#111827;
+
 }
 
 a{
+
 color:#60a5fa;
 text-decoration:none;
-font-weight:bold;
+
 }
 
 </style>
@@ -109,16 +115,6 @@ font-weight:bold;
 <body>
 
 <h1>⚙️ Bot Ayarları</h1>
-
-<p>
-
-<a href="/dashboard">
-
-🏠 Dashboard
-
-</a>
-
-</p>
 
 <table>
 
@@ -143,9 +139,9 @@ ${rows}
 
 });
 
-/* ===========================
-   BOT AYARLARI
-=========================== */
+/* ==========================
+   BOT AYAR SAYFASI
+========================== */
 
 settings.get("/settings/:botId", async (c) => {
 
@@ -164,10 +160,11 @@ settings.get("/settings/:botId", async (c) => {
     return c.text("Bot bulunamadı.", 404);
   }
 
-  const s: any = await getBotSettings(
-    c.env.DB,
-    botId
-  );
+  const s: any =
+    await getBotSettings(
+      c.env.DB,
+      botId
+    );
 
   return c.html(`
 
@@ -184,25 +181,25 @@ settings.get("/settings/:botId", async (c) => {
 <style>
 
 body{
+
 background:#0f172a;
 color:white;
 font-family:Arial;
 padding:40px;
+
 }
 
 .card{
+
 max-width:900px;
 margin:auto;
-background:#1e293b;
-padding:30px;
-border-radius:12px;
-}
 
-label{
-display:block;
-margin-top:18px;
-margin-bottom:8px;
-font-weight:bold;
+background:#1e293b;
+
+padding:30px;
+
+border-radius:12px;
+
 }
 
 input,
@@ -210,12 +207,17 @@ textarea,
 select{
 
 width:100%;
+
 padding:12px;
+
+margin-top:8px;
+margin-bottom:20px;
 
 background:#0f172a;
 color:white;
 
 border:1px solid #334155;
+
 border-radius:8px;
 
 }
@@ -230,28 +232,20 @@ resize:vertical;
 button{
 
 width:100%;
-margin-top:25px;
 
 padding:14px;
 
 background:#2563eb;
-color:white;
 
 border:none;
+
 border-radius:8px;
 
-font-size:16px;
+color:white;
+
 cursor:pointer;
 
-}
-
-.back{
-
-display:inline-block;
-margin-bottom:20px;
-
-color:#60a5fa;
-text-decoration:none;
+font-size:16px;
 
 }
 
@@ -262,12 +256,6 @@ text-decoration:none;
 <body>
 
 <div class="card">
-
-<a class="back" href="/settings">
-
-⬅ Geri
-
-</a>
 
 <h2>${bot.name}</h2>
 
@@ -322,19 +310,19 @@ value="${s.button_url || ""}">
 
 <option
 value="HTML"
-${s.parse_mode==="HTML"?"selected":""}>
+${s.parse_mode === "HTML" ? "selected" : ""}>
 HTML
 </option>
 
 <option
 value="MarkdownV2"
-${s.parse_mode==="MarkdownV2"?"selected":""}>
+${s.parse_mode === "MarkdownV2" ? "selected" : ""}>
 MarkdownV2
 </option>
 
 <option
 value="None"
-${s.parse_mode==="None"?"selected":""}>
+${s.parse_mode === "None" ? "selected" : ""}>
 None
 </option>
 
@@ -375,34 +363,49 @@ Pasif
 `);
 
 });
-/* ===========================
+/* ==========================
    AYARLARI KAYDET
-=========================== */
+========================== */
 
 settings.post("/settings/:botId", async (c) => {
 
-  const botId = Number(c.req.param("botId"));
+  try {
 
-  const body = await c.req.parseBody();
+    const botId = Number(
+      c.req.param("botId")
+    );
 
-  const data = {
-    start_message: String(body.start_message || ""),
-    photo: String(body.photo || ""),
-    video: String(body.video || ""),
-    document_url: String(body.document_url || ""),
-    button_text: String(body.button_text || ""),
-    button_url: String(body.button_url || ""),
-    parse_mode: String(body.parse_mode || "HTML"),
-    is_enabled: Number(body.is_enabled || 1)
-  };
+    const body = await c.req.parseBody();
 
-  await updateBotSettings(
-    c.env.DB,
-    botId,
-    data
-  );
+    await updateBotSettings(
+      c.env.DB,
+      botId,
+      {
+        start_message: String(body.start_message || ""),
+        photo: String(body.photo || ""),
+        video: String(body.video || ""),
+        document_url: String(body.document_url || ""),
+        button_text: String(body.button_text || ""),
+        button_url: String(body.button_url || ""),
+        parse_mode: String(body.parse_mode || "HTML"),
+        is_enabled: Number(body.is_enabled || 1)
+      }
+    );
 
-  return c.redirect(`/settings/${botId}`);
+    return c.redirect(
+      `/settings/${botId}`
+    );
+
+  } catch (e: any) {
+
+    console.error(e);
+
+    return c.text(
+      e?.message || "Kayıt hatası",
+      500
+    );
+
+  }
 
 });
 
