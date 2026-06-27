@@ -267,26 +267,36 @@ globalSettings.post("/global-settings/apply", async (c) => {
 
   for (const bot of bots) {
 
-    try {
+  try {
+    await setMyName(
+      bot.token,
+      settings.bot_name || ""
+    );
+  } catch (e) {
+    console.error("setMyName:", e);
+  }
 
-      await setMyName(
-        bot.token,
-        settings.bot_name || ""
-      );
+  try {
+    await setMyDescription(
+      bot.token,
+      settings.description || ""
+    );
+  } catch (e) {
+    console.error("setMyDescription:", e);
+  }
 
-      await setMyDescription(
-        bot.token,
-        settings.description || ""
-      );
+  try {
+    await setMyShortDescription(
+      bot.token,
+      settings.short_description || ""
+    );
+  } catch (e) {
+    console.error("setMyShortDescription:", e);
+  }
 
-      await setMyShortDescription(
-        bot.token,
-        settings.short_description || ""
-      );
+  success++;
 
-      success++;
-
-    } catch (e: any) {
+} catch (e: any) {
 
   return c.html(`
     <h2>Hata</h2>
