@@ -641,14 +641,6 @@ bots.post("/bots/edit/:id", async (c) => {
 
   }
 
-  await updateBotProfile(
-    c.env.DB,
-    id,
-    name,
-    description,
-    shortDescription
-  );
-
   try {
 
     await setMyName(
@@ -666,17 +658,36 @@ bots.post("/bots/edit/:id", async (c) => {
       shortDescription
     );
 
+    // Telegram başarılıysa veritabanını güncelle
+    await updateBotProfile(
+      c.env.DB,
+      id,
+      name,
+      description,
+      shortDescription
+    );
+
+    return c.redirect("/bots");
+
   } catch (e: any) {
 
-  return c.html(`
-<h2>Telegram Hatası</h2>
+    return c.html(`
+<h2>Telegram API Hatası</h2>
+
+<p>Bot bilgileri kaydedilmedi.</p>
 
 <pre>${e.message}</pre>
+
+<br>
+
+<a href="/bots/edit/${id}">
+← Geri Dön
+</a>
 `);
 
-}
+  }
 
-  return c.redirect("/bots");
+});
 
 });
 // Bot Sil
