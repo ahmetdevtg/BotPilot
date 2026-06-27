@@ -5,6 +5,7 @@ import type { Env } from "./types/env";
 const globalSettings = new Hono<Env>();
 
 globalSettings.use("*", auth);
+
 /*
 |--------------------------------------------------------------------------
 | GLOBAL START AYARLARI
@@ -110,9 +111,7 @@ cursor:pointer;
 }
 
 button:hover{
-
 background:#1d4ed8;
-
 }
 
 </style>
@@ -122,9 +121,7 @@ background:#1d4ed8;
 <body>
 
 <a class="back" href="/dashboard">
-
 🏠 Anasayfaya Dön
-
 </a>
 
 <div class="card">
@@ -176,31 +173,28 @@ value="${settings?.button_url || ""}">
 <label>Parse Mode</label>
 
 <select name="parse_mode">
-
 <option
 value="HTML"
-${settings?.parse_mode==="HTML"?"selected":""}>
+${settings?.parse_mode === "HTML" ? "selected" : ""}>
 HTML
 </option>
 
 <option
 value="MarkdownV2"
-${settings?.parse_mode==="MarkdownV2"?"selected":""}>
+${settings?.parse_mode === "MarkdownV2" ? "selected" : ""}>
 MarkdownV2
 </option>
 
 <option
 value="None"
-${settings?.parse_mode==="None"?"selected":""}>
+${settings?.parse_mode === "None" ? "selected" : ""}>
 None
 </option>
 
 </select>
 
 <button type="submit">
-
 💾 Tüm Botlara Kaydet
-
 </button>
 
 </form>
@@ -215,11 +209,6 @@ None
 
 });
 
-/*
-|--------------------------------------------------------------------------
-| GLOBAL AYARLARI KAYDET
-|--------------------------------------------------------------------------
-*/
 /*
 |--------------------------------------------------------------------------
 | GLOBAL AYARLARI KAYDET
@@ -242,36 +231,80 @@ globalSettings.post("/global-settings", async (c) => {
 
     for (const bot of bots) {
 
-      await c.env.DB
+      const exists = await c.env.DB
         .prepare(`
-          UPDATE bot_settings
-          SET
-            start_message=?,
-            photo=?,
-            video=?,
-            document_url=?,
-            button_text=?,
-            button_url=?,
-            parse_mode=?,
-            updated_at=CURRENT_TIMESTAMP
+          SELECT id
+          FROM bot_settings
           WHERE bot_id=?
         `)
-        .bind(
-          String(body.start_message || ""),
-          String(body.photo || ""),
-          String(body.video || ""),
-          String(body.document_url || ""),
-          String(body.button_text || ""),
-          String(body.button_url || ""),
-          String(body.parse_mode || "HTML"),
-          bot.telegram_id
-        )
-        .run();
+        .bind(bot.telegram_id)
+        .first();
+
+      if (exists) {
+        await c.env.DB
+          .prepare(`
+            UPDATE bot_settings
+            SET
+              start_message=?,
+              photo=?,
+              video=?,
+              document_url=?,
+              button_text=?,
+              button_url=?,
+              parse_mode=?,
+              updated_at=CURRENT_TIMESTAMP
+            WHERE bot_id=?
+          `)
+          .bind(
+            String(body.start_message || ""),
+            String(body.photo || ""),
+            String(body.video || ""),
+            String(body.document_url || ""),
+            String(body.button_text || ""),
+            String(body.button_url || ""),
+            String(body.parse_mode || "HTML"),
+            bot.telegram_id
+          )
+          .run();
+
+      } else {
+
+        await c.env.DB
+          .prepare(`
+            INSERT INTO bot_settings
+            (
+              bot_id,
+              start_message,
+              photo,
+              video,
+              document_url,
+              button_text,
+              button_url,
+              parse_mode,
+              is_enabled
+            )
+            VALUES
+            (
+              ?,?,?,?,?,?,?,?,1
+            )
+          `)
+          .bind(
+            bot.telegram_id,
+            String(body.start_message || ""),
+            String(body.photo || ""),
+            String(body.video || ""),
+            String(body.document_url || ""),
+            String(body.button_text || ""),
+            String(body.button_url || ""),
+            String(body.parse_mode || "HTML")
+          )
+          .run();
+
+      }
 
     }
 
     return c.redirect("/global-settings");
-
   } catch (e: any) {
 
     console.error("GLOBAL SETTINGS ERROR");
