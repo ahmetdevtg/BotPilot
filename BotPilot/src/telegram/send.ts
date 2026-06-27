@@ -1,3 +1,6 @@
+console.log("=== SEND MESSAGE ===");
+console.log("TEXT:", text);
+console.log("CHAT:", chatId);
 export async function sendMessage(
   token: string,
   chatId: number,
