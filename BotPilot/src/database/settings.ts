@@ -38,6 +38,7 @@ export async function getBotSettings(
   return settings;
 
 }
+
 export async function updateBotSettings(
   db: D1Database,
   botId: number,
