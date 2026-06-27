@@ -31,7 +31,7 @@ bots.get("/bots", async (c) => {
 <td>${bot.id}</td>
 <td>${bot.name}</td>
 <td>@${bot.username}</td>
-<<td>${bot.status ? "🟢 Online" : "🔴 Offline"}</td>
+<td>${bot.status ? "🟢 Online" : "🔴 Offline"}</td>
 
 <td>${bot.users ?? 0}</td>
 
