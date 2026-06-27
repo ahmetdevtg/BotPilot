@@ -8,16 +8,27 @@ import {
   sendDocumentWithButton,
   sendMessageWithButton
 } from "../telegram/api";
-import { deleteTelegramUser } from "../database/telegram-users";
+
+import {
+  deleteTelegramUser
+} from "../database/telegram-users";
 
 export interface BroadcastOptions {
+
   message: string;
+
   photo?: string;
+
   video?: string;
+
   document?: string;
+
   parseMode?: string;
+
   buttonText?: string;
+
   buttonUrl?: string;
+
 }
 
 export async function sendBroadcast(
@@ -37,6 +48,7 @@ export async function sendBroadcast(
     .all();
 
   let success = 0;
+
   let failed = 0;
 
   for (const user of results as any[]) {
@@ -44,149 +56,245 @@ export async function sendBroadcast(
     try {
 
       if (
-  options.photo &&
-  options.buttonText &&
-  options.buttonUrl
-) {
 
-  await sendPhotoWithButton(
-    token,
-    user.telegram_id,
-    options.photo,
-    options.message,
-    options.buttonText,
-    options.buttonUrl,
-    options.parseMode || "HTML"
-  );
+        options.photo &&
 
-} else if (
-  options.video &&
-  options.buttonText &&
-  options.buttonUrl
-) {
+        options.buttonText &&
 
-  await sendVideoWithButton(
-    token,
-    user.telegram_id,
-    options.video,
-    options.message,
-    options.buttonText,
-    options.buttonUrl,
-    options.parseMode || "HTML"
-  );
+        options.buttonUrl
 
-} else if (
-  options.document &&
-  options.buttonText &&
-  options.buttonUrl
-) {
+      ) {
 
-  await sendDocumentWithButton(
-    token,
-    user.telegram_id,
-    options.document,
-    options.message,
-    options.buttonText,
-    options.buttonUrl,
-    options.parseMode || "HTML"
-  );
+        await sendPhotoWithButton(
 
-} else if (
-  options.buttonText &&
-  options.buttonUrl
-) {
+          token,
 
-  await sendMessageWithButton(
-    token,
-    user.telegram_id,
-    options.message,
-    options.buttonText,
-    options.buttonUrl,
-    options.parseMode || "HTML"
-  );
+          user.telegram_id,
 
-} else if (options.photo) {
+          options.photo,
 
-  await sendPhoto(
-    token,
-    user.telegram_id,
-    options.photo,
-    options.message,
-    options.parseMode || "HTML"
-  );
+          options.message,
 
-} else if (options.video) {
+          options.buttonText,
 
-  await sendVideo(
-    token,
-    user.telegram_id,
-    options.video,
-    options.message,
-    options.parseMode || "HTML"
-  );
+          options.buttonUrl,
 
-} else if (options.document) {
+          options.parseMode || "HTML"
 
-  await sendDocument(
-    token,
-    user.telegram_id,
-    options.document,
-    options.message,
-    options.parseMode || "HTML"
-  );
+        );
 
-} else {
+      } else if (
 
-  await sendText(
-    token,
-    user.telegram_id,
-    options.message,
-    options.parseMode || "HTML"
-  );
+        options.video &&
 
-}
+        options.buttonText &&
+
+        options.buttonUrl
+
+      ) {
+
+        await sendVideoWithButton(
+
+          token,
+
+          user.telegram_id,
+
+          options.video,
+
+          options.message,
+
+          options.buttonText,
+
+          options.buttonUrl,
+
+          options.parseMode || "HTML"
+
+        );
+
+      } else if (
+
+        options.document &&
+
+        options.buttonText &&
+
+        options.buttonUrl
+
+      ) {
+
+        await sendDocumentWithButton(
+
+          token,
+
+          user.telegram_id,
+
+          options.document,
+
+          options.message,
+
+          options.buttonText,
+
+          options.buttonUrl,
+
+          options.parseMode || "HTML"
+
+        );
+
+      }
+      else if (
+
+        options.buttonText &&
+
+        options.buttonUrl
+
+      ) {
+
+        await sendMessageWithButton(
+
+          token,
+
+          user.telegram_id,
+
+          options.message,
+
+          options.buttonText,
+
+          options.buttonUrl,
+
+          options.parseMode || "HTML"
+
+        );
+
+      }
+
+      else if (options.photo) {
+
+        await sendPhoto(
+
+          token,
+
+          user.telegram_id,
+
+          options.photo,
+
+          options.message,
+
+          options.parseMode || "HTML"
+
+        );
+
+      }
+
+      else if (options.video) {
+
+        await sendVideo(
+
+          token,
+
+          user.telegram_id,
+
+          options.video,
+
+          options.message,
+
+          options.parseMode || "HTML"
+
+        );
+
+      }
+
+      else if (options.document) {
+
+        await sendDocument(
+
+          token,
+
+          user.telegram_id,
+
+          options.document,
+
+          options.message,
+
+          options.parseMode || "HTML"
+
+        );
+
+      }
+
+      else {
+
+        await sendText(
+
+          token,
+
+          user.telegram_id,
+
+          options.message,
+
+          options.parseMode || "HTML"
+
+        );
+
+      }
 
       success++;
 
-    } catch (e: any) {
+    }
 
-  console.error("========== BROADCAST ERROR ==========");
-  console.error(e);
-  console.error("=====================================");
+    catch (e: any) {
 
-  const error = String(e);
+      console.error("========== BROADCAST ERROR ==========");
 
-  if (
-    error.includes("bot was blocked") ||
-    error.includes("chat not found") ||
-    error.includes("user is deactivated")
-  ) {
+      console.error(e);
 
-    await deleteTelegramUser(
-      db,
-      user.telegram_id
-    );
+      console.error("=====================================");
 
-    console.log(
-      "Kullanıcı otomatik silindi:",
-      user.telegram_id
-    );
+      const error = String(e);
 
-  }
+      if (
 
-  failed++;
+        error.includes("bot was blocked") ||
 
-}
+        error.includes("chat not found") ||
+
+        error.includes("user is deactivated")
+
+      ) {
+
+        await deleteTelegramUser(
+
+          db,
+
+          botId,
+
+          user.telegram_id
+
+        );
+
+        console.log(
+
+          "Kullanıcı otomatik silindi:",
+
+          user.telegram_id
+
+        );
+
+      }
+
+      failed++;
+
+    }
 
   }
 
   return {
+
     success,
+
     failed
+
   };
 
 }
-
 export async function sendBroadcastAllBots(
   db: D1Database,
   options: BroadcastOptions
@@ -201,25 +309,42 @@ export async function sendBroadcastAllBots(
     .all();
 
   let totalSuccess = 0;
+
   let totalFailed = 0;
 
   for (const bot of results as any[]) {
 
-    const result = await sendBroadcast(
-      db,
-      bot.token,
-      bot.telegram_id,
-      options
-    );
+    try {
 
-    totalSuccess += result.success;
-    totalFailed += result.failed;
+      const result = await sendBroadcast(
+        db,
+        bot.token,
+        bot.telegram_id,
+        options
+      );
+
+      totalSuccess += result.success;
+
+      totalFailed += result.failed;
+
+    } catch (e) {
+
+      console.error(
+        "BOT BROADCAST ERROR:",
+        bot.telegram_id,
+        e
+      );
+
+    }
 
   }
 
   return {
+
     success: totalSuccess,
+
     failed: totalFailed
+
   };
 
 }
