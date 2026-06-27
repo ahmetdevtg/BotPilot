@@ -30,11 +30,15 @@ async function telegramRequest(
 
   const json = await res.json() as any;
 
-  if (!json.ok) {
-    throw new Error(
-      json.description || "Telegram API Hatası"
-    );
-  }
+ if (!json.ok) {
+
+  console.error(json);
+
+  throw new Error(
+    JSON.stringify(json, null, 2)
+  );
+
+}
 
   return json;
 
