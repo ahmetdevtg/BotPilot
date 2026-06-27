@@ -8,6 +8,7 @@ import {
   sendDocumentWithButton,
   sendMessageWithButton
 } from "../telegram/api";
+import { deleteTelegramUser } from "../database/telegram-users";
 
 export interface BroadcastOptions {
   message: string;
@@ -152,6 +153,26 @@ export async function sendBroadcast(
   console.error("========== BROADCAST ERROR ==========");
   console.error(e);
   console.error("=====================================");
+
+  const error = String(e);
+
+  if (
+    error.includes("bot was blocked") ||
+    error.includes("chat not found") ||
+    error.includes("user is deactivated")
+  ) {
+
+    await deleteTelegramUser(
+      db,
+      user.telegram_id
+    );
+
+    console.log(
+      "Kullanıcı otomatik silindi:",
+      user.telegram_id
+    );
+
+  }
 
   failed++;
 
