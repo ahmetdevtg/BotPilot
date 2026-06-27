@@ -197,8 +197,7 @@ background:#16a34a;
 color:white;
 text-decoration:none;
 border-radius:8px;
-margin-left:10px;
-">
+margin-left:10px;">
 
 📥 Toplu Bot Ekle
 
