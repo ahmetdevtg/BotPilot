@@ -12,7 +12,8 @@ import {
 import {
   setMyName,
   setMyDescription,
-  setMyShortDescription
+  setMyShortDescription,
+  sleep
 } from "./telegram/api";
 
 const globalSettings = new Hono<Env>();
