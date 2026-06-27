@@ -275,8 +275,7 @@ globalSettings.post("/global-settings/apply", async (c) => {
   } catch (e: any) {
   console.error("setMyName:", e);
 }
-    console.error("setMyName:", e);
-  }
+ 
 
   try {
     await setMyDescription(
@@ -285,7 +284,6 @@ globalSettings.post("/global-settings/apply", async (c) => {
     );
   } catch (e: any) {
   console.error("setMyName:", e);
-}
     console.error("setMyDescription:", e);
   }
 
@@ -296,8 +294,8 @@ globalSettings.post("/global-settings/apply", async (c) => {
     );
   } catch (e: any) {
   console.error("setMyName:", e);
-}
-    console.error("setMyShortDescription:", e);
+
+   console.error("setMyShortDescription:", e);
   }
 
   success++;
