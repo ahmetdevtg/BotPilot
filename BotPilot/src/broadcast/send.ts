@@ -9,10 +9,6 @@ import {
   sendMessageWithButton
 } from "../telegram/api";
 
-import {
-  deleteTelegramUser
-} from "../database/telegram-users";
-
 export interface BroadcastOptions {
 
   message: string;
@@ -56,229 +52,114 @@ export async function sendBroadcast(
     try {
 
       if (
-
         options.photo &&
-
         options.buttonText &&
-
         options.buttonUrl
-
       ) {
 
         await sendPhotoWithButton(
-
           token,
-
           user.telegram_id,
-
           options.photo,
-
           options.message,
-
           options.buttonText,
-
           options.buttonUrl,
-
           options.parseMode || "HTML"
-
         );
 
       } else if (
-
         options.video &&
-
         options.buttonText &&
-
         options.buttonUrl
-
       ) {
 
         await sendVideoWithButton(
-
           token,
-
           user.telegram_id,
-
           options.video,
-
           options.message,
-
           options.buttonText,
-
           options.buttonUrl,
-
           options.parseMode || "HTML"
-
         );
 
       } else if (
-
         options.document &&
-
         options.buttonText &&
-
         options.buttonUrl
-
       ) {
 
         await sendDocumentWithButton(
-
           token,
-
           user.telegram_id,
-
           options.document,
-
           options.message,
-
           options.buttonText,
-
           options.buttonUrl,
-
           options.parseMode || "HTML"
-
         );
-
-      }
       else if (
-
         options.buttonText &&
-
         options.buttonUrl
-
       ) {
 
         await sendMessageWithButton(
-
           token,
-
           user.telegram_id,
-
           options.message,
-
           options.buttonText,
-
           options.buttonUrl,
-
           options.parseMode || "HTML"
-
         );
 
-      }
-
-      else if (options.photo) {
+      } else if (options.photo) {
 
         await sendPhoto(
-
           token,
-
           user.telegram_id,
-
           options.photo,
-
           options.message,
-
           options.parseMode || "HTML"
-
         );
 
-      }
-
-      else if (options.video) {
+      } else if (options.video) {
 
         await sendVideo(
-
           token,
-
           user.telegram_id,
-
           options.video,
-
           options.message,
-
           options.parseMode || "HTML"
-
         );
 
-      }
-
-      else if (options.document) {
+      } else if (options.document) {
 
         await sendDocument(
-
           token,
-
           user.telegram_id,
-
           options.document,
-
           options.message,
-
           options.parseMode || "HTML"
-
         );
 
-      }
-
-      else {
+      } else {
 
         await sendText(
-
           token,
-
           user.telegram_id,
-
           options.message,
-
           options.parseMode || "HTML"
-
         );
 
       }
 
       success++;
 
-    }
-
-    catch (e: any) {
+    } catch (e: any) {
 
       console.error("========== BROADCAST ERROR ==========");
-
       console.error(e);
-
       console.error("=====================================");
-
-      const error = String(e);
-
-      if (
-
-        error.includes("bot was blocked") ||
-
-        error.includes("chat not found") ||
-
-        error.includes("user is deactivated")
-
-      ) {
-
-        await deleteTelegramUser(
-
-          db,
-
-          botId,
-
-          user.telegram_id
-
-        );
-
-        console.log(
-
-          "Kullanıcı otomatik silindi:",
-
-          user.telegram_id
-
-        );
-
-      }
 
       failed++;
 
@@ -287,11 +168,8 @@ export async function sendBroadcast(
   }
 
   return {
-
     success,
-
     failed
-
   };
 
 }
@@ -309,42 +187,25 @@ export async function sendBroadcastAllBots(
     .all();
 
   let totalSuccess = 0;
-
   let totalFailed = 0;
 
   for (const bot of results as any[]) {
 
-    try {
+    const result = await sendBroadcast(
+      db,
+      bot.token,
+      bot.telegram_id,
+      options
+    );
 
-      const result = await sendBroadcast(
-        db,
-        bot.token,
-        bot.telegram_id,
-        options
-      );
-
-      totalSuccess += result.success;
-
-      totalFailed += result.failed;
-
-    } catch (e) {
-
-      console.error(
-        "BOT BROADCAST ERROR:",
-        bot.telegram_id,
-        e
-      );
-
-    }
+    totalSuccess += result.success;
+    totalFailed += result.failed;
 
   }
 
   return {
-
     success: totalSuccess,
-
     failed: totalFailed
-
   };
 
 }
