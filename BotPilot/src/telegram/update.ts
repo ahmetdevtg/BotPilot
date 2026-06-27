@@ -10,45 +10,50 @@ export async function handleUpdate(
   update: any
 ) {
 
-  if (!update.message) {
-    return;
-  }
+  try {
 
-  const message = update.message;
-  const text = message.text || "";
+    if (!update.message) {
+      return;
+    }
 
-  // START
+    const message = update.message;
+    const text = message.text || "";
+    // /start
 
-  if (text === "/start") {
+    if (text === "/start") {
 
-    await handleStart(
-      db,
-      token,
-      botId,
-      message
-    );
+      await handleStart(
+        db,
+        token,
+        botId,
+        message
+      );
 
-    return;
+      return;
 
-  }
+    }
 
-  // Reply Button
+    // Reply Button Handler
 
-  const handled = await handleReplyButton(
+    const handled =
+      await handleReplyButton(
+        db,
+        token,
+        message
+      );
+
+    if (handled) {
+      return;
+    }
+
+    // Veritabanındaki Reply Button
+
+   const reply: any =
+  await getReplyButton(
     db,
-    token,
-    message
+    text
   );
 
-  if (handled) {
-    return;
-  }
-
-  const reply: any =
-    await getReplyButton(
-      db,
-      text
-    );
     if (reply) {
 
       await sendMessage(
@@ -62,7 +67,6 @@ export async function handleUpdate(
       return;
 
     }
-
     // SABİT MENÜLER
 
     if (text === "📢 Kanal") {
@@ -101,6 +105,9 @@ Ad: ${message.from.first_name}`
       return;
 
     }
+    // Bilinmeyen mesajlar için hiçbir şey yapma
+    return;
+
   } catch (e: any) {
 
     console.error("HANDLE UPDATE ERROR");
@@ -119,7 +126,12 @@ Ad: ${message.from.first_name}`
 
       }
 
-    } catch {}
+    } catch (err) {
+
+      console.error("SEND ERROR MESSAGE FAILED");
+      console.error(err);
+
+    }
 
   }
 
