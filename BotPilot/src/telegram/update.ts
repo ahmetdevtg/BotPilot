@@ -24,6 +24,8 @@ export async function handleUpdate(
   // Önce /start çalışsın
   if (text === "/start") {
 
+  try {
+
     await handleStart(
       db,
       token,
@@ -31,8 +33,15 @@ export async function handleUpdate(
       update.message
     );
 
-    return;
+  } catch (e: any) {
+
+    console.error("HANDLE START ERROR:", e);
+
   }
+
+  return;
+
+}
 
   // Sonra Reply Button kontrolü
   const handled = await handleReplyButton(
