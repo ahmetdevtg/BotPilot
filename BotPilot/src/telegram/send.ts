@@ -1,6 +1,3 @@
-console.log("=== SEND MESSAGE ===");
-console.log("TEXT:", text);
-console.log("CHAT:", chatId);
 export async function sendMessage(
   token: string,
   chatId: number,
@@ -12,15 +9,17 @@ export async function sendMessage(
   let replyMarkup: any = undefined;
 
   if (keyboard && keyboard.trim() !== "") {
+
     replyMarkup = {
       keyboard: keyboard
         .split("\n")
-        .map(x => [{ text: x.trim() }]),
+        .map((x) => [{ text: x.trim() }]),
       resize_keyboard: true
     };
+
   }
 
-  const res = await fetch(
+  const response = await fetch(
     `https://api.telegram.org/bot${token}/sendMessage`,
     {
       method: "POST",
@@ -29,22 +28,24 @@ export async function sendMessage(
       },
       body: JSON.stringify({
         chat_id: chatId,
-        text,
-        parse_mode: parseMode === "None" ? undefined : parseMode,
+        text: text,
+        parse_mode:
+          parseMode === "None"
+            ? undefined
+            : parseMode,
         reply_markup: replyMarkup
       })
     }
   );
 
-  const json = await res.json();
+  const json = await response.json();
 
-  console.log("SEND MESSAGE RESULT");
+  console.log("SEND MESSAGE");
   console.log(JSON.stringify(json));
 
   return json;
 
 }
-
 export async function sendPhotoWithButton(
   token: string,
   chatId: number,
@@ -56,26 +57,31 @@ export async function sendPhotoWithButton(
   keyboard?: string
 ) {
 
-  const replyMarkup =
-    keyboard && keyboard.trim() !== ""
-      ? {
-          keyboard: keyboard
-            .split("\n")
-            .map(x => [{ text: x.trim() }]),
-          resize_keyboard: true
-        }
-      : buttonText && buttonUrl
-      ? {
-          inline_keyboard: [[
-            {
-              text: buttonText,
-              url: buttonUrl
-            }
-          ]]
-        }
-      : undefined;
+  let replyMarkup: any = undefined;
 
-  const res = await fetch(
+  if (keyboard && keyboard.trim() !== "") {
+
+    replyMarkup = {
+      keyboard: keyboard
+        .split("\n")
+        .map((x) => [{ text: x.trim() }]),
+      resize_keyboard: true
+    };
+
+  } else if (buttonText && buttonUrl) {
+
+    replyMarkup = {
+      inline_keyboard: [[
+        {
+          text: buttonText,
+          url: buttonUrl
+        }
+      ]]
+    };
+
+  }
+
+  const response = await fetch(
     `https://api.telegram.org/bot${token}/sendPhoto`,
     {
       method: "POST",
@@ -84,23 +90,25 @@ export async function sendPhotoWithButton(
       },
       body: JSON.stringify({
         chat_id: chatId,
-        photo,
-        caption,
-        parse_mode: parseMode === "None" ? undefined : parseMode,
+        photo: photo,
+        caption: caption,
+        parse_mode:
+          parseMode === "None"
+            ? undefined
+            : parseMode,
         reply_markup: replyMarkup
       })
     }
   );
 
-  const json = await res.json();
+  const json = await response.json();
 
-  console.log("SEND PHOTO RESULT");
+  console.log("SEND PHOTO");
   console.log(JSON.stringify(json));
 
   return json;
 
 }
-
 export async function sendVideoWithButton(
   token: string,
   chatId: number,
@@ -112,26 +120,31 @@ export async function sendVideoWithButton(
   keyboard?: string
 ) {
 
-  const replyMarkup =
-    keyboard && keyboard.trim() !== ""
-      ? {
-          keyboard: keyboard
-            .split("\n")
-            .map(x => [{ text: x.trim() }]),
-          resize_keyboard: true
-        }
-      : buttonText && buttonUrl
-      ? {
-          inline_keyboard: [[
-            {
-              text: buttonText,
-              url: buttonUrl
-            }
-          ]]
-        }
-      : undefined;
+  let replyMarkup: any = undefined;
 
-  const res = await fetch(
+  if (keyboard && keyboard.trim() !== "") {
+
+    replyMarkup = {
+      keyboard: keyboard
+        .split("\n")
+        .map((x) => [{ text: x.trim() }]),
+      resize_keyboard: true
+    };
+
+  } else if (buttonText && buttonUrl) {
+
+    replyMarkup = {
+      inline_keyboard: [[
+        {
+          text: buttonText,
+          url: buttonUrl
+        }
+      ]]
+    };
+
+  }
+
+  const response = await fetch(
     `https://api.telegram.org/bot${token}/sendVideo`,
     {
       method: "POST",
@@ -140,23 +153,25 @@ export async function sendVideoWithButton(
       },
       body: JSON.stringify({
         chat_id: chatId,
-        video,
-        caption,
-        parse_mode: parseMode === "None" ? undefined : parseMode,
+        video: video,
+        caption: caption,
+        parse_mode:
+          parseMode === "None"
+            ? undefined
+            : parseMode,
         reply_markup: replyMarkup
       })
     }
   );
 
-  const json = await res.json();
+  const json = await response.json();
 
-  console.log("SEND VIDEO RESULT");
+  console.log("SEND VIDEO");
   console.log(JSON.stringify(json));
 
   return json;
 
 }
-
 export async function sendDocumentWithButton(
   token: string,
   chatId: number,
@@ -168,26 +183,31 @@ export async function sendDocumentWithButton(
   keyboard?: string
 ) {
 
-  const replyMarkup =
-    keyboard && keyboard.trim() !== ""
-      ? {
-          keyboard: keyboard
-            .split("\n")
-            .map(x => [{ text: x.trim() }]),
-          resize_keyboard: true
-        }
-      : buttonText && buttonUrl
-      ? {
-          inline_keyboard: [[
-            {
-              text: buttonText,
-              url: buttonUrl
-            }
-          ]]
-        }
-      : undefined;
+  let replyMarkup: any = undefined;
 
-  const res = await fetch(
+  if (keyboard && keyboard.trim() !== "") {
+
+    replyMarkup = {
+      keyboard: keyboard
+        .split("\n")
+        .map((x) => [{ text: x.trim() }]),
+      resize_keyboard: true
+    };
+
+  } else if (buttonText && buttonUrl) {
+
+    replyMarkup = {
+      inline_keyboard: [[
+        {
+          text: buttonText,
+          url: buttonUrl
+        }
+      ]]
+    };
+
+  }
+
+  const response = await fetch(
     `https://api.telegram.org/bot${token}/sendDocument`,
     {
       method: "POST",
@@ -196,17 +216,20 @@ export async function sendDocumentWithButton(
       },
       body: JSON.stringify({
         chat_id: chatId,
-        document,
-        caption,
-        parse_mode: parseMode === "None" ? undefined : parseMode,
+        document: document,
+        caption: caption,
+        parse_mode:
+          parseMode === "None"
+            ? undefined
+            : parseMode,
         reply_markup: replyMarkup
       })
     }
   );
 
-  const json = await res.json();
+  const json = await response.json();
 
-  console.log("SEND DOCUMENT RESULT");
+  console.log("SEND DOCUMENT");
   console.log(JSON.stringify(json));
 
   return json;
