@@ -80,6 +80,43 @@ export async function deleteBot(
   id: number
 ) {
 
+  const bot: any = await db
+    .prepare(`
+      SELECT telegram_id
+      FROM bots
+      WHERE id=?
+    `)
+    .bind(id)
+    .first();
+
+  if (!bot) {
+    return;
+  }
+
+  await db
+    .prepare(`
+      DELETE FROM telegram_users
+      WHERE bot_id=?
+    `)
+    .bind(bot.telegram_id)
+    .run();
+
+  await db
+    .prepare(`
+      DELETE FROM bot_settings
+      WHERE bot_id=?
+    `)
+    .bind(bot.telegram_id)
+    .run();
+
+  await db
+    .prepare(`
+      DELETE FROM broadcasts
+      WHERE bot_id=?
+    `)
+    .bind(bot.telegram_id)
+    .run();
+
   return await db
     .prepare(`
       DELETE FROM bots
