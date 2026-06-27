@@ -360,19 +360,48 @@ bots.get("/bots/bulk", async (c) => {
 
 <style>
 
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
 body{
 background:#0f172a;
 color:white;
-font-family:Arial,sans-serif;
 padding:40px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+}
+
+.back{
+display:inline-block;
+margin-bottom:20px;
+padding:12px 20px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+font-weight:bold;
 }
 
 .card{
 background:#1e293b;
 padding:25px;
 border-radius:12px;
-max-width:900px;
-margin:auto;
+}
+
+h1{
+margin-bottom:10px;
+}
+
+p{
+color:#cbd5e1;
+margin-bottom:20px;
 }
 
 textarea{
@@ -384,27 +413,23 @@ border-radius:8px;
 background:#0f172a;
 color:white;
 resize:vertical;
-margin-top:15px;
-margin-bottom:20px;
+font-size:15px;
 }
 
 button{
+margin-top:20px;
 padding:14px 24px;
 background:#16a34a;
 color:white;
 border:none;
 border-radius:8px;
 cursor:pointer;
+font-size:16px;
+font-weight:bold;
 }
 
-a{
-display:inline-block;
-margin-bottom:20px;
-padding:10px 18px;
-background:#2563eb;
-color:white;
-text-decoration:none;
-border-radius:8px;
+button:hover{
+background:#15803d;
 }
 
 </style>
@@ -413,9 +438,11 @@ border-radius:8px;
 
 <body>
 
-<a href="/bots">
+<div class="container">
 
-⬅ Botlara Dön
+<a href="/bots" class="back">
+
+⬅ Bot Listesine Dön
 
 </a>
 
@@ -433,19 +460,21 @@ Her satıra bir Telegram Bot Token yapıştır.
 
 <textarea
 name="tokens"
-placeholder="123456:AA...
+placeholder="123456:AAxxxxxxxxxxxxxxxx
 
-987654:BB...
+987654:BBxxxxxxxxxxxxxxxx
 
-741852:CC..."></textarea>
+741852:CCxxxxxxxxxxxxxxxx"></textarea>
 
-<button>
+<button type="submit">
 
 🚀 Botları Ekle
 
 </button>
 
 </form>
+
+</div>
 
 </div>
 
