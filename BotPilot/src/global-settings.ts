@@ -1,30 +1,29 @@
 import { Hono } from "hono";
 import { auth } from "./middleware/auth";
 import type { Env } from "./types/env";
+
 import { getBots } from "./database/bots";
+
+import {
+  getBotSettings,
+  updateBotSettings
+} from "./database/bot-settings";
 
 import {
   setMyName,
   setMyDescription,
   setMyShortDescription
 } from "./telegram/api";
-import {
-  getBotSettings,
-  updateBotSettings
-} from "./database/bot-settings";
 
 const globalSettings = new Hono<Env>();
 
 globalSettings.use("*", auth);
-
 globalSettings.get("/global-settings", async (c) => {
 
-const settings = await getBotSettings(c.env.DB);
+  const settings: any = await getBotSettings(c.env.DB);
 
-return c.html(`
-
+  return c.html(`
 <!DOCTYPE html>
-
 <html lang="tr">
 
 <head>
@@ -49,7 +48,6 @@ padding:40px;
 }
 
 .back{
-
 display:inline-block;
 margin-bottom:20px;
 padding:10px 18px;
@@ -58,28 +56,22 @@ color:white;
 text-decoration:none;
 border-radius:8px;
 font-weight:bold;
-
 }
 
 .card{
-
 background:#1e293b;
 padding:20px;
 border-radius:12px;
 margin-bottom:25px;
-
 }
 
 .card h2{
-
 margin-bottom:20px;
-
 }
 
 input,
 textarea,
 select{
-
 width:100%;
 padding:12px;
 border:none;
@@ -88,24 +80,19 @@ margin-top:8px;
 margin-bottom:18px;
 background:#0f172a;
 color:white;
-
 }
 
 button{
-
 padding:14px 24px;
 background:#2563eb;
 color:white;
 border:none;
 border-radius:8px;
 cursor:pointer;
-
 }
 
 button:hover{
-
 background:#1d4ed8;
-
 }
 
 </style>
@@ -115,15 +102,11 @@ background:#1d4ed8;
 <body>
 
 <a href="/dashboard" class="back">
-
 🏠 Anasayfaya Dön
-
 </a>
 
 <h1 style="margin-bottom:25px;">
-
 ⚙ Genel Bot Ayarları
-
 </h1>
 
 <form method="POST" action="/global-settings">
@@ -155,7 +138,7 @@ rows="2">${settings?.short_description || ""}</textarea>
 
 <h2>🚀 /start Ayarları</h2>
 
-<label>/start Mesajı</label>
+<label>Başlangıç Mesajı</label>
 
 <textarea
 name="start_message"
@@ -173,16 +156,17 @@ value="${settings?.photo_url || ""}">
 name="video_url"
 value="${settings?.video_url || ""}">
 
-<label>Dosya URL</label>
+<label>Doküman URL</label>
 
 <input
 name="document_url"
 value="${settings?.document_url || ""}">
 
 </div>
+
 <div class="card">
 
-<h2>🔘 Buton Ayarları</h2>
+<h2>🔗 Başlangıç Butonu</h2>
 
 <label>Buton Yazısı</label>
 
@@ -200,15 +184,7 @@ value="${settings?.button_url || ""}">
 
 <div class="card">
 
-<h2>⌨ Reply Keyboard</h2>
-
-<label>Her satıra bir buton yaz.</label>
-
-<textarea
-name="reply_keyboard"
-rows="6">${settings?.reply_keyboard || ""}</textarea>
-
-<label>Parse Mode</label>
+<h2>⚙ Parse Mode</h2>
 
 <select name="parse_mode">
 
@@ -235,25 +211,19 @@ None
 </div>
 
 <button type="submit">
-
 💾 Kaydet
-
 </button>
-<div style="margin-top:15px;">
 
 <button
 type="submit"
 formaction="/global-settings/apply"
 style="
+margin-left:12px;
 background:#16a34a;
-margin-left:10px;
 ">
-
 🚀 Tüm Botlara Uygula
-
 </button>
 
-</div>
 </form>
 
 </body>
@@ -277,69 +247,10 @@ globalSettings.post("/global-settings", async (c) => {
     document_url: String(body.document_url || ""),
     button_text: String(body.button_text || ""),
     button_url: String(body.button_url || ""),
-    reply_keyboard: String(body.reply_keyboard || ""),
+    reply_keyboard: "",
     parse_mode: String(body.parse_mode || "HTML")
   });
 
   return c.redirect("/global-settings");
 
 });
-globalSettings.post("/global-settings/apply", async (c) => {
-
-  const settings = await getBotSettings(c.env.DB) as any;
-
-  const bots = await getBots(c.env.DB) as any[];
-
-  let success = 0;
-  let failed = 0;
-
-  for (const bot of bots) {
-
-    try {
-
-      await setMyName(
-        bot.token,
-        settings.bot_name
-      );
-
-      await setMyDescription(
-        bot.token,
-        settings.description
-      );
-
-      await setMyShortDescription(
-        bot.token,
-        settings.short_description
-      );
-
-      success++;
-
-    } catch (e) {
-
-      console.error(e);
-
-      failed++;
-
-    }
-
-  }
-
-  return c.html(`
-
-<h2>İşlem Tamamlandı</h2>
-
-<p>✅ Başarılı: ${success}</p>
-
-<p>❌ Başarısız: ${failed}</p>
-
-<a href="/global-settings">
-
-← Geri Dön
-
-</a>
-
-`);
-
-});
-
-export default globalSettings;
