@@ -18,12 +18,15 @@ import {
 const globalSettings = new Hono<Env>();
 
 globalSettings.use("*", auth);
+
 globalSettings.get("/global-settings", async (c) => {
 
   const settings: any = await getBotSettings(c.env.DB);
 
   return c.html(`
+
 <!DOCTYPE html>
+
 <html lang="tr">
 
 <head>
@@ -110,6 +113,7 @@ background:#1d4ed8;
 </h1>
 
 <form method="POST" action="/global-settings">
+
 <div class="card">
 
 <h2>🤖 Bot Profili</h2>
@@ -217,10 +221,7 @@ None
 <button
 type="submit"
 formaction="/global-settings/apply"
-style="
-margin-left:12px;
-background:#16a34a;
-">
+style="margin-left:10px;background:#16a34a;">
 🚀 Tüm Botlara Uygula
 </button>
 
@@ -254,3 +255,116 @@ globalSettings.post("/global-settings", async (c) => {
   return c.redirect("/global-settings");
 
 });
+
+globalSettings.post("/global-settings/apply", async (c) => {
+
+  const settings: any = await getBotSettings(c.env.DB);
+
+  const bots: any[] = await getBots(c.env.DB);
+
+  let success = 0;
+  let failed = 0;
+
+  for (const bot of bots) {
+
+    try {
+
+      await setMyName(
+        bot.token,
+        settings.bot_name || ""
+      );
+
+      await setMyDescription(
+        bot.token,
+        settings.description || ""
+      );
+
+      await setMyShortDescription(
+        bot.token,
+        settings.short_description || ""
+      );
+
+      success++;
+
+    } catch (e) {
+
+      console.error(e);
+
+      failed++;
+
+    }
+
+  }
+
+  return c.html(`
+
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>İşlem Tamamlandı</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial,sans-serif;
+padding:40px;
+}
+
+.card{
+background:#1e293b;
+padding:25px;
+border-radius:12px;
+max-width:500px;
+margin:auto;
+text-align:center;
+}
+
+a{
+display:inline-block;
+margin-top:20px;
+padding:12px 20px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>✅ İşlem Tamamlandı</h2>
+
+<p>Başarılı: ${success}</p>
+
+<p>Başarısız: ${failed}</p>
+
+<a href="/global-settings">
+
+← Genel Ayarlara Dön
+
+</a>
+
+</div>
+
+</body>
+
+</html>
+
+`);
+
+});
+
+export default globalSettings;
