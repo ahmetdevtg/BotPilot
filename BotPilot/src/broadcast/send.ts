@@ -89,7 +89,7 @@ export async function sendBroadcast(
           options.buttonUrl,
           options.parseMode || "HTML"
         );
-      else if (
+      } else if (
         options.buttonText &&
         options.buttonUrl
       ) {
