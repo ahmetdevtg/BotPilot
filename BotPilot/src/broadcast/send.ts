@@ -10,21 +10,13 @@ import {
 } from "../telegram/api";
 
 export interface BroadcastOptions {
-
   message: string;
-
   photo?: string;
-
   video?: string;
-
   document?: string;
-
   parseMode?: string;
-
   buttonText?: string;
-
   buttonUrl?: string;
-
 }
 
 export async function sendBroadcast(
@@ -44,7 +36,6 @@ export async function sendBroadcast(
     .all();
 
   let success = 0;
-
   let failed = 0;
 
   for (const user of results as any[]) {
@@ -182,7 +173,7 @@ export async function sendBroadcastAllBots(
     .prepare(`
       SELECT *
       FROM bots
-      WHERE status=1
+      WHERE status = 1
     `)
     .all();
 
