@@ -486,6 +486,110 @@ Geri Dön
 
 });
 // Bot Düzenle
+bots.post("/bots/bulk", async (c) => {
+
+  const body = await c.req.parseBody();
+
+  const text = String(body.tokens || "");
+
+  const tokens = text
+    .split("\n")
+    .map(x => x.trim())
+    .filter(x => x !== "");
+
+  let success = 0;
+  let failed = 0;
+
+  for (const token of tokens) {
+
+    try {
+
+      await addBot(
+        c.env.DB,
+        token
+      );
+
+      success++;
+
+    } catch (e) {
+
+      failed++;
+
+    }
+
+  }
+
+  return c.html(`
+
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>İşlem Tamamlandı</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+padding:40px;
+}
+
+.card{
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+max-width:600px;
+margin:auto;
+text-align:center;
+}
+
+a{
+display:inline-block;
+margin-top:20px;
+padding:12px 20px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>✅ Toplu Bot Ekleme Tamamlandı</h1>
+
+<p>Toplam Token: ${tokens.length}</p>
+
+<p>Başarılı: ${success}</p>
+
+<p>Başarısız: ${failed}</p>
+
+<a href="/bots">
+
+⬅ Botlara Dön
+
+</a>
+
+</div>
+
+</body>
+
+</html>
+
+`);
+
+});
 bots.post("/bots/edit/:id", async (c) => {
 
   const id = Number(c.req.param("id"));
