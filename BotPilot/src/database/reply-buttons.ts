@@ -1,36 +1,77 @@
-export async function getReplyButtons(db: D1Database) {
+
+export async function getReplyButtons(
+  db: D1Database
+) {
+
   return await db
     .prepare(`
       SELECT *
       FROM reply_buttons
-      WHERE is_enabled=1
-      ORDER BY sort_order ASC,id ASC
+      ORDER BY sort_order ASC, id ASC
     `)
     .all();
+
+}
+
+export async function getEnabledReplyButtons(
+  db: D1Database
+) {
+
+  const result = await db
+    .prepare(`
+      SELECT *
+      FROM reply_buttons
+      WHERE is_enabled = 1
+      ORDER BY sort_order ASC, id ASC
+    `)
+    .all();
+
+  return result.results;
+
 }
 
 export async function getReplyButton(
   db: D1Database,
   buttonText: string
 ) {
+
   return await db
     .prepare(`
       SELECT *
       FROM reply_buttons
-      WHERE button_text=?
+      WHERE button_text = ?
       LIMIT 1
     `)
     .bind(buttonText)
     .first();
+
 }
 
+export async function getReplyButtonById(
+  db: D1Database,
+  id: number
+) {
+
+  return await db
+    .prepare(`
+      SELECT *
+      FROM reply_buttons
+      WHERE id = ?
+      LIMIT 1
+    `)
+    .bind(id)
+    .first();
+
+}
 export async function createReplyButton(
   db: D1Database,
   data: any
 ) {
+
   return await db
     .prepare(`
-      INSERT INTO reply_buttons(
+      INSERT INTO reply_buttons
+      (
         button_text,
         response_type,
         message,
@@ -41,9 +82,13 @@ export async function createReplyButton(
         button_url,
         parse_mode,
         reply_keyboard,
-        sort_order
+        sort_order,
+        is_enabled
       )
-      VALUES(?,?,?,?,?,?,?,?,?,?,?)
+      VALUES
+      (
+        ?,?,?,?,?,?,?,?,?,?,?,?
+      )
     `)
     .bind(
       data.button_text,
@@ -56,42 +101,18 @@ export async function createReplyButton(
       data.button_url,
       data.parse_mode,
       data.reply_keyboard,
-      data.sort_order
+      data.sort_order,
+      data.is_enabled
     )
     .run();
-}
 
-export async function deleteReplyButton(
-  db: D1Database,
-  id: number
-) {
-  return await db
-    .prepare(`
-      DELETE FROM reply_buttons
-      WHERE id=?
-    `)
-    .bind(id)
-    .run();
 }
-export async function getReplyButtonById(
-  db: D1Database,
-  id: number
-) {
-  return await db
-    .prepare(`
-      SELECT *
-      FROM reply_buttons
-      WHERE id=?
-    `)
-    .bind(id)
-    .first();
-}
-
 export async function updateReplyButton(
   db: D1Database,
   id: number,
   data: any
 ) {
+
   return await db
     .prepare(`
       UPDATE reply_buttons
@@ -103,7 +124,11 @@ export async function updateReplyButton(
         video_url=?,
         document_url=?,
         button_text_url=?,
-        button_url=?
+        button_url=?,
+        parse_mode=?,
+        reply_keyboard=?,
+        sort_order=?,
+        is_enabled=?
       WHERE id=?
     `)
     .bind(
@@ -115,21 +140,26 @@ export async function updateReplyButton(
       data.document_url,
       data.button_text_url,
       data.button_url,
+      data.parse_mode,
+      data.reply_keyboard,
+      data.sort_order,
+      data.is_enabled,
       id
     )
     .run();
-}
-export async function getEnabledReplyButtons(
-  db: D1Database
-) {
-  const result = await db
-    .prepare(`
-      SELECT *
-      FROM reply_buttons
-      WHERE is_enabled = 1
-      ORDER BY sort_order ASC, id ASC
-    `)
-    .all();
 
-  return result.results;
+}
+export async function deleteReplyButton(
+  db: D1Database,
+  id: number
+) {
+
+  return await db
+    .prepare(`
+      DELETE FROM reply_buttons
+      WHERE id=?
+    `)
+    .bind(id)
+    .run();
+
 }
