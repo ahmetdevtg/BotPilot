@@ -272,7 +272,9 @@ globalSettings.post("/global-settings/apply", async (c) => {
       bot.token,
       settings.bot_name || ""
     );
-  } catch (e) {
+  } catch (e: any) {
+  console.error("setMyName:", e);
+}
     console.error("setMyName:", e);
   }
 
@@ -281,7 +283,9 @@ globalSettings.post("/global-settings/apply", async (c) => {
       bot.token,
       settings.description || ""
     );
-  } catch (e) {
+  } catch (e: any) {
+  console.error("setMyName:", e);
+}
     console.error("setMyDescription:", e);
   }
 
@@ -290,7 +294,9 @@ globalSettings.post("/global-settings/apply", async (c) => {
       bot.token,
       settings.short_description || ""
     );
-  } catch (e) {
+  } catch (e: any) {
+  console.error("setMyName:", e);
+}
     console.error("setMyShortDescription:", e);
   }
 
