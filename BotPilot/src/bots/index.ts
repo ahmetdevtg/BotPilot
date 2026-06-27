@@ -636,58 +636,21 @@ bots.post("/bots/edit/:id", async (c) => {
   ) as any;
 
   if (!bot) {
-
     return c.html("<h2>Bot bulunamadı.</h2>");
-
   }
 
-  try {
+  await updateBotProfile(
+    c.env.DB,
+    id,
+    name,
+    description,
+    shortDescription
+  );
 
-    await setMyName(
-      bot.token,
-      name
-    );
-
-    await setMyDescription(
-      bot.token,
-      description
-    );
-
-    await setMyShortDescription(
-      bot.token,
-      shortDescription
-    );
-
-    // Telegram başarılıysa veritabanını güncelle
-    await updateBotProfile(
-      c.env.DB,
-      id,
-      name,
-      description,
-      shortDescription
-    );
-
-    return c.redirect("/bots");
-
-  } catch (e: any) {
-
-    return c.html(`
-<h2>Telegram API Hatası</h2>
-
-<p>Bot bilgileri kaydedilmedi.</p>
-
-<pre>${e.message}</pre>
-
-<br>
-
-<a href="/bots/edit/${id}">
-← Geri Dön
-</a>
-`);
-
-  }
+  return c.redirect("/bots");
 
 });
+
 // Bot Sil
 bots.post("/bots/delete/:id", async (c) => {
 
