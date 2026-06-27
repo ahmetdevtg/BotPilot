@@ -117,25 +117,6 @@ background:#1d4ed8;
 
 <div class="card">
 
-<h2>🤖 Bot Profili</h2>
-
-<label>Bot Adı</label>
-
-<input
-name="bot_name"
-value="${settings?.bot_name || ""}">
-
-<label>Açıklama</label>
-
-<textarea
-name="description"
-rows="4">${settings?.description || ""}</textarea>
-
-<label>Kısa Açıklama</label>
-
-<textarea
-name="short_description"
-rows="2">${settings?.short_description || ""}</textarea>
 
 </div>
 
@@ -239,10 +220,12 @@ globalSettings.post("/global-settings", async (c) => {
 
   const body = await c.req.parseBody();
 
+  const current: any = await getBotSettings(c.env.DB);
+
   await updateBotSettings(c.env.DB, {
-    bot_name: String(body.bot_name || ""),
-    description: String(body.description || ""),
-    short_description: String(body.short_description || ""),
+    bot_name: current?.bot_name || "",
+    description: current?.description || "",
+    short_description: current?.short_description || "",
     start_message: String(body.start_message || ""),
     photo_url: String(body.photo_url || ""),
     video_url: String(body.video_url || ""),
@@ -256,7 +239,6 @@ globalSettings.post("/global-settings", async (c) => {
   return c.redirect("/global-settings");
 
 });
-
 globalSettings.post("/global-settings/apply", async (c) => {
 
   const settings: any = await getBotSettings(c.env.DB);
