@@ -1,4 +1,3 @@
-
 import { getReplyButton } from "../database/reply-buttons";
 import { handleStart } from "./handlers/start";
 import { handleReplyButton } from "./handlers/reply-button";
@@ -11,99 +10,116 @@ export async function handleUpdate(
   update: any
 ) {
 
-  console.log("UPDATE:", JSON.stringify(update));
-
   if (!update.message) {
     return;
   }
 
-  const text = update.message.text || "";
+  const message = update.message;
+  const text = message.text || "";
 
-  console.log("TEXT:", text);
+  // START
 
-  // Önce /start çalışsın
   if (text === "/start") {
-
-  try {
 
     await handleStart(
       db,
       token,
       botId,
-      update.message
+      message
     );
 
-  } catch (e: any) {
-
-    console.error("HANDLE START ERROR:", e);
+    return;
 
   }
 
-  return;
+  // Reply Button
 
-}
-
-  // Sonra Reply Button kontrolü
   const handled = await handleReplyButton(
     db,
     token,
-    update.message
+    message
   );
 
   if (handled) {
     return;
   }
 
-  const reply: any = await getReplyButton(
-    db,
-    text
-  );
-
-  if (reply) {
-
-    await sendMessage(
-      token,
-      update.message.chat.id,
-      reply.message || ""
+  const reply: any =
+    await getReplyButton(
+      db,
+      text
     );
+    if (reply) {
 
-    return;
+      await sendMessage(
+        token,
+        message.chat.id,
+        reply.message || "",
+        reply.parse_mode || "HTML",
+        reply.reply_keyboard || ""
+      );
 
-  }
+      return;
 
-  if (text === "📢 Kanal") {
+    }
 
-    await sendMessage(
-      token,
-      update.message.chat.id,
-      "Kanalımız:\nhttps://t.me/kanaliniz"
-    );
+    // SABİT MENÜLER
 
-    return;
+    if (text === "📢 Kanal") {
 
-  }
+      await sendMessage(
+        token,
+        message.chat.id,
+        "Kanalımız:\nhttps://t.me/kanaliniz"
+      );
 
-  if (text === "👤 Profil") {
+      return;
 
-    await sendMessage(
-      token,
-      update.message.chat.id,
-      `ID: ${update.message.from.id}\nAd: ${update.message.from.first_name}`
-    );
+    }
 
-    return;
+    if (text === "👤 Profil") {
 
-  }
+      await sendMessage(
+        token,
+        message.chat.id,
+        `ID: ${message.from.id}
+Ad: ${message.from.first_name}`
+      );
 
-  if (text === "ℹ️ Yardım") {
+      return;
 
-    await sendMessage(
-      token,
-      update.message.chat.id,
-      "Yardım menüsü yakında eklenecek."
-    );
+    }
 
-    return;
+    if (text === "ℹ️ Yardım") {
+
+      await sendMessage(
+        token,
+        message.chat.id,
+        "Yardım menüsü yakında eklenecek."
+      );
+
+      return;
+
+    }
+  } catch (e: any) {
+
+    console.error("HANDLE UPDATE ERROR");
+    console.error(e);
+    console.error(e?.stack);
+
+    try {
+
+      if (update?.message?.chat?.id) {
+
+        await sendMessage(
+          token,
+          update.message.chat.id,
+          "❌ Bir hata oluştu."
+        );
+
+      }
+
+    } catch {}
 
   }
 
