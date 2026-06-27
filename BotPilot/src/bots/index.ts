@@ -688,8 +688,6 @@ bots.post("/bots/edit/:id", async (c) => {
   }
 
 });
-
-});
 // Bot Sil
 bots.post("/bots/delete/:id", async (c) => {
 
