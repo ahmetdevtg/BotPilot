@@ -286,13 +286,19 @@ globalSettings.post("/global-settings/apply", async (c) => {
 
       success++;
 
-    } catch (e) {
+    } catch (e: any) {
 
-      console.error(e);
+  return c.html(`
+    <h2>Hata</h2>
 
-      failed++;
+    <pre>${e?.message}</pre>
 
-    }
+    <p>Bot: ${bot.name}</p>
+
+    <a href="/global-settings">Geri Dön</a>
+  `);
+
+}
 
   }
 
