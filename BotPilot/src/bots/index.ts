@@ -168,6 +168,8 @@ background:#172033;
 🏠 Anasayfaya Dön
 </a>
 
+<div style="margin-bottom:20px;">
+
 <form method="POST" action="/bots/add">
 
 <input
@@ -177,11 +179,29 @@ required>
 
 <button type="submit">
 
-Bot Ekle
+➕ Bot Ekle
 
 </button>
 
+<a
+href="/bots/bulk"
+style="
+display:inline-block;
+padding:12px 18px;
+background:#16a34a;
+color:white;
+text-decoration:none;
+border-radius:8px;
+margin-left:10px;
+">
+
+📥 Toplu Bot Ekle
+
+</a>
+
 </form>
+
+</div>
 
 <table>
 
@@ -315,6 +335,118 @@ rows="2">${bot.short_description || ""}</textarea>
 </button>
 
 </form>
+
+</body>
+
+</html>
+
+`);
+
+});
+bots.get("/bots/bulk", async (c) => {
+
+  return c.html(`
+
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Toplu Bot Ekle</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial,sans-serif;
+padding:40px;
+}
+
+.card{
+background:#1e293b;
+padding:25px;
+border-radius:12px;
+max-width:900px;
+margin:auto;
+}
+
+textarea{
+width:100%;
+height:350px;
+padding:15px;
+border:none;
+border-radius:8px;
+background:#0f172a;
+color:white;
+resize:vertical;
+margin-top:15px;
+margin-bottom:20px;
+}
+
+button{
+padding:14px 24px;
+background:#16a34a;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+a{
+display:inline-block;
+margin-bottom:20px;
+padding:10px 18px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<a href="/bots">
+
+⬅ Botlara Dön
+
+</a>
+
+<div class="card">
+
+<h1>📥 Toplu Bot Ekle</h1>
+
+<p>
+
+Her satıra bir Telegram Bot Token yapıştır.
+
+</p>
+
+<form method="POST" action="/bots/bulk">
+
+<textarea
+name="tokens"
+placeholder="123456:AA...
+
+987654:BB...
+
+741852:CC..."></textarea>
+
+<button>
+
+🚀 Botları Ekle
+
+</button>
+
+</form>
+
+</div>
 
 </body>
 
