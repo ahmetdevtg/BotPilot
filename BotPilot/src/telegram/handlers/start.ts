@@ -40,14 +40,14 @@ export async function handleStart(
       db,
       botId
     );
-await sendMessage(
+console.log("SENDING:", settings.start_message);
+
+return await sendMessage(
   token,
   message.chat.id,
-  settings.start_message || "👋 Hoş geldiniz.",
-  settings.parse_mode || "HTML",
-  keyboard
+  settings.start_message,
+  "HTML"
 );
-
 return;
 
     const buttons: any[] =
