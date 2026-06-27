@@ -1,31 +1,21 @@
 import { Hono } from "hono";
 import { auth } from "./middleware/auth";
-import type { Env } from "./types/env";
-
-import { getBots } from "./database/bots";
 
 import {
   getBotSettings,
   updateBotSettings
 } from "./database/bot-settings";
 
-import {
-  setMyName,
-  setMyDescription,
-  setMyShortDescription,
-  sleep
-} from "./telegram/api";
+import type { Env } from "./types/env";
 
 const globalSettings = new Hono<Env>();
 
 globalSettings.use("*", auth);
-
 globalSettings.get("/global-settings", async (c) => {
 
   const settings: any = await getBotSettings(c.env.DB);
 
   return c.html(`
-
 <!DOCTYPE html>
 
 <html lang="tr">
@@ -34,7 +24,7 @@ globalSettings.get("/global-settings", async (c) => {
 
 <meta charset="UTF-8">
 
-<title>Genel Bot Ayarları</title>
+<title>/start Ayarları</title>
 
 <style>
 
@@ -53,24 +43,31 @@ padding:40px;
 
 .back{
 display:inline-block;
-margin-bottom:20px;
 padding:10px 18px;
 background:#2563eb;
 color:white;
 text-decoration:none;
 border-radius:8px;
 font-weight:bold;
+margin-bottom:25px;
 }
 
 .card{
 background:#1e293b;
-padding:20px;
+padding:25px;
 border-radius:12px;
 margin-bottom:25px;
 }
 
 .card h2{
 margin-bottom:20px;
+}
+
+label{
+display:block;
+margin-top:12px;
+margin-bottom:8px;
+font-weight:bold;
 }
 
 input,
@@ -80,10 +77,13 @@ width:100%;
 padding:12px;
 border:none;
 border-radius:8px;
-margin-top:8px;
-margin-bottom:18px;
 background:#0f172a;
 color:white;
+margin-bottom:18px;
+}
+
+textarea{
+resize:vertical;
 }
 
 button{
@@ -93,6 +93,7 @@ color:white;
 border:none;
 border-radius:8px;
 cursor:pointer;
+font-size:15px;
 }
 
 button:hover{
@@ -110,20 +111,14 @@ background:#1d4ed8;
 </a>
 
 <h1 style="margin-bottom:25px;">
-⚙ Genel Bot Ayarları
+🚀 /start Ayarları
 </h1>
 
 <form method="POST" action="/global-settings">
 
 <div class="card">
 
-
-</div>
-
-<div class="card">
-
-<h2>🚀 /start Ayarları</h2>
-
+<h2>🚀 Başlangıç Mesajı</h2>
 <label>Başlangıç Mesajı</label>
 
 <textarea
@@ -148,12 +143,6 @@ value="${settings?.video_url || ""}">
 name="document_url"
 value="${settings?.document_url || ""}">
 
-</div>
-
-<div class="card">
-
-<h2>🔗 Başlangıç Butonu</h2>
-
 <label>Buton Yazısı</label>
 
 <input
@@ -166,11 +155,7 @@ value="${settings?.button_text || ""}">
 name="button_url"
 value="${settings?.button_url || ""}">
 
-</div>
-
-<div class="card">
-
-<h2>⚙ Parse Mode</h2>
+<label>Parse Mode</label>
 
 <select name="parse_mode">
 
@@ -197,7 +182,9 @@ None
 </div>
 
 <button type="submit">
-💾 Kaydet
+
+💾 Ayarları Kaydet
+
 </button>
 
 </form>
@@ -225,7 +212,7 @@ globalSettings.post("/global-settings", async (c) => {
     document_url: String(body.document_url || ""),
     button_text: String(body.button_text || ""),
     button_url: String(body.button_url || ""),
-    reply_keyboard: "",
+    reply_keyboard: current?.reply_keyboard || "",
     parse_mode: String(body.parse_mode || "HTML")
   });
 
