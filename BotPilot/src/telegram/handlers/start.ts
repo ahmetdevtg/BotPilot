@@ -34,7 +34,18 @@ export async function handleStart(
     );
   }
 
-  const settings: any = await getBotSettings(db);
+  const settings: any = await getBotSettings(
+  db,
+  botId
+);
+console.log("SETTINGS");
+console.log(JSON.stringify(settings));
+
+console.log("BUTTONS");
+console.log(JSON.stringify(buttons));
+
+console.log("KEYBOARD");
+console.log(keyboard);
 
   const buttons: any[] = await getEnabledReplyButtons(db);
 
