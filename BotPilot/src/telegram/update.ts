@@ -102,5 +102,4 @@ export async function handleUpdate(
     } catch (err) {
       console.error(err);
     }
-  }
 }
