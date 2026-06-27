@@ -639,15 +639,61 @@ bots.post("/bots/edit/:id", async (c) => {
     return c.html("<h2>Bot bulunamadı.</h2>");
   }
 
-  await updateBotProfile(
-    c.env.DB,
-    id,
-    name,
-    description,
-    shortDescription
-  );
+  try {
 
-  return c.redirect("/bots");
+    await setMyName(
+      bot.token,
+      name
+    );
+
+    await setMyDescription(
+      bot.token,
+      description
+    );
+
+    await setMyShortDescription(
+      bot.token,
+      shortDescription
+    );
+
+    await updateBotProfile(
+      c.env.DB,
+      id,
+      name,
+      description,
+      shortDescription
+    );
+
+    return c.redirect("/bots");
+
+  } catch (e: any) {
+
+    return c.html(`
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Telegram API Hatası</title>
+</head>
+<body style="background:#0f172a;color:white;font-family:Arial;padding:40px;">
+
+<h2>Telegram API Hatası</h2>
+
+<p>Bot güncellenemedi.</p>
+
+<pre>${e.message}</pre>
+
+<br>
+
+<a href="/bots/edit/${id}" style="color:#60a5fa;">
+← Geri Dön
+</a>
+
+</body>
+</html>
+`);
+
+  }
 
 });
 
