@@ -1,19 +1,26 @@
 import { Hono } from "hono";
 import { auth } from "./middleware/auth";
-
-import {
-  getBotSettings,
-  updateBotSettings
-} from "./database/bot-settings";
-
 import type { Env } from "./types/env";
 
 const globalSettings = new Hono<Env>();
 
 globalSettings.use("*", auth);
+/*
+|--------------------------------------------------------------------------
+| GLOBAL START AYARLARI
+|--------------------------------------------------------------------------
+*/
+
 globalSettings.get("/global-settings", async (c) => {
 
-  const settings: any = await getBotSettings(c.env.DB);
+  const settings: any = await c.env.DB
+    .prepare(`
+      SELECT *
+      FROM bot_settings
+      ORDER BY id ASC
+      LIMIT 1
+    `)
+    .first();
 
   return c.html(`
 <!DOCTYPE html>
@@ -24,7 +31,7 @@ globalSettings.get("/global-settings", async (c) => {
 
 <meta charset="UTF-8">
 
-<title>/start Ayarları</title>
+<title>Global Start Ayarları</title>
 
 <style>
 
@@ -48,7 +55,6 @@ background:#2563eb;
 color:white;
 text-decoration:none;
 border-radius:8px;
-font-weight:bold;
 margin-bottom:25px;
 }
 
@@ -56,16 +62,17 @@ margin-bottom:25px;
 background:#1e293b;
 padding:25px;
 border-radius:12px;
-margin-bottom:25px;
+max-width:900px;
+margin:auto;
 }
 
-.card h2{
-margin-bottom:20px;
+h1{
+margin-bottom:25px;
 }
 
 label{
 display:block;
-margin-top:12px;
+margin-top:15px;
 margin-bottom:8px;
 font-weight:bold;
 }
@@ -73,31 +80,39 @@ font-weight:bold;
 input,
 textarea,
 select{
+
 width:100%;
 padding:12px;
-border:none;
-border-radius:8px;
 background:#0f172a;
 color:white;
+border:1px solid #334155;
+border-radius:8px;
 margin-bottom:18px;
+
 }
 
 textarea{
+height:220px;
 resize:vertical;
 }
 
 button{
-padding:14px 24px;
+
+width:100%;
+padding:15px;
 background:#2563eb;
 color:white;
 border:none;
 border-radius:8px;
+font-size:16px;
 cursor:pointer;
-font-size:15px;
+
 }
 
 button:hover{
+
 background:#1d4ed8;
+
 }
 
 </style>
@@ -106,52 +121,55 @@ background:#1d4ed8;
 
 <body>
 
-<a href="/dashboard" class="back">
+<a class="back" href="/dashboard">
+
 🏠 Anasayfaya Dön
+
 </a>
-
-<h1 style="margin-bottom:25px;">
-🚀 /start Ayarları
-</h1>
-
-<form method="POST" action="/global-settings">
 
 <div class="card">
 
-<h2>🚀 Başlangıç Mesajı</h2>
+<h1>🚀 Global Start Ayarları</h1>
+
+<form method="POST" action="/global-settings">
+
 <label>Başlangıç Mesajı</label>
 
 <textarea
-name="start_message"
-rows="6">${settings?.start_message || ""}</textarea>
+name="start_message">${settings?.start_message || ""}</textarea>
 
 <label>Fotoğraf URL</label>
 
 <input
-name="photo_url"
-value="${settings?.photo_url || ""}">
+type="text"
+name="photo"
+value="${settings?.photo || ""}">
 
 <label>Video URL</label>
 
 <input
-name="video_url"
-value="${settings?.video_url || ""}">
+type="text"
+name="video"
+value="${settings?.video || ""}">
 
 <label>Doküman URL</label>
 
 <input
+type="text"
 name="document_url"
 value="${settings?.document_url || ""}">
 
-<label>Buton Yazısı</label>
+<label>Inline Buton Yazısı</label>
 
 <input
+type="text"
 name="button_text"
 value="${settings?.button_text || ""}">
 
-<label>Buton Linki</label>
+<label>Inline Buton Linki</label>
 
 <input
+type="text"
 name="button_url"
 value="${settings?.button_url || ""}">
 
@@ -179,44 +197,85 @@ None
 
 </select>
 
-</div>
-
 <button type="submit">
 
-💾 Ayarları Kaydet
+💾 Tüm Botlara Kaydet
 
 </button>
 
 </form>
+
+</div>
 
 </body>
 
 </html>
 
 `);
+/*
+|--------------------------------------------------------------------------
+| GLOBAL AYARLARI KAYDET
+|--------------------------------------------------------------------------
+*/
 
-});
 globalSettings.post("/global-settings", async (c) => {
 
-  const body = await c.req.parseBody();
+  try {
 
-  const current: any = await getBotSettings(c.env.DB);
+    const body = await c.req.parseBody();
 
-  await updateBotSettings(c.env.DB, {
-    bot_name: current?.bot_name || "",
-    description: current?.description || "",
-    short_description: current?.short_description || "",
-    start_message: String(body.start_message || ""),
-    photo_url: String(body.photo_url || ""),
-    video_url: String(body.video_url || ""),
-    document_url: String(body.document_url || ""),
-    button_text: String(body.button_text || ""),
-    button_url: String(body.button_url || ""),
-    reply_keyboard: current?.reply_keyboard || "",
-    parse_mode: String(body.parse_mode || "HTML")
-  });
+    const bots: any[] = await c.env.DB
+      .prepare(`
+        SELECT telegram_id
+        FROM bots
+      `)
+      .all()
+      .then((r: any) => r.results);
 
-  return c.redirect("/global-settings");
+    for (const bot of bots) {
+
+      await c.env.DB
+        .prepare(`
+          UPDATE bot_settings
+          SET
+            start_message=?,
+            photo=?,
+            video=?,
+            document_url=?,
+            button_text=?,
+            button_url=?,
+            parse_mode=?,
+            updated_at=CURRENT_TIMESTAMP
+          WHERE bot_id=?
+        `)
+        .bind(
+          String(body.start_message || ""),
+          String(body.photo || ""),
+          String(body.video || ""),
+          String(body.document_url || ""),
+          String(body.button_text || ""),
+          String(body.button_url || ""),
+          String(body.parse_mode || "HTML"),
+          bot.telegram_id
+        )
+        .run();
+
+    }
+
+    return c.redirect("/global-settings");
+
+  } catch (e: any) {
+
+    console.error("GLOBAL SETTINGS ERROR");
+    console.error(e);
+    console.error(e?.stack);
+
+    return c.text(
+      e?.message || "Kayıt sırasında hata oluştu.",
+      500
+    );
+
+  }
 
 });
 
