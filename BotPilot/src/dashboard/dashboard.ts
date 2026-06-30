@@ -1,8 +1,6 @@
 import { Hono } from "hono";
 import { auth } from "../middleware/auth";
 import { getDashboardStats } from "../database/dashboard";
-import { getBots, updateBotStatus } from "../database/bots";
-import { getMe } from "../telegram/api";
 import type { Env } from "../types/env";
 
 const dashboard = new Hono<Env>();
@@ -10,32 +8,6 @@ const dashboard = new Hono<Env>();
 dashboard.use("*", auth);
 
 dashboard.get("/dashboard", async (c) => {
-
-  const bots = await getBots(c.env.DB);
-
-  for (const bot of bots as any[]) {
-
-    try {
-
-      await getMe(bot.token);
-
-      await updateBotStatus(
-        c.env.DB,
-        bot.id,
-        1
-      );
-
-    } catch {
-
-      await updateBotStatus(
-        c.env.DB,
-        bot.id,
-        0
-      );
-
-    }
-
-  }
 
   const stats = await getDashboardStats(c.env.DB);
 
@@ -95,7 +67,6 @@ Henüz broadcast yapılmadı.
   }
 
   return c.html(`
-
 <!DOCTYPE html>
 
 <html lang="tr">
@@ -151,6 +122,7 @@ grid-template-columns:repeat(4,1fr);
 gap:20px;
 margin-bottom:30px;
 }
+
 .card{
 background:#1e293b;
 padding:20px;
@@ -215,6 +187,7 @@ font-weight:bold;
 <a href="/broadcast">📢 Broadcast</a>
 
 <a href="/global-settings">🚀 /start Ayarları</a>
+
 <a href="/reply-buttons">⌨️ Reply Keyboard</a>
 
 <a href="/admin">👤 Admin</a>
@@ -266,6 +239,7 @@ ${botRows}
 </table>
 
 </div>
+
 <div class="table">
 
 <h2>📢 Son Broadcastlar</h2>
@@ -286,7 +260,6 @@ ${broadcastRows}
 </table>
 
 </div>
-
 </body>
 
 </html>
