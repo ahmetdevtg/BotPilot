@@ -871,17 +871,23 @@ bots.get("/bots/check", async (c) => {
 
       online++;
 
-    } catch {
+    } catch (e: any) {
 
-      await updateBotStatus(
-        c.env.DB,
-        bot.id,
-        0
-      );
+  console.error("================================");
+  console.error("BOT:", bot.username);
+  console.error("TOKEN:", bot.token);
+  console.error("ERROR:", e);
+  console.error("================================");
 
-      offline++;
+  await updateBotStatus(
+    c.env.DB,
+    bot.id,
+    0
+  );
 
-    }
+  offline++;
+
+}
 
   }
 
