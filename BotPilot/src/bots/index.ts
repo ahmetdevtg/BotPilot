@@ -3,12 +3,14 @@ import {
   getBots,
   deleteBot,
   getBotById,
-  updateBotProfile
+  updateBotProfile,
+  updateBotStatus
 } from "../database/bots";
 import { addBot } from "../services/bot.service";
 import { auth } from "../middleware/auth";
 import type { Env } from "../types/env";
 import {
+  getMe,
   setMyName,
   setMyDescription,
   setMyShortDescription
@@ -214,6 +216,20 @@ border-radius:8px;
 margin-left:10px;">
 
 🤖 Tüm Botları Güncelle
+
+</a>
+<a
+href="/bots/check"
+style="
+display:inline-block;
+padding:12px 18px;
+background:#f59e0b;
+color:white;
+text-decoration:none;
+border-radius:8px;
+margin-left:10px;">
+
+🔄 Botları Kontrol Et
 
 </a>
 
@@ -832,6 +848,70 @@ bots.post("/bots/edit/:id", async (c) => {
 `);
 
   }
+
+});
+bots.get("/bots/check", async (c) => {
+
+  const botlar = await getBots(c.env.DB) as any[];
+
+  let online = 0;
+  let offline = 0;
+
+  for (const bot of botlar) {
+
+    try {
+
+      await getMe(bot.token);
+
+      await updateBotStatus(
+        c.env.DB,
+        bot.id,
+        1
+      );
+
+      online++;
+
+    } catch {
+
+      await updateBotStatus(
+        c.env.DB,
+        bot.id,
+        0
+      );
+
+      offline++;
+
+    }
+
+  }
+
+  return c.html(`
+
+<!DOCTYPE html>
+
+<html>
+
+<body style="background:#0f172a;color:white;font-family:Arial;padding:40px;">
+
+<h2>✅ Bot Kontrolü Tamamlandı</h2>
+
+<p>🟢 Online: ${online}</p>
+
+<p>🔴 Offline: ${offline}</p>
+
+<br>
+
+<a href="/bots" style="color:#60a5fa;">
+
+⬅ Botlara Dön
+
+</a>
+
+</body>
+
+</html>
+
+`);
 
 });
 bots.post("/bots/update-all", async (c) => {
