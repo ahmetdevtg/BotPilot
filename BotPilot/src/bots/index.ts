@@ -705,7 +705,7 @@ bots.post("/bots/add", async (c) => {
 
   const body = await c.req.parseBody();
 
-  const token = String(body.token || "");
+  const token = String(body.token || "").trim();
 
   try {
 
@@ -761,6 +761,8 @@ bots.post("/bots/bulk", async (c) => {
       success++;
 
     } catch (e) {
+
+      console.error("BULK ADD ERROR:", e);
 
       failed++;
 
@@ -966,11 +968,11 @@ bots.get("/bots/check", async (c) => {
 
     } catch (e: any) {
 
-      console.error("================================");
-      console.error("BOT:", bot.username);
-      console.error("TOKEN:", bot.token);
-      console.error("ERROR:", e);
-      console.error("================================");
+      console.error(
+        "BOT CHECK ERROR:",
+        bot.username,
+        e
+      );
 
       await updateBotStatus(
         c.env.DB,
@@ -1036,9 +1038,9 @@ bots.post("/bots/update-all", async (c) => {
   ).trim();
 
 
-  // ==========================================
+  // ===================================================
   // BOŞ KONTROL
-  // ==========================================
+  // ===================================================
 
   if (!description) {
 
@@ -1076,9 +1078,9 @@ style="color:#60a5fa;">
   }
 
 
-  // ==========================================
+  // ===================================================
   // 512 KARAKTER KONTROLÜ
-  // ==========================================
+  // ===================================================
 
   if (description.length > 512) {
 
@@ -1124,9 +1126,9 @@ style="color:#60a5fa;">
   }
 
 
-  // ==========================================
+  // ===================================================
   // BOTLARI AL
-  // ==========================================
+  // ===================================================
 
   const botlar = await getBots(
     c.env.DB
@@ -1136,88 +1138,77 @@ style="color:#60a5fa;">
   let success = 0;
   let failed = 0;
 
-
   const successfulBots: any[] = [];
-
   const failedBots: any[] = [];
 
 
-  // ==========================================
+  // ===================================================
   // BOTLARI TEK TEK GÜNCELLE
-  // ==========================================
+  // ===================================================
 
   for (const bot of botlar) {
 
     try {
 
-      // SADECE ANA SAYFA AÇIKLAMASI
+      /*
+       * SADECE setMyDescription ÇALIŞIYOR.
+       *
+       * setMyName YOK
+       * setMyShortDescription YOK
+       * updateBotProfile YOK
+       *
+       * Bu nedenle bot adı,
+       * kısa açıklama ve veritabanı profili
+       * değiştirilmez.
+       */
+
       await setMyDescription(
         bot.token,
         description
       );
 
-
       success++;
 
-
       successfulBots.push({
-
         id: bot.id,
-
-        name:
-          bot.name ||
-          "İsimsiz Bot",
-
-        username:
-          bot.username
-            ? `@${bot.username}`
-            : "Username yok"
-
+        name: bot.name || "İsimsiz Bot",
+        username: bot.username
+          ? `@${bot.username}`
+          : "Username yok"
       });
-
 
     } catch (e: any) {
 
-      let errorCode =
-        "Bilinmiyor";
-
-      let errorMessage =
-        "Bilinmeyen hata";
-
-      let retryAfter:
-        number | null = null;
+      let errorCode = "Bilinmiyor";
+      let errorMessage = "Bilinmeyen hata";
+      let retryAfter: number | null = null;
 
 
-      // ==========================================
-      // ERROR STRING
-      // ==========================================
+      // =================================================
+      // STRING HATA
+      // =================================================
 
-      if (
-        typeof e === "string"
-      ) {
+      if (typeof e === "string") {
 
         errorMessage = e;
 
       }
 
 
-      // ==========================================
+      // =================================================
       // NORMAL ERROR
-      // ==========================================
+      // =================================================
 
-      else if (
-        e instanceof Error
-      ) {
+      else if (e instanceof Error) {
 
-        errorMessage =
-          e.message;
+        errorMessage = e.message;
 
       }
 
 
-      // ==========================================
-      // TELEGRAM API HATASI
-      // ==========================================
+      // =================================================
+      // TELEGRAM HATASI
+      // =================================================
 
       if (
         e &&
@@ -1229,9 +1220,7 @@ style="color:#60a5fa;">
         ) {
 
           errorCode =
-            String(
-              e.error_code
-            );
+            String(e.error_code);
 
         }
 
@@ -1240,9 +1229,7 @@ style="color:#60a5fa;">
         ) {
 
           errorMessage =
-            String(
-              e.description
-            );
+            String(e.description);
 
         }
 
@@ -1259,9 +1246,7 @@ style="color:#60a5fa;">
         }
 
 
-        // Bazı API wrapper'larında
-        // response içinde olabilir
-
+        // API wrapper response
         if (
           e.response &&
           typeof e.response === "object"
@@ -1332,15 +1317,50 @@ style="color:#60a5fa;">
 
 
       console.error(
-        "BOT AÇIKLAMA GÜNCELLEME HATASI",
-        {
-          botId: bot.id,
-          botName: bot.name,
-          username: bot.username,
-          errorCode,
-          errorMessage,
-          retryAfter
-        }
+        "======================================"
+      );
+
+      console.error(
+        "BOT AÇIKLAMA GÜNCELLEME HATASI"
+      );
+
+      console.error(
+        "BOT ID:",
+        bot.id
+      );
+
+      console.error(
+        "BOT:",
+        bot.name
+      );
+
+      console.error(
+        "USERNAME:",
+        bot.username
+      );
+
+      console.error(
+        "ERROR CODE:",
+        errorCode
+      );
+
+      console.error(
+        "ERROR MESSAGE:",
+        errorMessage
+      );
+
+      console.error(
+        "RETRY AFTER:",
+        retryAfter
+      );
+
+      console.error(
+        "ORIGINAL ERROR:",
+        e
+      );
+
+      console.error(
+        "======================================"
       );
 
     }
@@ -1348,9 +1368,9 @@ style="color:#60a5fa;">
   }
 
 
-  // ==========================================
-  // BAŞARILI BOTLAR
-  // ==========================================
+  // ===================================================
+  // BAŞARILI BOT HTML
+  // ===================================================
 
   let successHtml = "";
 
@@ -1364,24 +1384,28 @@ style="color:#60a5fa;">
 
 <div style="
 background:#064e3b;
-padding:12px;
+padding:14px;
 border-radius:8px;
 margin-bottom:8px;
 ">
 
-🟢 <strong>
-${bot.name}
-</strong>
+<div style="
+font-size:17px;
+font-weight:bold;
+">
 
-<br>
+🟢 ${bot.name}
 
-<span style="
+</div>
+
+<div style="
 color:#a7f3d0;
+margin-top:5px;
 ">
 
 ${bot.username}
 
-</span>
+</div>
 
 </div>
 
@@ -1409,9 +1433,9 @@ Hiçbir bot başarılı şekilde güncellenemedi.
   }
 
 
-  // ==========================================
-  // BAŞARISIZ BOTLAR
-  // ==========================================
+  // ===================================================
+  // BAŞARISIZ BOT HTML
+  // ===================================================
 
   let failedHtml = "";
 
@@ -1425,16 +1449,17 @@ Hiçbir bot başarılı şekilde güncellenemedi.
 
 <div style="
 background:#450a0a;
-padding:15px;
+padding:16px;
 border-radius:8px;
 margin-bottom:10px;
 ">
 
-<div style="font-size:17px;">
+<div style="
+font-size:17px;
+font-weight:bold;
+">
 
-🔴 <strong>
-${bot.name}
-</strong>
+🔴 ${bot.name}
 
 </div>
 
@@ -1450,51 +1475,42 @@ ${bot.username}
 <hr style="
 border:0;
 border-top:1px solid #7f1d1d;
-margin:10px 0;
+margin:12px 0;
 ">
 
 <div>
 
-❌ <strong>
-Hata Kodu:
-</strong>
+❌ <strong>Telegram Hata Kodu:</strong>
 
 ${bot.errorCode}
 
 </div>
 
 <div style="
-margin-top:6px;
+margin-top:8px;
 ">
 
-❌ <strong>
-Telegram:
-</strong>
+❌ <strong>Telegram Hatası:</strong>
 
 ${bot.errorMessage}
 
 </div>
 
 ${
-bot.retryAfter !== null
-?
-`
+  bot.retryAfter !== null
+    ? `
 <div style="
-margin-top:6px;
+margin-top:8px;
 color:#fbbf24;
 ">
 
-⏱️ <strong>
-Retry After:
-</strong>
+⏱️ <strong>Tekrar Deneme:</strong>
 
-${bot.retryAfter}
-saniye
+${bot.retryAfter} saniye sonra
 
 </div>
 `
-:
-""
+    : ""
 }
 
 </div>
@@ -1511,73 +1527,4 @@ saniye
 <div style="
 background:#064e3b;
 padding:15px;
-border-radius:8px;
-">
-
-🎉 Tüm botlar başarıyla güncellendi!
-
-</div>
-
-`;
-
-  }
-
-
-  // ==========================================
-  // SONUÇ SAYFASI
-  // ==========================================
-
-  return c.html(`
-
-<!DOCTYPE html>
-
-<html lang="tr">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1"
->
-
-<title>
-Bot Güncelleme Sonucu
-</title>
-
-<style>
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-font-family:Arial,sans-serif;
-
-padding:30px;
-
-margin:0;
-
-}
-
-.container{
-
-max-width:900px;
-
-margin:auto;
-
-}
-
-.card{
-
-background:#1e293b;
-
-padding:25px;
-
-border-radius:12px;
-
-margin-bottom:20px;
-
-}
+b
