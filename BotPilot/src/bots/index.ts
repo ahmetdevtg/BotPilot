@@ -163,6 +163,7 @@ background:#1e293b;
 tr:nth-child(even){
 background:#172033;
 }
+
 </style>
 
 </head>
@@ -204,6 +205,7 @@ margin-left:10px;">
 📥 Toplu Bot Ekle
 
 </a>
+
 <a
 href="/bots/update-all"
 style="
@@ -218,6 +220,7 @@ margin-left:10px;">
 🤖 Tüm Botları Güncelle
 
 </a>
+
 <a
 href="/bots/check"
 style="
@@ -248,6 +251,7 @@ margin-left:10px;">
 <th>👥 Kullanıcı</th>
 <th>📢 Broadcast</th>
 <th>⚙️ İşlemler</th>
+
 </tr>
 
 ${rows}
@@ -261,8 +265,12 @@ ${rows}
 `);
 
 });
-// Bot Ekle
-// Bot Düzenleme Sayfası
+
+
+/* =========================
+   BOT DÜZENLEME SAYFASI
+========================= */
+
 bots.get("/bots/edit/:id", async (c) => {
 
   const id = Number(c.req.param("id"));
@@ -374,6 +382,12 @@ rows="2">${bot.short_description || ""}</textarea>
 `);
 
 });
+
+
+/* =========================
+   TOPLU BOT EKLE
+========================= */
+
 bots.get("/bots/bulk", async (c) => {
 
   return c.html(`
@@ -481,9 +495,7 @@ background:#15803d;
 <h1>📥 Toplu Bot Ekle</h1>
 
 <p>
-
 Her satıra bir Telegram Bot Token yapıştır.
-
 </p>
 
 <form method="POST" action="/bots/bulk">
@@ -515,6 +527,13 @@ placeholder="123456:AAxxxxxxxxxxxxxxxx
 `);
 
 });
+
+
+/* =========================
+   TÜM BOTLARI GÜNCELLE SAYFASI
+   SADECE ANA SAYFA AÇIKLAMASI
+========================= */
+
 bots.get("/bots/update-all", async (c) => {
 
   return c.html(`
@@ -527,7 +546,7 @@ bots.get("/bots/update-all", async (c) => {
 
 <meta charset="UTF-8">
 
-<title>Tüm Bot Bilgilerini Güncelle</title>
+<title>Tüm Botların Açıklamasını Güncelle</title>
 
 <style>
 
@@ -559,7 +578,7 @@ text-decoration:none;
 border-radius:8px;
 }
 
-input,textarea{
+textarea{
 
 width:100%;
 padding:12px;
@@ -567,6 +586,9 @@ margin-top:10px;
 margin-bottom:20px;
 border:none;
 border-radius:8px;
+background:#0f172a;
+color:white;
+resize:vertical;
 
 }
 
@@ -580,6 +602,15 @@ border-radius:8px;
 cursor:pointer;
 font-size:16px;
 
+}
+
+.info{
+background:#0f172a;
+padding:15px;
+border-radius:8px;
+margin-bottom:20px;
+color:#cbd5e1;
+line-height:1.6;
 }
 
 </style>
@@ -598,31 +629,36 @@ font-size:16px;
 
 <div class="card">
 
-<h1>🤖 Tüm Bot Bilgilerini Güncelle</h1>
+<h1>🤖 Tüm Botların Açıklamasını Güncelle</h1>
+
+<div class="info">
+
+<strong>⚠️ Bilgi</strong><br><br>
+
+Bu işlem yalnızca Telegram botlarının
+<strong>ana sayfa açıklamasını</strong> değiştirir.
+
+<br><br>
+
+🤖 Bot adı değişmez.<br>
+🖼️ Profil resmi değişmez.<br>
+📝 Kısa açıklama değişmez.
+
+</div>
 
 <form method="POST" action="/bots/update-all">
 
-<label>Bot Adı</label>
-
-<input
-name="name"
-required>
-
-<label>Açıklama</label>
+<label>Yeni Ana Sayfa Açıklaması</label>
 
 <textarea
 name="description"
-rows="5"></textarea>
-
-<label>Kısa Açıklama</label>
-
-<textarea
-name="shortDescription"
-rows="3"></textarea>
+rows="7"
+placeholder="Botların ana sayfasında görünecek açıklamayı yazın..."
+required></textarea>
 
 <button type="submit">
 
-🚀 Tüm Botları Güncelle
+🚀 Tüm Botların Açıklamasını Güncelle
 
 </button>
 
@@ -639,6 +675,12 @@ rows="3"></textarea>
 `);
 
 });
+
+
+/* =========================
+   BOT EKLE
+========================= */
+
 bots.post("/bots/add", async (c) => {
 
   const body = await c.req.parseBody();
@@ -669,7 +711,12 @@ Geri Dön
   }
 
 });
-// Bot Düzenle
+
+
+/* =========================
+   TOPLU BOT EKLE POST
+========================= */
+
 bots.post("/bots/bulk", async (c) => {
 
   const body = await c.req.parseBody();
@@ -774,6 +821,12 @@ border-radius:8px;
 `);
 
 });
+
+
+/* =========================
+   TEK BOT DÜZENLE
+========================= */
+
 bots.post("/bots/edit/:id", async (c) => {
 
   const id = Number(c.req.param("id"));
@@ -829,6 +882,7 @@ bots.post("/bots/edit/:id", async (c) => {
 <meta charset="UTF-8">
 <title>Telegram API Hatası</title>
 </head>
+
 <body style="background:#0f172a;color:white;font-family:Arial;padding:40px;">
 
 <h2>Telegram API Hatası</h2>
@@ -850,6 +904,12 @@ bots.post("/bots/edit/:id", async (c) => {
   }
 
 });
+
+
+/* =========================
+   BOTLARI KONTROL ET
+========================= */
+
 bots.get("/bots/check", async (c) => {
 
   const botlar = await getBots(c.env.DB) as any[];
@@ -873,21 +933,21 @@ bots.get("/bots/check", async (c) => {
 
     } catch (e: any) {
 
-  console.error("================================");
-  console.error("BOT:", bot.username);
-  console.error("TOKEN:", bot.token);
-  console.error("ERROR:", e);
-  console.error("================================");
+      console.error("================================");
+      console.error("BOT:", bot.username);
+      console.error("TOKEN:", bot.token);
+      console.error("ERROR:", e);
+      console.error("================================");
 
-  await updateBotStatus(
-    c.env.DB,
-    bot.id,
-    0
-  );
+      await updateBotStatus(
+        c.env.DB,
+        bot.id,
+        0
+      );
 
-  offline++;
+      offline++;
 
-}
+    }
 
   }
 
@@ -920,13 +980,44 @@ bots.get("/bots/check", async (c) => {
 `);
 
 });
+
+
+/* =========================
+   TÜM BOTLARIN SADECE
+   ANA SAYFA AÇIKLAMASINI GÜNCELLE
+========================= */
+
 bots.post("/bots/update-all", async (c) => {
 
   const body = await c.req.parseBody();
 
-  const name = String(body.name || "");
-  const description = String(body.description || "");
-  const shortDescription = String(body.shortDescription || "");
+  const description = String(
+    body.description || ""
+  );
+
+  if (!description.trim()) {
+
+    return c.html(`
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<body style="background:#0f172a;color:white;font-family:Arial;padding:40px;">
+
+<h2>⚠️ Açıklama boş olamaz.</h2>
+
+<a href="/bots/update-all" style="color:#60a5fa;">
+
+← Geri Dön
+
+</a>
+
+</body>
+
+</html>
+`);
+
+  }
 
   const botlar = await getBots(c.env.DB) as any[];
 
@@ -937,34 +1028,52 @@ bots.post("/bots/update-all", async (c) => {
 
     try {
 
-      await setMyName(
-        bot.token,
-        name
-      );
+      /*
+       * SADECE ANA SAYFA AÇIKLAMASI DEĞİŞİYOR.
+       *
+       * setMyName YOK
+       * setMyShortDescription YOK
+       *
+       * Böylece:
+       * - Bot adı korunur
+       * - Kısa açıklama korunur
+       * - Profil resmi korunur
+       */
 
       await setMyDescription(
         bot.token,
         description
       );
 
-      await setMyShortDescription(
-        bot.token,
-        shortDescription
-      );
+      /*
+       * Veritabanında da sadece description
+       * alanını güncelliyoruz.
+       *
+       * Bot adı ve short_description
+       * değiştirilmez.
+       */
 
-      await updateBotProfile(
-        c.env.DB,
-        bot.id,
-        name,
-        description,
-        shortDescription
-      );
+      await c.env.DB
+        .prepare(`
+          UPDATE bots
+          SET description = ?
+          WHERE id = ?
+        `)
+        .bind(
+          description,
+          bot.id
+        )
+        .run();
 
       success++;
 
-    } catch (e) {
+    } catch (e: any) {
 
-      console.error(e);
+      console.error(
+        "Bot açıklaması güncellenemedi:",
+        bot.username,
+        e
+      );
 
       failed++;
 
@@ -1002,6 +1111,14 @@ border-radius:12px;
 text-align:center;
 }
 
+.success{
+color:#4ade80;
+}
+
+.failed{
+color:#f87171;
+}
+
 a{
 display:inline-block;
 margin-top:20px;
@@ -1022,9 +1139,23 @@ border-radius:8px;
 
 <h1>✅ Güncelleme Tamamlandı</h1>
 
-<p>Başarılı: ${success}</p>
+<p class="success">
+🟢 Başarılı: ${success}
+</p>
 
-<p>Başarısız: ${failed}</p>
+<p class="failed">
+🔴 Başarısız: ${failed}
+</p>
+
+<p>
+Sadece ana sayfa açıklaması güncellendi.
+</p>
+
+<p>
+🤖 Bot adı korunmuştur.<br>
+📝 Kısa açıklama korunmuştur.<br>
+🖼️ Profil resmi korunmuştur.
+</p>
 
 <a href="/bots">
 
@@ -1042,7 +1173,11 @@ border-radius:8px;
 
 });
 
-// Bot Sil
+
+/* =========================
+   BOT SİL
+========================= */
+
 bots.post("/bots/delete/:id", async (c) => {
 
   const id = Number(c.req.param("id"));
