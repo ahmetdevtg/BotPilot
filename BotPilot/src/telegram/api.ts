@@ -1,5 +1,6 @@
 export interface TelegramBotInfo {
   ok: boolean;
+
   result: {
     id: number;
     is_bot: boolean;
@@ -11,6 +12,11 @@ export interface TelegramBotInfo {
   };
 }
 
+
+/* =========================
+   TELEGRAM API REQUEST
+========================= */
+
 async function telegramRequest(
   token: string,
   method: string,
@@ -21,46 +27,179 @@ async function telegramRequest(
     `https://api.telegram.org/bot${token}/${method}`,
     {
       method: "POST",
+
       headers: {
         "Content-Type": "application/json"
       },
+
       body: JSON.stringify(body)
     }
   );
 
-  const json = await res.json() as any;
 
- if (!json.ok) {
+  let json: any;
 
-  console.error(json);
+  try {
 
-  throw new Error(
-    JSON.stringify(json, null, 2)
-  );
+    json = await res.json();
 
-}
+  } catch (e) {
+
+    throw new Error(
+      `Telegram API geçersiz cevap döndürdü. HTTP ${res.status}`
+    );
+
+  }
+
+
+  if (!res.ok) {
+
+    console.error(
+      "Telegram HTTP ERROR:",
+      res.status,
+      json
+    );
+
+    throw new Error(
+      `Telegram API HTTP ${res.status}: ${
+        json?.description || "Bilinmeyen hata"
+      }`
+    );
+
+  }
+
+
+  if (!json.ok) {
+
+    console.error(
+      "Telegram API ERROR:",
+      json
+    );
+
+    throw new Error(
+      `Telegram API Hatası: ${
+        json?.description || "Bilinmeyen hata"
+      }`
+    );
+
+  }
+
 
   return json;
 
 }
 
+
+/* =========================
+   GET ME
+========================= */
+
 export async function getMe(
   token: string
 ): Promise<TelegramBotInfo> {
 
-  const res = await fetch(
-    `https://api.telegram.org/bot${token}/getMe`
-  );
+  if (!token || !token.trim()) {
 
-  if (!res.ok) {
     throw new Error(
-      "Telegram API'ye bağlanılamadı."
+      "Bot token boş."
     );
+
   }
 
-  return await res.json() as TelegramBotInfo;
+
+  const cleanToken = token.trim();
+
+
+  try {
+
+    const res = await fetch(
+      `https://api.telegram.org/bot${cleanToken}/getMe`,
+      {
+        method: "GET",
+
+        headers: {
+          "Accept": "application/json"
+        }
+      }
+    );
+
+
+    let json: any;
+
+
+    try {
+
+      json = await res.json();
+
+    } catch (e) {
+
+      throw new Error(
+        `Telegram API JSON cevabı okunamadı. HTTP ${res.status}`
+      );
+
+    }
+
+
+    /*
+     * Telegram API bazen HTTP 200 dönüp
+     * json.ok = false gönderebilir.
+     */
+
+    if (!res.ok) {
+
+      throw new Error(
+        `Telegram HTTP ${res.status}: ${
+          json?.description || "Bilinmeyen hata"
+        }`
+      );
+
+    }
+
+
+    if (!json.ok) {
+
+      throw new Error(
+        `Telegram API: ${
+          json?.description || "Bilinmeyen hata"
+        }`
+      );
+
+    }
+
+
+    if (!json.result) {
+
+      throw new Error(
+        "Telegram API başarılı cevap verdi fakat bot bilgisi bulunamadı."
+      );
+
+    }
+
+
+    return json as TelegramBotInfo;
+
+
+  } catch (e: any) {
+
+    console.error(
+      "getMe ERROR:",
+      e?.message || e
+    );
+
+
+    throw new Error(
+      e?.message ||
+      "Telegram bot kontrolü sırasında bilinmeyen hata oluştu."
+    );
+
+  }
 
 }
+
+
+/* =========================
+   SET WEBHOOK
+========================= */
 
 export async function setWebhook(
   token: string,
@@ -76,6 +215,11 @@ export async function setWebhook(
   );
 
 }
+
+
+/* =========================
+   SEND TEXT
+========================= */
 
 export async function sendText(
   token: string,
@@ -95,6 +239,12 @@ export async function sendText(
   );
 
 }
+
+
+/* =========================
+   SEND PHOTO
+========================= */
+
 export async function sendPhoto(
   token: string,
   chatId: number,
@@ -115,6 +265,11 @@ export async function sendPhoto(
   );
 
 }
+
+
+/* =========================
+   SEND VIDEO
+========================= */
 
 export async function sendVideo(
   token: string,
@@ -137,6 +292,11 @@ export async function sendVideo(
 
 }
 
+
+/* =========================
+   SEND DOCUMENT
+========================= */
+
 export async function sendDocument(
   token: string,
   chatId: number,
@@ -158,6 +318,11 @@ export async function sendDocument(
 
 }
 
+
+/* =========================
+   SEND MESSAGE + BUTTON
+========================= */
+
 export async function sendMessageWithButton(
   token: string,
   chatId: number,
@@ -174,6 +339,7 @@ export async function sendMessageWithButton(
       chat_id: chatId,
       text,
       parse_mode: parseMode,
+
       reply_markup: {
         inline_keyboard: [[
           {
@@ -186,6 +352,12 @@ export async function sendMessageWithButton(
   );
 
 }
+
+
+/* =========================
+   SEND PHOTO + BUTTON
+========================= */
+
 export async function sendPhotoWithButton(
   token: string,
   chatId: number,
@@ -204,6 +376,7 @@ export async function sendPhotoWithButton(
       photo,
       caption,
       parse_mode: parseMode,
+
       reply_markup: {
         inline_keyboard: [[
           {
@@ -216,6 +389,11 @@ export async function sendPhotoWithButton(
   );
 
 }
+
+
+/* =========================
+   SEND VIDEO + BUTTON
+========================= */
 
 export async function sendVideoWithButton(
   token: string,
@@ -235,6 +413,7 @@ export async function sendVideoWithButton(
       video,
       caption,
       parse_mode: parseMode,
+
       reply_markup: {
         inline_keyboard: [[
           {
@@ -247,6 +426,11 @@ export async function sendVideoWithButton(
   );
 
 }
+
+
+/* =========================
+   SEND DOCUMENT + BUTTON
+========================= */
 
 export async function sendDocumentWithButton(
   token: string,
@@ -266,6 +450,7 @@ export async function sendDocumentWithButton(
       document,
       caption,
       parse_mode: parseMode,
+
       reply_markup: {
         inline_keyboard: [[
           {
@@ -278,6 +463,12 @@ export async function sendDocumentWithButton(
   );
 
 }
+
+
+/* =========================
+   SET MY NAME
+========================= */
+
 export async function setMyName(
   token: string,
   name: string
@@ -292,6 +483,11 @@ export async function setMyName(
   );
 
 }
+
+
+/* =========================
+   SET MY DESCRIPTION
+========================= */
 
 export async function setMyDescription(
   token: string,
@@ -308,6 +504,11 @@ export async function setMyDescription(
 
 }
 
+
+/* =========================
+   SET MY SHORT DESCRIPTION
+========================= */
+
 export async function setMyShortDescription(
   token: string,
   shortDescription: string
@@ -322,6 +523,18 @@ export async function setMyShortDescription(
   );
 
 }
-export async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+
+
+/* =========================
+   SLEEP
+========================= */
+
+export async function sleep(
+  ms: number
+) {
+
+  return new Promise(
+    resolve => setTimeout(resolve, ms)
+  );
+
 }
