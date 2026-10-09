@@ -1,13 +1,12 @@
+
 import { getBotSettings } from "../../database/settings";
 import { getEnabledReplyButtons } from "../../database/reply-buttons";
-
 import {
   sendMessage,
   sendPhotoWithButton,
   sendVideoWithButton,
   sendDocumentWithButton
 } from "../send";
-
 import {
   findTelegramUser,
   createTelegramUser
@@ -19,62 +18,85 @@ export async function handleStart(
   botId: number,
   message: any
 ) {
+  const user = message?.from;
+  const chatId = message?.chat?.id;
 
+  if (!user?.id || !chatId) {
+    console.error("START: Kullanıcı veya sohbet bilgisi eksik", {
+      botId,
+      message
+    });
+    return;
+  }
+
+  // Üyeyi mesaj göndermeden önce kaydet veya mevcut kaydı güncelle.
   try {
-
-    const user = message.from;
-
     const exists = await findTelegramUser(
       db,
       botId,
-      user.id
+      Number(user.id)
     );
 
     if (!exists) {
+      await createTelegramUser(db, botId, user);
 
-      await createTelegramUser(
-        db,
+      console.log("TELEGRAM USER REGISTERED", {
         botId,
-        user
-      );
-
+        telegramUserId: user.id,
+        username: user.username || ""
+      });
+    } else {
+      await db.prepare(`
+        UPDATE telegram_users
+        SET username = ?,
+            first_name = ?,
+            last_name = ?,
+            language_code = ?,
+            is_premium = ?,
+            is_bot = ?
+        WHERE bot_id = ? AND telegram_id = ?
+      `).bind(
+        user.username || "",
+        user.first_name || "",
+        user.last_name || "",
+        user.language_code || "",
+        user.is_premium ? 1 : 0,
+        user.is_bot ? 1 : 0,
+        botId,
+        Number(user.id)
+      ).run();
     }
+  } catch (e: any) {
+    console.error("TELEGRAM USER SAVE ERROR", {
+      botId,
+      telegramUserId: user.id,
+      error: e?.message || String(e),
+      stack: e?.stack
+    });
+  }
 
-    const settings: any =
-      await getBotSettings(
-        db,
-        botId
-      );
+  // Üye kaydı ile mesaj gönderimini ayrı tut.
+  try {
+    const settings: any = await getBotSettings(db, botId);
 
     if (!settings) {
-
-      await sendMessage(
-        token,
-        message.chat.id,
-        "Bot ayarları bulunamadı."
-      );
-
+      await sendMessage(token, chatId, "Bot ayarları bulunamadı.");
       return;
-
     }
 
-    const buttons: any[] =
-      await getEnabledReplyButtons(db) || [];
+    const buttons: any[] = await getEnabledReplyButtons(db) || [];
 
-    const keyboard =
-      buttons
-        .map((x: any) => x.button_text)
-        .join("\n");
-    // FOTOĞRAF
+    const keyboard = buttons
+      .map((item: any) => String(item.button_text || "").trim())
+      .filter(Boolean)
+      .join("\n");
 
-    if (
-      settings.photo &&
-      settings.photo.trim() !== ""
-    ) {
+    let result: any;
 
-      await sendPhotoWithButton(
+    if (settings.photo && String(settings.photo).trim()) {
+      result = await sendPhotoWithButton(
         token,
-        message.chat.id,
+        chatId,
         settings.photo,
         settings.start_message || "",
         settings.button_text || "",
@@ -82,21 +104,10 @@ export async function handleStart(
         settings.parse_mode || "HTML",
         keyboard
       );
-
-      return;
-
-    }
-
-    // VİDEO
-
-    if (
-      settings.video &&
-      settings.video.trim() !== ""
-    ) {
-
-      await sendVideoWithButton(
+    } else if (settings.video && String(settings.video).trim()) {
+      result = await sendVideoWithButton(
         token,
-        message.chat.id,
+        chatId,
         settings.video,
         settings.start_message || "",
         settings.button_text || "",
@@ -104,21 +115,13 @@ export async function handleStart(
         settings.parse_mode || "HTML",
         keyboard
       );
-
-      return;
-
-    }
-
-    // DOKÜMAN
-
-    if (
+    } else if (
       settings.document_url &&
-      settings.document_url.trim() !== ""
+      String(settings.document_url).trim()
     ) {
-
-      await sendDocumentWithButton(
+      result = await sendDocumentWithButton(
         token,
-        message.chat.id,
+        chatId,
         settings.document_url,
         settings.start_message || "",
         settings.button_text || "",
@@ -126,43 +129,30 @@ export async function handleStart(
         settings.parse_mode || "HTML",
         keyboard
       );
-
-      return;
-
-    }
-
-    // NORMAL MESAJ
-
-    await sendMessage(
-      token,
-      message.chat.id,
-      settings.start_message || "👋 Hoş geldiniz.",
-      settings.parse_mode || "HTML",
-      keyboard
-    );
-
-    return;
-  } catch (e: any) {
-
-    console.error("HANDLE START ERROR");
-    console.error(e);
-    console.error(e?.stack);
-
-    try {
-
-      await sendMessage(
+    } else {
+      result = await sendMessage(
         token,
-        message.chat.id,
-        "❌ Start mesajı gönderilirken hata oluştu."
+        chatId,
+        settings.start_message || "👋 Hoş geldiniz.",
+        settings.parse_mode || "HTML",
+        keyboard
       );
-
-    } catch (err) {
-
-      console.error("FAILED TO SEND ERROR MESSAGE");
-      console.error(err);
-
     }
 
+    if (result?.ok === false) {
+      console.error("START MESSAGE TELEGRAM API ERROR", {
+        botId,
+        telegramUserId: user.id,
+        errorCode: result.error_code,
+        description: result.description
+      });
+    }
+  } catch (e: any) {
+    console.error("HANDLE START MESSAGE ERROR", {
+      botId,
+      telegramUserId: user.id,
+      error: e?.message || String(e),
+      stack: e?.stack
+    });
   }
-
 }
