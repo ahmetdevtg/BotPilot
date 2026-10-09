@@ -498,7 +498,6 @@ border-radius:8px;
 <a
 href="/bots"
 class="back">
-
 ⬅ Botlara Dön
 
 </a>
@@ -1398,9 +1397,9 @@ style="color:#60a5fa;">
 `);
 
   }
+  );
 
 });
-
 
 
 /* =========================
@@ -1408,289 +1407,144 @@ style="color:#60a5fa;">
 ========================= */
 
 bots.get("/bots/check", async (c) => {
-
   try {
+    const botlar = await getBots(c.env.DB) as any[];
 
-    const botlar = await getBots(
-      c.env.DB
-    ) as any[];
+    const batchSize = 5;
+    const parseCount = (value: string | undefined) => {
+      const n = Number.parseInt(value || "0", 10);
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    };
 
+    const offset = parseCount(c.req.query("offset"));
+    let online = parseCount(c.req.query("online"));
+    let offline = parseCount(c.req.query("offline"));
+    let skipped = parseCount(c.req.query("skipped"));
 
-    let online = 0;
-
-    let offline = 0;
-
-
-    for (const bot of botlar) {
-
-      try {
-
-        await getMe(
-          bot.token
-        );
-
-
-        await updateBotStatus(
-          c.env.DB,
-          bot.id,
-          1
-        );
-
-
-        online++;
-
-
-      } catch (e: any) {
-
-        /*
-         * GERÇEK HATA BURADA LOGLANIYOR.
-         *
-         * TOKEN BİLEREK LOGA YAZILMIYOR.
-         */
-
-        console.error(
-          "BOT CHECK ERROR"
-        );
-
-        console.error(
-          "Bot ID:",
-          bot.id
-        );
-
-        console.error(
-          "Bot Username:",
-          bot.username || "-"
-        );
-
-        console.error(
-          "Error:",
-          e?.message || e
-        );
-
-        console.error(
-          "Stack:",
-          e?.stack || "No stack"
-        );
-
-
-        await updateBotStatus(
-          c.env.DB,
-          bot.id,
-          0
-        );
-
-
-        offline++;
-
-      }
-
+    if (offset >= botlar.length && offset !== 0) {
+      return c.redirect("/bots/check");
     }
 
+    const batch = botlar.slice(offset, offset + batchSize);
 
-    return c.html(`
+    for (const bot of batch) {
+      try {
+        await getMe(bot.token);
+        await updateBotStatus(c.env.DB, bot.id, 1);
+        online++;
+      } catch (e: any) {
+        const message = String(e?.message || e || "Unknown error");
 
-<!DOCTYPE html>
+        console.error("BOT CHECK ERROR", {
+          botId: bot.id,
+          username: bot.username || "-",
+          error: message
+        });
 
+        const temporaryError =
+          /too many subrequests|fetch failed|network|timeout|timed out|rate.?limit|\b429\b|service unavailable|\b5\d\d\b|internal error|connection|socket|temporar/i.test(message);
+
+        if (temporaryError) {
+          skipped++;
+        } else {
+          await updateBotStatus(c.env.DB, bot.id, 0);
+          offline++;
+        }
+      }
+    }
+
+    const nextOffset = offset + batch.length;
+
+    if (nextOffset < botlar.length) {
+      const nextUrl =
+        "/bots/check?offset=" + nextOffset +
+        "&online=" + online +
+        "&offline=" + offline +
+        "&skipped=" + skipped;
+
+      const progress = Math.round(
+        (nextOffset / Math.max(1, botlar.length)) * 100
+      );
+
+      return c.html(`<!doctype html>
 <html lang="tr">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Bot Kontrolü</title>
-
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Botlar Kontrol Ediliyor</title>
 <style>
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-font-family:Arial,sans-serif;
-
-padding:40px;
-
-}
-
-.card{
-
-max-width:600px;
-
-margin:auto;
-
-background:#1e293b;
-
-padding:30px;
-
-border-radius:12px;
-
-text-align:center;
-
-}
-
-.online{
-
-color:#4ade80;
-
-}
-
-.offline{
-
-color:#f87171;
-
-}
-
-a{
-
-display:inline-block;
-
-margin-top:20px;
-
-padding:12px 20px;
-
-background:#2563eb;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:8px;
-
-}
-
+body{background:#0f172a;color:#fff;font-family:Arial,sans-serif;padding:24px}
+.card{max-width:600px;margin:20px auto;background:#1e293b;padding:24px;border-radius:12px}
+.bar{height:10px;background:#334155;border-radius:8px;overflow:hidden}
+.fill{height:10px;background:#22c55e;width:${progress}%}
+.online{color:#4ade80}.offline{color:#f87171}.skipped{color:#fbbf24}
 </style>
-
 </head>
-
-
 <body>
-
-
 <div class="card">
-
-
-<h1>
-
-✅ Bot Kontrolü Tamamlandı
-
-</h1>
-
-
-<p class="online">
-
-🟢 Online: ${online}
-
-</p>
-
-
-<p class="offline">
-
-🔴 Offline: ${offline}
-
-</p>
-
-
-<p>
-
-Toplam Bot: ${botlar.length}
-
-</p>
-
-
-<a href="/bots">
-
-⬅ Botlara Dön
-
-</a>
-
-
+<h2>🔄 Botlar kontrol ediliyor</h2>
+<p>İlerleme: ${nextOffset} / ${botlar.length} (${progress}%)</p>
+<div class="bar"><div class="fill"></div></div>
+<p class="online">🟢 Online: ${online}</p>
+<p class="offline">🔴 Offline: ${offline}</p>
+<p class="skipped">🟡 Geçici hata nedeniyle atlanan: ${skipped}</p>
+<p>Kontrol tamamlanana kadar bu sayfayı açık tut.</p>
+<script>
+setTimeout(function(){location.replace(${JSON.stringify(nextUrl)})},500);
+</script>
+<noscript><a href="${nextUrl}">Sonraki gruba geç</a></noscript>
 </div>
-
-
 </body>
+</html>`);
+    }
 
-</html>
-
-`);
-
+    return c.html(`<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bot Kontrol Sonucu</title>
+<style>
+body{background:#0f172a;color:#fff;font-family:Arial,sans-serif;padding:24px}
+.card{max-width:600px;margin:20px auto;background:#1e293b;padding:24px;border-radius:12px;text-align:center}
+.online{color:#4ade80}.offline{color:#f87171}.skipped{color:#fbbf24}
+a{display:inline-block;padding:12px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>✅ Bot kontrolü tamamlandı</h2>
+<p class="online">🟢 Online: ${online}</p>
+<p class="offline">🔴 Offline: ${offline}</p>
+<p class="skipped">🟡 Geçici hata nedeniyle atlanan: ${skipped}</p>
+<p>Toplam bot: ${botlar.length}</p>
+<p>Geçici hata alan botların mevcut durumları korundu.</p>
+<a href="/bots">⬅ Botlara dön</a>
+</div>
+</body>
+</html>`);
 
   } catch (e: any) {
-
     console.error(
       "BOT CHECK GENEL HATA:",
-      e?.message || e
+      e?.message || e,
+      e?.stack || ""
     );
 
-    console.error(
-      "STACK:",
-      e?.stack || "No stack"
-    );
-
-
-    return c.html(`
-
-<!DOCTYPE html>
-
+    return c.html(`<!doctype html>
 <html lang="tr">
-
 <head>
-
-<meta charset="UTF-8">
-
-<title>Bot Kontrol Hatası</title>
-
+<meta charset="utf-8">
+<title>Kontrol Hatası</title>
 </head>
-
-
-<body
-style="
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:40px;
-">
-
-
-<h2>
-
-❌ Bot kontrolü sırasında hata oluştu
-
-</h2>
-
-
-<pre>
-
-${e?.message || e}
-
-</pre>
-
-
-<br>
-
-
-<a
-href="/bots"
-style="color:#60a5fa;">
-
-← Botlara Dön
-
-</a>
-
-
+<body style="background:#0f172a;color:white;font-family:Arial;padding:30px">
+<h2>❌ Bot kontrolü tamamlanamadı</h2>
+<p>Genel hata nedeniyle işlem durduruldu.</p>
+<a href="/bots" style="color:#60a5fa">Botlara dön</a>
 </body>
-
-</html>
-
-`);
-
+</html>`);
   }
-
 });
-
 
 
 /* =========================
@@ -1699,257 +1553,69 @@ style="color:#60a5fa;">
 ========================= */
 
 bots.post("/bots/update-all", async (c) => {
-
   const body = await c.req.parseBody();
-
-
-  const description = String(
-    body.description || ""
-  );
-
+  const description = String(body.description || "");
 
   if (!description.trim()) {
-
-    return c.html(`
-
-<!DOCTYPE html>
-
+    return c.html(`<!DOCTYPE html>
 <html lang="tr">
-
-<body
-style="
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:40px;
-">
-
-
-<h2>
-
-⚠️ Açıklama boş olamaz.
-
-</h2>
-
-
-<a
-href="/bots/update-all"
-style="color:#60a5fa;">
-
-← Geri Dön
-
-</a>
-
-
+<body style="background:#0f172a;color:white;font-family:Arial;padding:40px">
+<h2>⚠️ Açıklama boş olamaz.</h2>
+<a href="/bots/update-all" style="color:#60a5fa">← Geri Dön</a>
 </body>
-
-</html>
-
-`);
-
+</html>`);
   }
 
-
-  const botlar = await getBots(
-    c.env.DB
-  ) as any[];
-
-
+  const botlar = await getBots(c.env.DB) as any[];
   let success = 0;
-
   let failed = 0;
 
-
   for (const bot of botlar) {
-
     try {
-
-      await setMyDescription(
-        bot.token,
-        description
-      );
-
+      await setMyDescription(bot.token, description);
 
       await c.env.DB
-        .prepare(`
-          UPDATE bots
-          SET description = ?
-          WHERE id = ?
-        `)
-        .bind(
-          description,
-          bot.id
-        )
+        .prepare("UPDATE bots SET description = ? WHERE id = ?")
+        .bind(description, bot.id)
         .run();
 
-
       success++;
-
-
     } catch (e: any) {
-
       console.error(
         "BOT AÇIKLAMA GÜNCELLEME HATASI:",
         bot.id,
         bot.username || "-",
         e?.message || e
       );
-
-
       failed++;
-
     }
-
   }
 
-
-  return c.html(`
-
-<!DOCTYPE html>
-
+  return c.html(`<!DOCTYPE html>
 <html lang="tr">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>İşlem Tamamlandı</title>
-
-
 <style>
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-font-family:Arial,sans-serif;
-
-padding:40px;
-
-}
-
-.card{
-
-max-width:600px;
-
-margin:auto;
-
-background:#1e293b;
-
-padding:30px;
-
-border-radius:12px;
-
-text-align:center;
-
-}
-
-.success{
-
-color:#4ade80;
-
-}
-
-.failed{
-
-color:#f87171;
-
-}
-
-a{
-
-display:inline-block;
-
-margin-top:20px;
-
-padding:12px 20px;
-
-background:#2563eb;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:8px;
-
-}
-
+body{background:#0f172a;color:white;font-family:Arial,sans-serif;padding:40px}
+.card{max-width:600px;margin:auto;background:#1e293b;padding:30px;border-radius:12px;text-align:center}
+.success{color:#4ade80}.failed{color:#f87171}
+a{display:inline-block;margin-top:20px;padding:12px 20px;background:#2563eb;color:white;text-decoration:none;border-radius:8px}
 </style>
-
 </head>
-
-
 <body>
-
-
 <div class="card">
-
-
-<h1>
-
-✅ Güncelleme Tamamlandı
-
-</h1>
-
-
-<p class="success">
-
-🟢 Başarılı: ${success}
-
-</p>
-
-
-<p class="failed">
-
-🔴 Başarısız: ${failed}
-
-</p>
-
-
-<p>
-
-Sadece ana sayfa açıklaması güncellendi.
-
-</p>
-
-
-<p>
-
-🤖 Bot adı korunmuştur.
-
-<br>
-
-📝 Kısa açıklama korunmuştur.
-
-<br>
-
-🖼️ Profil resmi korunmuştur.
-
-</p>
-
-
-<a href="/bots">
-
-⬅ Bot Yönetimine Dön
-
-</a>
-
-
+<h1>✅ Güncelleme Tamamlandı</h1>
+<p class="success">🟢 Başarılı: ${success}</p>
+<p class="failed">🔴 Başarısız: ${failed}</p>
+<p>Sadece ana sayfa açıklaması güncellendi.</p>
+<p>🤖 Bot adı korunmuştur.<br>📝 Kısa açıklama korunmuştur.<br>🖼️ Profil resmi korunmuştur.</p>
+<a href="/bots">⬅ Bot Yönetimine Dön</a>
 </div>
-
-
 </body>
-
-</html>
-
-`);
-
+</html>`);
 });
-
 
 
 /* =========================
@@ -1957,22 +1623,11 @@ Sadece ana sayfa açıklaması güncellendi.
 ========================= */
 
 bots.post("/bots/delete/:id", async (c) => {
+  const id = Number(c.req.param("id"));
 
-  const id = Number(
-    c.req.param("id")
-  );
+  await deleteBot(c.env.DB, id);
 
-
-  await deleteBot(
-    c.env.DB,
-    id
-  );
-
-
-  return c.redirect(
-    "/bots"
-  );
-
+  return c.redirect("/bots");
 });
 
 
