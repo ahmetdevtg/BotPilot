@@ -97,7 +97,7 @@ export async function addBot(
   }
   await setWebhook(
     token,
-    "https://botpilot.yrdahmets.workers.dev/webhook/" + me.result.id
+    "https://botpilot-panel.yrdahmets.workers.dev/webhook/" + me.result.id
   );
 
   return me.result;
