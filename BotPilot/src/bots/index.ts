@@ -5,7 +5,7 @@ import {
   deleteBot,
   getBotById,
   updateBotProfile,
-  updateBotStatus
+  updateBotStatus,
 } from "../database/bots";
 
 import { addBot } from "../services/bot.service";
@@ -16,1300 +16,299 @@ import {
   getMe,
   setMyName,
   setMyDescription,
-  setMyShortDescription
+  setMyShortDescription,
 } from "../telegram/api";
-
 
 const bots = new Hono<Env>();
 
-
-/* =========================
-   AUTH
-========================= */
-
 bots.use("*", auth);
 
+/* =========================
+   YARDIMCI FONKSİYONLAR
+========================= */
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function readCount(value: unknown): number {
+  const number = Number.parseInt(String(value ?? "0"), 10);
+  return Number.isFinite(number) && number >= 0 ? number : 0;
+}
+
+function page(title: string, content: string): string {
+  return `<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(title)}</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0f172a;color:#f8fafc;font-family:Arial,sans-serif;padding:24px}
+.container{max-width:1100px;margin:0 auto}
+.card{background:#1e293b;padding:24px;border-radius:12px;margin:18px 0}
+h1,h2{margin-top:0}
+a{color:#93c5fd}
+input,textarea{width:100%;padding:12px;margin:8px 0 16px;border:1px solid #475569;border-radius:8px;background:#0f172a;color:white}
+button,.btn{display:inline-block;padding:11px 15px;border:0;border-radius:8px;background:#2563eb;color:white;text-decoration:none;cursor:pointer;font-size:14px}
+.green{background:#16a34a}
+.orange{background:#d97706}
+.red{background:#dc2626}
+.muted{color:#cbd5e1}
+table{width:100%;border-collapse:collapse;margin-top:18px}
+th,td{padding:10px;border:1px solid #334155;text-align:left}
+th{background:#334155}
+.table-wrap{overflow-x:auto}
+.notice{padding:14px;background:#0f172a;border-radius:8px;line-height:1.6;margin:16px 0}
+.success{color:#4ade80}
+.failed{color:#f87171}
+.warning{color:#fbbf24}
+.bar{height:12px;background:#334155;border-radius:8px;overflow:hidden}
+.fill{height:12px;background:#22c55e}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+@media(max-width:600px){body{padding:12px}.card{padding:16px}th,td{padding:7px;font-size:13px}}
+</style>
+</head>
+<body><main class="container">${content}</main></body>
+</html>`;
+}
 
 /* =========================
    BOT LİSTESİ
 ========================= */
 
 bots.get("/bots", async (c) => {
+  const botlar = await getBots(c.env.DB) as any[];
 
-  const botlar = await getBots(c.env.DB);
-
-  let rows = "";
-
-  for (const bot of botlar as any[]) {
-
-    rows += `
+  const rows = botlar.length
+    ? botlar.map((bot) => `
 <tr>
-
-<td>${bot.id}</td>
-
-<td>${bot.name || "-"}</td>
-
-<td>@${bot.username || "-"}</td>
-
+<td>${escapeHtml(bot.id)}</td>
+<td>${escapeHtml(bot.name || "-")}</td>
+<td>@${escapeHtml(bot.username || "-")}</td>
+<td>${bot.status ? "🟢 Online" : "🔴 Offline"}</td>
+<td>${escapeHtml(bot.users ?? 0)}</td>
+<td>${escapeHtml(bot.broadcasts ?? 0)}</td>
 <td>
-${bot.status ? "🟢 Online" : "🔴 Offline"}
+<div class="actions">
+<a class="btn green" href="/bots/edit/${encodeURIComponent(String(bot.id))}">📝 Düzenle</a>
+<form method="POST" action="/bots/delete/${encodeURIComponent(String(bot.id))}" onsubmit="return confirm('Bu botu silmek istediğine emin misin?')">
+<button class="red" type="submit">🗑 Sil</button>
+</form>
+</div>
 </td>
+</tr>`).join("")
+    : `<tr><td colspan="7">Henüz bot eklenmedi.</td></tr>`;
 
-<td>
-${bot.users ?? 0}
-</td>
+  return c.html(page("Bot Yönetimi", `
+<h1>🤖 Bot Yönetimi</h1>
+<a class="btn" href="/dashboard">🏠 Anasayfaya Dön</a>
 
-<td>
-${bot.broadcasts ?? 0}
-</td>
-
-<td>
-
-<a
-href="/bots/edit/${bot.id}"
-style="
-display:inline-block;
-padding:8px 12px;
-background:#16a34a;
-color:white;
-text-decoration:none;
-border-radius:6px;
-margin-right:8px;
-">
-
-📝 Düzenle
-
-</a>
-
-
-<form
-method="POST"
-action="/bots/delete/${bot.id}"
-style="display:inline-block;">
-
-<button
-class="delete-btn"
-type="submit">
-
-🗑 Sil
-
-</button>
-
+<div class="card">
+<h2>Bot Ekle</h2>
+<form method="POST" action="/bots/add">
+<label>Telegram Bot Token</label>
+<input name="token" placeholder="Telegram Bot Token" required>
+<button type="submit">➕ Bot Ekle</button>
 </form>
 
-</td>
-
-</tr>
-`;
-
-  }
-
-
-  if (rows === "") {
-
-    rows = `
-<tr>
-
-<td
-colspan="7"
-style="text-align:center;">
-
-Henüz bot eklenmedi.
-
-</td>
-
-</tr>
-`;
-
-  }
-
-
-  return c.html(`
-
-<!DOCTYPE html>
-
-<html lang="tr">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Bot Yönetimi</title>
-
-
-<style>
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-font-family:Arial,sans-serif;
-
-padding:40px;
-
-}
-
-h1{
-
-margin-bottom:20px;
-
-}
-
-.back{
-
-display:inline-block;
-
-padding:10px 18px;
-
-background:#2563eb;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:8px;
-
-margin-bottom:20px;
-
-}
-
-input{
-
-width:420px;
-
-max-width:100%;
-
-padding:12px;
-
-border:none;
-
-border-radius:8px;
-
-margin-right:10px;
-
-}
-
-button{
-
-padding:12px 20px;
-
-border:none;
-
-border-radius:8px;
-
-background:#2563eb;
-
-color:white;
-
-cursor:pointer;
-
-}
-
-.delete-btn{
-
-background:#dc2626;
-
-}
-
-table{
-
-width:100%;
-
-margin-top:25px;
-
-border-collapse:collapse;
-
-}
-
-th,td{
-
-border:1px solid #334155;
-
-padding:12px;
-
-}
-
-th{
-
-background:#1e293b;
-
-}
-
-tr:nth-child(even){
-
-background:#172033;
-
-}
-
-</style>
-
-</head>
-
-
-<body>
-
-
-<h1>
-
-🤖 Bot Yönetimi
-
-</h1>
-
-
-<a
-href="/dashboard"
-class="back">
-
-🏠 Anasayfaya Dön
-
-</a>
-
-
-<div style="margin-bottom:20px;">
-
-
-<form
-method="POST"
-action="/bots/add">
-
-
-<input
-name="token"
-placeholder="Telegram Bot Token"
-required>
-
-
-<button type="submit">
-
-➕ Bot Ekle
-
-</button>
-
-
-<a
-href="/bots/bulk"
-style="
-display:inline-block;
-padding:12px 18px;
-background:#16a34a;
-color:white;
-text-decoration:none;
-border-radius:8px;
-margin-left:10px;">
-
-📥 Toplu Bot Ekle
-
-</a>
-
-
-<a
-href="/bots/update-all"
-style="
-display:inline-block;
-padding:12px 18px;
-background:#16a34a;
-color:white;
-text-decoration:none;
-border-radius:8px;
-margin-left:10px;">
-
-🤖 Tüm Botları Güncelle
-
-</a>
-
-
-<a
-href="/bots/check"
-style="
-display:inline-block;
-padding:12px 18px;
-background:#f59e0b;
-color:white;
-text-decoration:none;
-border-radius:8px;
-margin-left:10px;">
-
-🔄 Botları Kontrol Et
-
-</a>
-
-
-</form>
-
+<div class="actions">
+<a class="btn green" href="/bots/bulk">📥 Toplu Bot Ekle</a>
+<a class="btn green" href="/bots/update-all">🤖 Tüm Botların Açıklamasını Güncelle</a>
+<a class="btn orange" href="/bots/check">🔄 Botları Kontrol Et</a>
+</div>
 </div>
 
-
+<div class="card">
+<h2>Bot Listesi (${botlar.length})</h2>
+<div class="table-wrap">
 <table>
-
-<tr>
-
-<th>ID</th>
-
-<th>🤖 Bot Adı</th>
-
-<th>👤 Username</th>
-
-<th>🟢 Durum</th>
-
-<th>👥 Kullanıcı</th>
-
-<th>📢 Broadcast</th>
-
-<th>⚙️ İşlemler</th>
-
-</tr>
-
-
-${rows}
-
-
+<thead><tr>
+<th>ID</th><th>Bot Adı</th><th>Username</th><th>Durum</th>
+<th>Kullanıcı</th><th>Broadcast</th><th>İşlemler</th>
+</tr></thead>
+<tbody>${rows}</tbody>
 </table>
-
-
-</body>
-
-</html>
-
-`);
-
+</div>
+</div>`));
 });
-
-
 
 /* =========================
    BOT DÜZENLEME SAYFASI
 ========================= */
 
 bots.get("/bots/edit/:id", async (c) => {
+  const id = Number(c.req.param("id"));
 
-  const id = Number(
-    c.req.param("id")
-  );
-
-
-  const bot = await getBotById(
-    c.env.DB,
-    id
-  ) as any;
-
-
-  if (!bot) {
-
-    return c.html(
-      "<h2>Bot bulunamadı.</h2>"
-    );
-
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return c.text("Geçersiz bot ID.", 400);
   }
 
-
-  return c.html(`
-
-<!DOCTYPE html>
-
-<html lang="tr">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Bot Düzenle</title>
-
-
-<style>
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-font-family:Arial,sans-serif;
-
-padding:40px;
-
-}
-
-input,textarea{
-
-width:100%;
-
-padding:12px;
-
-margin-top:10px;
-
-margin-bottom:20px;
-
-border:none;
-
-border-radius:8px;
-
-box-sizing:border-box;
-
-}
-
-button{
-
-padding:12px 20px;
-
-background:#2563eb;
-
-border:none;
-
-border-radius:8px;
-
-color:white;
-
-cursor:pointer;
-
-}
-
-.back{
-
-display:inline-block;
-
-margin-bottom:20px;
-
-padding:10px 18px;
-
-background:#475569;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:8px;
-
-}
-
-</style>
-
-</head>
-
-
-<body>
-
-
-<a
-href="/bots"
-class="back">
-⬅ Botlara Dön
-
-</a>
-
-
-<h1>
-
-📝 Bot Düzenle
-
-</h1>
-
-
-<form
-method="POST"
-action="/bots/edit/${bot.id}">
-
-
-<label>
-
-Bot Adı
-
-</label>
-
-
-<input
-name="name"
-value="${bot.name || ""}">
-
-
-<label>
-
-Açıklama
-
-</label>
-
-
-<textarea
-name="description"
-rows="4">${bot.description || ""}</textarea>
-
-
-<label>
-
-Kısa Açıklama
-
-</label>
-
-
-<textarea
-name="shortDescription"
-rows="2">${bot.short_description || ""}</textarea>
-
-
-<button>
-
-💾 Kaydet
-
-</button>
-
-
+  const bot = await getBotById(c.env.DB, id) as any;
+
+  if (!bot) {
+    return c.html(page("Bot Bulunamadı", `
+<div class="card"><h2>Bot bulunamadı.</h2><a href="/bots">← Botlara dön</a></div>`), 404);
+  }
+
+  return c.html(page("Bot Düzenle", `
+<a class="btn" href="/bots">⬅ Botlara Dön</a>
+<div class="card">
+<h1>📝 Bot Düzenle</h1>
+<form method="POST" action="/bots/edit/${id}">
+<label>Bot Adı</label>
+<input name="name" value="${escapeHtml(bot.name || "")}">
+
+<label>Ana Sayfa Açıklaması</label>
+<textarea name="description" rows="4">${escapeHtml(bot.description || "")}</textarea>
+
+<label>Kısa Açıklama</label>
+<textarea name="shortDescription" rows="3">${escapeHtml(bot.short_description || "")}</textarea>
+
+<button type="submit">💾 Kaydet</button>
 </form>
-
-
-</body>
-
-</html>
-
-`);
-
+</div>`));
 });
-
-
 
 /* =========================
    TOPLU BOT EKLE SAYFASI
 ========================= */
 
 bots.get("/bots/bulk", async (c) => {
-
-  return c.html(`
-
-<!DOCTYPE html>
-
-<html lang="tr">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Toplu Bot Ekle</title>
-
-
-<style>
-
-*{
-
-margin:0;
-
-padding:0;
-
-box-sizing:border-box;
-
-font-family:Arial,sans-serif;
-
-}
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-padding:40px;
-
-}
-
-.container{
-
-max-width:900px;
-
-margin:auto;
-
-}
-
-.back{
-
-display:inline-block;
-
-margin-bottom:20px;
-
-padding:12px 20px;
-
-background:#2563eb;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:8px;
-
-font-weight:bold;
-
-}
-
-.card{
-
-background:#1e293b;
-
-padding:25px;
-
-border-radius:12px;
-
-}
-
-h1{
-
-margin-bottom:10px;
-
-}
-
-p{
-
-color:#cbd5e1;
-
-margin-bottom:20px;
-
-}
-
-textarea{
-
-width:100%;
-
-height:350px;
-
-padding:15px;
-
-border:none;
-
-border-radius:8px;
-
-background:#0f172a;
-
-color:white;
-
-resize:vertical;
-
-font-size:15px;
-
-}
-
-button{
-
-margin-top:20px;
-
-padding:14px 24px;
-
-background:#16a34a;
-
-color:white;
-
-border:none;
-
-border-radius:8px;
-
-cursor:pointer;
-
-font-size:16px;
-
-font-weight:bold;
-
-}
-
-button:hover{
-
-background:#15803d;
-
-}
-
-</style>
-
-</head>
-
-
-<body>
-
-
-<div class="container">
-
-
-<a
-href="/bots"
-class="back">
-
-⬅ Bot Listesine Dön
-
-</a>
-
-
+  return c.html(page("Toplu Bot Ekle", `
+<a class="btn" href="/bots">⬅ Bot Listesine Dön</a>
 <div class="card">
-
-
-<h1>
-
-📥 Toplu Bot Ekle
-
-</h1>
-
-
-<p>
-
-Her satıra bir Telegram Bot Token yapıştır.
-
-</p>
-
-
-<form
-method="POST"
-action="/bots/bulk">
-
-
-<textarea
-name="tokens"
-placeholder="123456:AAxxxxxxxxxxxxxxxx
-
-987654:BBxxxxxxxxxxxxxxxx
-
-741852:CCxxxxxxxxxxxxxxxx"></textarea>
-
-
-<button
-type="submit">
-
-🚀 Botları Ekle
-
-</button>
-
-
+<h1>📥 Toplu Bot Ekle</h1>
+<p class="muted">Her satıra bir Telegram bot tokenı yaz.</p>
+<form method="POST" action="/bots/bulk">
+<textarea name="tokens" rows="14" placeholder="İlk bot tokenı&#10;İkinci bot tokenı&#10;Üçüncü bot tokenı" required></textarea>
+<button class="green" type="submit">🚀 Botları Ekle</button>
 </form>
-
-
-</div>
-
-
-</div>
-
-
-</body>
-
-</html>
-
-`);
-
+</div>`));
 });
-
-
-
-/* =========================
-   TÜM BOTLARI GÜNCELLE SAYFASI
-========================= */
-
-bots.get("/bots/update-all", async (c) => {
-
-  return c.html(`
-
-<!DOCTYPE html>
-
-<html lang="tr">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Tüm Botların Açıklamasını Güncelle</title>
-
-
-<style>
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-font-family:Arial,sans-serif;
-
-padding:40px;
-
-}
-
-.container{
-
-max-width:800px;
-
-margin:auto;
-
-}
-
-.card{
-
-background:#1e293b;
-
-padding:25px;
-
-border-radius:12px;
-
-}
-
-.back{
-
-display:inline-block;
-
-margin-bottom:20px;
-
-padding:12px 20px;
-
-background:#2563eb;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:8px;
-
-}
-
-textarea{
-
-width:100%;
-
-padding:12px;
-
-margin-top:10px;
-
-margin-bottom:20px;
-
-border:none;
-
-border-radius:8px;
-
-background:#0f172a;
-
-color:white;
-
-resize:vertical;
-
-box-sizing:border-box;
-
-}
-
-button{
-
-padding:14px 24px;
-
-background:#16a34a;
-
-color:white;
-
-border:none;
-
-border-radius:8px;
-
-cursor:pointer;
-
-font-size:16px;
-
-}
-
-.info{
-
-background:#0f172a;
-
-padding:15px;
-
-border-radius:8px;
-
-margin-bottom:20px;
-
-color:#cbd5e1;
-
-line-height:1.6;
-
-}
-
-</style>
-
-</head>
-
-
-<body>
-
-
-<div class="container">
-
-
-<a
-class="back"
-href="/bots">
-
-⬅ Botlara Dön
-
-</a>
-
-
-<div class="card">
-
-
-<h1>
-
-🤖 Tüm Botların Açıklamasını Güncelle
-
-</h1>
-
-
-<div class="info">
-
-
-<strong>⚠️ Bilgi</strong>
-
-<br><br>
-
-
-Bu işlem yalnızca Telegram botlarının
-<strong>ana sayfa açıklamasını</strong> değiştirir.
-
-
-<br><br>
-
-
-🤖 Bot adı değişmez.
-
-<br>
-
-🖼️ Profil resmi değişmez.
-
-<br>
-
-📝 Kısa açıklama değişmez.
-
-
-</div>
-
-
-<form
-method="POST"
-action="/bots/update-all">
-
-
-<label>
-
-Yeni Ana Sayfa Açıklaması
-
-</label>
-
-
-<textarea
-name="description"
-rows="7"
-placeholder="Botların ana sayfasında görünecek açıklamayı yazın..."
-required></textarea>
-
-
-<button
-type="submit">
-
-🚀 Tüm Botların Açıklamasını Güncelle
-
-</button>
-
-
-</form>
-
-
-</div>
-
-
-</div>
-
-
-</body>
-
-</html>
-
-`);
-
-});
-
-
-
-/* =========================
-   BOT EKLE
-========================= */
-
-bots.post("/bots/add", async (c) => {
-
-  const body = await c.req.parseBody();
-
-  const token = String(
-    body.token || ""
-  ).trim();
-
-
-  try {
-
-    await addBot(
-      c.env.DB,
-      token
-    );
-
-    return c.redirect(
-      "/bots"
-    );
-
-  } catch (e: any) {
-
-    return c.html(`
-
-<h2>
-
-${e?.message || "Bot eklenemedi."}
-
-</h2>
-
-<a href="/bots">
-
-Geri Dön
-
-</a>
-
-`);
-
-  }
-
-});
-
-
 
 /* =========================
    TOPLU BOT EKLE
 ========================= */
 
 bots.post("/bots/bulk", async (c) => {
-
   const body = await c.req.parseBody();
+  const text = String(body.tokens || "");
 
-  const text = String(
-    body.tokens || ""
-  );
-
-
-  const tokens = text
-    .split(/\r?\n/)
-    .map(x => x.trim())
-    .filter(x => x !== "");
-
+  const tokens = [...new Set(
+    text.split(/\r?\n/).map((token) => token.trim()).filter(Boolean)
+  )];
 
   let success = 0;
-
   let failed = 0;
-
+  let firstError = "";
 
   for (const token of tokens) {
-
     try {
-
-      await addBot(
-        c.env.DB,
-        token
-      );
-
+      await addBot(c.env.DB, token);
       success++;
-
     } catch (e: any) {
-
-      console.error(
-        "TOPLU BOT EKLEME HATASI:",
-        e?.message || e
-      );
-
       failed++;
+      const message = String(e?.message || e || "Bilinmeyen hata");
 
+      console.error("TOPLU BOT EKLEME HATASI:", message);
+
+      if (!firstError) firstError = message;
     }
-
   }
 
-
-  return c.html(`
-
-<!DOCTYPE html>
-
-<html lang="tr">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>İşlem Tamamlandı</title>
-
-
-<style>
-
-body{
-
-background:#0f172a;
-
-color:white;
-
-font-family:Arial;
-
-padding:40px;
-
-}
-
-.card{
-
-background:#1e293b;
-
-padding:30px;
-
-border-radius:12px;
-
-max-width:600px;
-
-margin:auto;
-
-text-align:center;
-
-}
-
-a{
-
-display:inline-block;
-
-margin-top:20px;
-
-padding:12px 20px;
-
-background:#2563eb;
-
-color:white;
-
-text-decoration:none;
-
-border-radius:8px;
-
-}
-
-</style>
-
-</head>
-
-
-<body>
-
-
+  return c.html(page("Toplu Ekleme Sonucu", `
 <div class="card">
-
-
-<h1>
-
-✅ Toplu Bot Ekleme Tamamlandı
-
-</h1>
-
-
-<p>
-
-Toplam Token: ${tokens.length}
-
-</p>
-
-
-<p>
-
-Başarılı: ${success}
-
-</p>
-
-
-<p>
-
-Başarısız: ${failed}
-
-</p>
-
-
-<a href="/bots">
-
-⬅ Botlara Dön
-
-</a>
-
-
-</div>
-
-
-</body>
-
-</html>
-
-`);
-
+<h1>✅ Toplu Bot Ekleme Tamamlandı</h1>
+<p>İşlenen token: ${tokens.length}</p>
+<p class="success">🟢 Başarılı: ${success}</p>
+<p class="failed">🔴 Başarısız: ${failed}</p>
+${firstError ? `<div class="notice"><strong>İlk hata:</strong><pre>${escapeHtml(firstError)}</pre></div>` : ""}
+<a class="btn" href="/bots">⬅ Bot Yönetimine Dön</a>
+</div>`));
 });
 
+/* =========================
+   TÜM BOTLARI GÜNCELLE SAYFASI
+========================= */
 
+bots.get("/bots/update-all", async (c) => {
+  return c.html(page("Toplu Açıklama Güncelle", `
+<a class="btn" href="/bots">⬅ Botlara Dön</a>
+<div class="card">
+<h1>🤖 Tüm Botların Açıklamasını Güncelle</h1>
+<div class="notice">
+<strong>Bilgi:</strong> Bu işlem yalnızca Telegram botlarının ana sayfa açıklamasını değiştirir.
+<br>Bot adı, kısa açıklama ve profil resmi değiştirilmez.
+<br>Botlar beşerli gruplar hâlinde işlenir.
+</div>
+<form method="POST" action="/bots/update-all">
+<label>Yeni ana sayfa açıklaması</label>
+<textarea name="description" rows="7" placeholder="Botların ana sayfasında görünecek açıklamayı yaz..." required></textarea>
+<button class="green" type="submit">🚀 Güncellemeyi Başlat</button>
+</form>
+</div>`));
+});
+
+/* =========================
+   TEK BOT EKLE
+========================= */
+
+bots.post("/bots/add", async (c) => {
+  const body = await c.req.parseBody();
+  const token = String(body.token || "").trim();
+
+  if (!token) {
+    return c.text("Bot tokenı boş olamaz.", 400);
+  }
+
+  try {
+    await addBot(c.env.DB, token);
+    return c.redirect("/bots");
+  } catch (e: any) {
+    console.error("BOT EKLEME HATASI:", e?.message || e);
+
+    return c.html(page("Bot Eklenemedi", `
+<div class="card">
+<h2>❌ Bot eklenemedi</h2>
+<pre>${escapeHtml(e?.message || e || "Bilinmeyen hata")}</pre>
+<a class="btn" href="/bots">Geri Dön</a>
+</div>`), 400);
+  }
+});
 
 /* =========================
    TEK BOT DÜZENLE
 ========================= */
 
 bots.post("/bots/edit/:id", async (c) => {
+  const id = Number(c.req.param("id"));
 
-  const id = Number(
-    c.req.param("id")
-  );
-
-
-  const body = await c.req.parseBody();
-
-
-  const name = String(
-    body.name || ""
-  );
-
-  const description = String(
-    body.description || ""
-  );
-
-  const shortDescription = String(
-    body.shortDescription || ""
-  );
-
-
-  const bot = await getBotById(
-    c.env.DB,
-    id
-  ) as any;
-
-
-  if (!bot) {
-
-    return c.html(
-      "<h2>Bot bulunamadı.</h2>"
-    );
-
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return c.text("Geçersiz bot ID.", 400);
   }
 
+  const body = await c.req.parseBody();
+  const name = String(body.name || "").trim();
+  const description = String(body.description || "");
+  const shortDescription = String(body.shortDescription || "");
+
+  const bot = await getBotById(c.env.DB, id) as any;
+
+  if (!bot) {
+    return c.text("Bot bulunamadı.", 404);
+  }
 
   try {
-
-    await setMyName(
-      bot.token,
-      name
-    );
-
-
-    await setMyDescription(
-      bot.token,
-      description
-    );
-
-
-    await setMyShortDescription(
-      bot.token,
-      shortDescription
-    );
-
+    await setMyName(bot.token, name);
+    await setMyDescription(bot.token, description);
+    await setMyShortDescription(bot.token, shortDescription);
 
     await updateBotProfile(
       c.env.DB,
@@ -1319,87 +318,23 @@ bots.post("/bots/edit/:id", async (c) => {
       shortDescription
     );
 
-
-    return c.redirect(
-      "/bots"
-    );
-
-
+    return c.redirect("/bots");
   } catch (e: any) {
+    const message = String(e?.message || e || "Bilinmeyen hata");
 
-    console.error(
-      "BOT PROFİL GÜNCELLEME HATASI:",
-      e?.message || e
-    );
+    console.error("BOT PROFİL GÜNCELLEME HATASI:", {
+      botId: id,
+      error: message,
+    });
 
-
-    return c.html(`
-
-<!DOCTYPE html>
-
-<html lang="tr">
-
-<head>
-
-<meta charset="UTF-8">
-
-<title>Telegram API Hatası</title>
-
-</head>
-
-
-<body
-style="
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:40px;
-">
-
-
-<h2>
-
-Telegram API Hatası
-
-</h2>
-
-
-<p>
-
-Bot güncellenemedi.
-
-</p>
-
-
-<pre>
-
-${e?.message || e}
-
-</pre>
-
-
-<br>
-
-
-<a
-href="/bots/edit/${id}"
-style="color:#60a5fa;">
-
-← Geri Dön
-
-</a>
-
-
-</body>
-
-</html>
-
-`);
-
+    return c.html(page("Profil Güncelleme Hatası", `
+<div class="card">
+<h2>❌ Bot profili güncellenemedi</h2>
+<pre>${escapeHtml(message)}</pre>
+<a class="btn" href="/bots/edit/${id}">← Geri Dön</a>
+</div>`), 400);
   }
-
 });
-
 
 /* =========================
    BOTLARI KONTROL ET
@@ -1410,15 +345,10 @@ bots.get("/bots/check", async (c) => {
     const botlar = await getBots(c.env.DB) as any[];
 
     const batchSize = 5;
-    const parseCount = (value: string | undefined) => {
-      const n = Number.parseInt(value || "0", 10);
-      return Number.isFinite(n) && n >= 0 ? n : 0;
-    };
-
-    const offset = parseCount(c.req.query("offset"));
-    let online = parseCount(c.req.query("online"));
-    let offline = parseCount(c.req.query("offline"));
-    let skipped = parseCount(c.req.query("skipped"));
+    const offset = readCount(c.req.query("offset"));
+    let online = readCount(c.req.query("online"));
+    let offline = readCount(c.req.query("offline"));
+    let skipped = readCount(c.req.query("skipped"));
 
     if (offset >= botlar.length && offset !== 0) {
       return c.redirect("/bots/check");
@@ -1434,10 +364,10 @@ bots.get("/bots/check", async (c) => {
       } catch (e: any) {
         const message = String(e?.message || e || "Unknown error");
 
-        console.error("BOT CHECK ERROR", {
+        console.error("BOT CHECK ERROR:", {
           botId: bot.id,
           username: bot.username || "-",
-          error: message
+          error: message,
         });
 
         const temporaryError =
@@ -1455,167 +385,173 @@ bots.get("/bots/check", async (c) => {
     const nextOffset = offset + batch.length;
 
     if (nextOffset < botlar.length) {
-      const nextUrl =
-        "/bots/check?offset=" + nextOffset +
+      const nextUrl = "/bots/check?offset=" + nextOffset +
         "&online=" + online +
         "&offline=" + offline +
         "&skipped=" + skipped;
 
       const progress = Math.round(
-        (nextOffset / Math.max(1, botlar.length)) * 100
+        nextOffset / Math.max(1, botlar.length) * 100
       );
 
-      return c.html(`<!doctype html>
-<html lang="tr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Botlar Kontrol Ediliyor</title>
-<style>
-body{background:#0f172a;color:#fff;font-family:Arial,sans-serif;padding:24px}
-.card{max-width:600px;margin:20px auto;background:#1e293b;padding:24px;border-radius:12px}
-.bar{height:10px;background:#334155;border-radius:8px;overflow:hidden}
-.fill{height:10px;background:#22c55e;width:${progress}%}
-.online{color:#4ade80}.offline{color:#f87171}.skipped{color:#fbbf24}
-</style>
-</head>
-<body>
+      return c.html(page("Botlar Kontrol Ediliyor", `
 <div class="card">
 <h2>🔄 Botlar kontrol ediliyor</h2>
-<p>İlerleme: ${nextOffset} / ${botlar.length} (${progress}%)</p>
-<div class="bar"><div class="fill"></div></div>
-<p class="online">🟢 Online: ${online}</p>
-<p class="offline">🔴 Offline: ${offline}</p>
-<p class="skipped">🟡 Geçici hata nedeniyle atlanan: ${skipped}</p>
-<p>Kontrol tamamlanana kadar bu sayfayı açık tut.</p>
-<script>
-setTimeout(function(){location.replace(${JSON.stringify(nextUrl)})},500);
-</script>
-<noscript><a href="${nextUrl}">Sonraki gruba geç</a></noscript>
-</div>
-</body>
-</html>`);
+<p>İlerleme: ${nextOffset} / ${botlar.length} (%${progress})</p>
+<div class="bar"><div class="fill" style="width:${progress}%"></div></div>
+<p class="success">🟢 Online: ${online}</p>
+<p class="failed">🔴 Offline: ${offline}</p>
+<p class="warning">🟡 Geçici hata nedeniyle atlanan: ${skipped}</p>
+<p>İşlem bitene kadar bu sayfayı açık tut.</p>
+<script>setTimeout(function(){location.replace(${JSON.stringify(nextUrl)})},500)</script>
+<noscript><a href="${escapeHtml(nextUrl)}">Sonraki gruba geç</a></noscript>
+</div>`));
     }
 
-    return c.html(`<!doctype html>
-<html lang="tr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bot Kontrol Sonucu</title>
-<style>
-body{background:#0f172a;color:#fff;font-family:Arial,sans-serif;padding:24px}
-.card{max-width:600px;margin:20px auto;background:#1e293b;padding:24px;border-radius:12px;text-align:center}
-.online{color:#4ade80}.offline{color:#f87171}.skipped{color:#fbbf24}
-a{display:inline-block;padding:12px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px}
-</style>
-</head>
-<body>
+    return c.html(page("Bot Kontrol Sonucu", `
 <div class="card">
 <h2>✅ Bot kontrolü tamamlandı</h2>
-<p class="online">🟢 Online: ${online}</p>
-<p class="offline">🔴 Offline: ${offline}</p>
-<p class="skipped">🟡 Geçici hata nedeniyle atlanan: ${skipped}</p>
+<p class="success">🟢 Online: ${online}</p>
+<p class="failed">🔴 Offline: ${offline}</p>
+<p class="warning">🟡 Geçici hata nedeniyle atlanan: ${skipped}</p>
 <p>Toplam bot: ${botlar.length}</p>
 <p>Geçici hata alan botların mevcut durumları korundu.</p>
-<a href="/bots">⬅ Botlara dön</a>
-</div>
-</body>
-</html>`);
-
+<a class="btn" href="/bots">⬅ Botlara Dön</a>
+</div>`));
   } catch (e: any) {
-    console.error(
-      "BOT CHECK GENEL HATA:",
-      e?.message || e,
-      e?.stack || ""
-    );
+    console.error("BOT CHECK GENEL HATA:", e?.message || e, e?.stack || "");
 
-    return c.html(`<!doctype html>
-<html lang="tr">
-<head>
-<meta charset="utf-8">
-<title>Kontrol Hatası</title>
-</head>
-<body style="background:#0f172a;color:white;font-family:Arial;padding:30px">
-<h2>❌ Bot kontrolü tamamlanamadı</h2>
-<p>Genel hata nedeniyle işlem durduruldu.</p>
-<a href="/bots" style="color:#60a5fa">Botlara dön</a>
-</body>
-</html>`);
+    return c.html(page("Kontrol Hatası", `
+<div class="card">
+<h2>❌ Kontrol tamamlanamadı</h2>
+<pre>${escapeHtml(e?.message || e || "Bilinmeyen hata")}</pre>
+<a class="btn" href="/bots">Botlara dön</a>
+</div>`), 500);
   }
 });
 
-
 /* =========================
-   TÜM BOTLARIN AÇIKLAMASINI
-   GÜNCELLE
+   TOPLU AÇIKLAMA GÜNCELLE
+   BEŞ BOTLUK GRUPLAR
 ========================= */
 
 bots.post("/bots/update-all", async (c) => {
   const body = await c.req.parseBody();
+
   const description = String(body.description || "");
+  const offset = readCount(body.offset);
+  let success = readCount(body.success);
+  let failed = readCount(body.failed);
+  let firstError = String(body.firstError || "");
 
   if (!description.trim()) {
-    return c.html(`<!DOCTYPE html>
-<html lang="tr">
-<body style="background:#0f172a;color:white;font-family:Arial;padding:40px">
+    return c.html(page("Eksik Açıklama", `
+<div class="card">
 <h2>⚠️ Açıklama boş olamaz.</h2>
-<a href="/bots/update-all" style="color:#60a5fa">← Geri Dön</a>
-</body>
-</html>`);
+<a class="btn" href="/bots/update-all">← Geri Dön</a>
+</div>`), 400);
   }
 
-  const botlar = await getBots(c.env.DB) as any[];
-  let success = 0;
-  let failed = 0;
+  try {
+    const botlar = await getBots(c.env.DB) as any[];
 
-  for (const bot of botlar) {
-    try {
-      await setMyDescription(bot.token, description);
-
-      await c.env.DB
-        .prepare("UPDATE bots SET description = ? WHERE id = ?")
-        .bind(description, bot.id)
-        .run();
-
-      success++;
-    } catch (e: any) {
-      console.error(
-        "BOT AÇIKLAMA GÜNCELLEME HATASI:",
-        bot.id,
-        bot.username || "-",
-        e?.message || e
-      );
-      failed++;
+    if (botlar.length === 0) {
+      return c.html(page("Bot Bulunamadı", `
+<div class="card"><h2>Henüz bot eklenmemiş.</h2><a class="btn" href="/bots">Botlara dön</a></div>`));
     }
-  }
 
-  return c.html(`<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>İşlem Tamamlandı</title>
-<style>
-body{background:#0f172a;color:white;font-family:Arial,sans-serif;padding:40px}
-.card{max-width:600px;margin:auto;background:#1e293b;padding:30px;border-radius:12px;text-align:center}
-.success{color:#4ade80}.failed{color:#f87171}
-a{display:inline-block;margin-top:20px;padding:12px 20px;background:#2563eb;color:white;text-decoration:none;border-radius:8px}
-</style>
-</head>
-<body>
+    const batchSize = 5;
+    const batch = botlar.slice(offset, offset + batchSize);
+
+    if (batch.length === 0 && offset > 0) {
+      return c.html(page("İşlem Hatası", `
+<div class="card">
+<h2>⚠️ Güncelleme konumu geçersiz.</h2>
+<a class="btn" href="/bots/update-all">Yeniden başlat</a>
+</div>`), 400);
+    }
+
+    for (const bot of batch) {
+      try {
+        await setMyDescription(bot.token, description);
+
+        await c.env.DB
+          .prepare("UPDATE bots SET description = ? WHERE id = ?")
+          .bind(description, bot.id)
+          .run();
+
+        success++;
+      } catch (e: any) {
+        failed++;
+
+        const message = String(e?.message || e || "Bilinmeyen hata");
+
+        console.error("BOT AÇIKLAMA GÜNCELLEME HATASI:", {
+          botId: bot.id,
+          username: bot.username || "-",
+          error: message,
+        });
+
+        if (!firstError) {
+          firstError = `Bot ID ${bot.id} (@${bot.username || "-"}): ${message}`;
+        }
+      }
+    }
+
+    const nextOffset = offset + batch.length;
+
+    if (nextOffset < botlar.length) {
+      const progress = Math.round(
+        nextOffset / Math.max(1, botlar.length) * 100
+      );
+
+      const escapedDescription = escapeHtml(description);
+      const escapedFirstError = escapeHtml(firstError);
+
+      return c.html(page("Toplu Güncelleme", `
+<div class="card">
+<h2>🔄 Açıklamalar güncelleniyor</h2>
+<p>İlerleme: ${nextOffset} / ${botlar.length} (%${progress})</p>
+<div class="bar"><div class="fill" style="width:${progress}%"></div></div>
+<p class="success">🟢 Başarılı: ${success}</p>
+<p class="failed">🔴 Başarısız: ${failed}</p>
+<p>Sonraki grup otomatik olarak işlenecek. Bu sayfayı kapatma.</p>
+<form id="next" method="POST" action="/bots/update-all">
+<input type="hidden" name="description" value="${escapedDescription}">
+<input type="hidden" name="offset" value="${nextOffset}">
+<input type="hidden" name="success" value="${success}">
+<input type="hidden" name="failed" value="${failed}">
+<input type="hidden" name="firstError" value="${escapedFirstError}">
+<noscript><button type="submit">Sonraki gruba geç</button></noscript>
+</form>
+<script>setTimeout(function(){document.getElementById("next").submit()},500)</script>
+</div>`));
+    }
+
+    return c.html(page("Güncelleme Sonucu", `
 <div class="card">
 <h1>✅ Güncelleme Tamamlandı</h1>
+<p>Toplam bot: ${botlar.length}</p>
 <p class="success">🟢 Başarılı: ${success}</p>
 <p class="failed">🔴 Başarısız: ${failed}</p>
 <p>Sadece ana sayfa açıklaması güncellendi.</p>
 <p>🤖 Bot adı korunmuştur.<br>📝 Kısa açıklama korunmuştur.<br>🖼️ Profil resmi korunmuştur.</p>
-<a href="/bots">⬅ Bot Yönetimine Dön</a>
-</div>
-</body>
-</html>`);
-});
+${firstError ? `<div class="notice"><h3>İlk hata mesajı</h3><pre>${escapeHtml(firstError)}</pre></div>` : ""}
+<a class="btn" href="/bots">⬅ Bot Yönetimine Dön</a>
+</div>`));
+  } catch (e: any) {
+    const message = String(e?.message || e || "Bilinmeyen hata");
 
+    console.error("TOPLU AÇIKLAMA GÜNCELLEME GENEL HATA:", message, e?.stack || "");
+
+    return c.html(page("Toplu Güncelleme Hatası", `
+<div class="card">
+<h2>❌ Toplu güncelleme durdu</h2>
+<pre>${escapeHtml(message)}</pre>
+<a class="btn" href="/bots">Botlara dön</a>
+</div>`), 500);
+  }
+});
 
 /* =========================
    BOT SİL
@@ -1624,10 +560,23 @@ a{display:inline-block;margin-top:20px;padding:12px 20px;background:#2563eb;colo
 bots.post("/bots/delete/:id", async (c) => {
   const id = Number(c.req.param("id"));
 
-  await deleteBot(c.env.DB, id);
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return c.text("Geçersiz bot ID.", 400);
+  }
 
-  return c.redirect("/bots");
+  try {
+    await deleteBot(c.env.DB, id);
+    return c.redirect("/bots");
+  } catch (e: any) {
+    console.error("BOT SİLME HATASI:", e?.message || e);
+
+    return c.html(page("Bot Silinemedi", `
+<div class="card">
+<h2>❌ Bot silinemedi</h2>
+<pre>${escapeHtml(e?.message || e || "Bilinmeyen hata")}</pre>
+<a class="btn" href="/bots">Botlara dön</a>
+</div>`), 500);
+  }
 });
-
 
 export default bots;
