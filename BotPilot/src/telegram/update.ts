@@ -1,3 +1,4 @@
+
 import { getReplyButton } from "../database/reply-buttons";
 import { handleStart } from "./handlers/start";
 import { handleReplyButton } from "./handlers/reply-button";
@@ -9,41 +10,22 @@ export async function handleUpdate(
   botId: number,
   update: any
 ) {
+  if (!update?.message) return;
+
+  const message = update.message;
+  const text = String(message.text || "").trim();
+
   try {
-    if (!update?.message) {
+    // /start, /start payload ve /start@bot_kullanici_adi
+    if (/^\/start(?:@[A-Za-z0-9_]+)?(?:\s+.*)?$/i.test(text)) {
+      await handleStart(db, token, botId, message);
       return;
     }
 
-    const message = update.message;
-    const text = message.text || "";
+    const handled = await handleReplyButton(token, message);
+    if (handled) return;
 
-    // /start
-    if (text === "/start") {
-      await handleStart(
-        db,
-        token,
-        botId,
-        message
-      );
-      return;
-    }
-
-    // Reply Button Handler
-    const handled = await handleReplyButton(
-      db,
-      token,
-      message
-    );
-
-    if (handled) {
-      return;
-    }
-
-    // Veritabanındaki cevap
-    const reply: any = await getReplyButton(
-      db,
-      text
-    );
+    const reply: any = await getReplyButton(db, text);
 
     if (reply) {
       await sendMessage(
@@ -56,7 +38,6 @@ export async function handleUpdate(
       return;
     }
 
-    // Sabit menüler
     if (text === "📢 Kanal") {
       await sendMessage(
         token,
@@ -70,7 +51,7 @@ export async function handleUpdate(
       await sendMessage(
         token,
         message.chat.id,
-        `ID: ${message.from.id}\nAd: ${message.from.first_name}`
+        `ID: ${message.from?.id}\nAd: ${message.from?.first_name || ""}`
       );
       return;
     }
@@ -81,26 +62,13 @@ export async function handleUpdate(
         message.chat.id,
         "Yardım menüsü yakında eklenecek."
       );
-      return;
     }
-
   } catch (e: any) {
-
-    console.error("HANDLE UPDATE ERROR");
-    console.error(e);
-
-    try {
-
-      if (update?.message?.chat?.id) {
-        await sendMessage(
-          token,
-          update.message.chat.id,
-          "❌ Bir hata oluştu."
-        );
-      }
-
-    } catch (err) {
-      console.error(err);
-    }
+    console.error("HANDLE UPDATE ERROR:", {
+      botId,
+      updateId: update?.update_id,
+      error: e?.message || String(e),
+      stack: e?.stack
+    });
   }
 }
