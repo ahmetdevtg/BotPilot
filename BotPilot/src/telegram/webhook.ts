@@ -1,3 +1,4 @@
+
 import { Hono } from "hono";
 import type { Env } from "../types/env";
 import { handleUpdate } from "./update";
@@ -5,52 +6,57 @@ import { handleUpdate } from "./update";
 const webhook = new Hono<Env>();
 
 webhook.post("/webhook/:botId", async (c) => {
-
-  console.log("WEBHOOK CALLED");
+  let botId = 0;
+  let update: any;
 
   try {
+    botId = Number(c.req.param("botId"));
 
-    const botId = Number(c.req.param("botId"));
+    if (!Number.isSafeInteger(botId) || botId <= 0) {
+      return c.text("Geçersiz bot ID.", 400);
+    }
 
-    const update = await c.req.json();
-
-    console.log("UPDATE:", JSON.stringify(update));
+    update = await c.req.json();
 
     const bot = await c.env.DB
-      .prepare("SELECT * FROM bots WHERE telegram_id=?")
+      .prepare("SELECT * FROM bots WHERE telegram_id = ?")
       .bind(botId)
-      .first();
+      .first() as any;
 
     if (!bot) {
-      console.log("BOT NOT FOUND");
+      console.error("WEBHOOK BOT NOT FOUND", {
+        botId,
+        updateId: update?.update_id
+      });
+
       return c.text("Bot bulunamadı.", 404);
     }
 
-    console.log("BOT FOUND:", (bot as any).name);
-
-    console.log("BEFORE HANDLE UPDATE");
+    console.log("WEBHOOK RECEIVED", {
+      botId,
+      updateId: update?.update_id,
+      messageText: update?.message?.text || "",
+      telegramUserId: update?.message?.from?.id
+    });
 
     await handleUpdate(
       c.env.DB,
-      String((bot as any).token),
+      String(bot.token),
       botId,
       update
     );
 
-    console.log("AFTER HANDLE UPDATE");
-
     return c.text("OK");
-
   } catch (e: any) {
+    console.error("WEBHOOK ERROR", {
+      botId,
+      updateId: update?.update_id,
+      error: e?.message || String(e),
+      stack: e?.stack
+    });
 
-    console.error("WEBHOOK ERROR");
-    console.error(e);
-    console.error(e?.stack);
-
-    return c.text(e?.message || "Worker Error", 500);
-
+    return c.text("Webhook error", 500);
   }
-
 });
 
 export default webhook;
