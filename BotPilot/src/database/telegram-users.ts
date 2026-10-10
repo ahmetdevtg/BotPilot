@@ -1,48 +1,32 @@
 ```ts
-// BotPilot/src/database/telegram-users.ts
-
-export async function getTelegramUsers(
-  db: D1Database
-) {
-  const { results } = await db
-    .prepare(`
-      SELECT *
-      FROM telegram_users
-      ORDER BY id DESC
-    `)
+export async function getTelegramUsers(db: D1Database) {
+  const result = await db
+    .prepare("SELECT * FROM telegram_users ORDER BY id DESC")
     .all();
 
-  return results;
+  return result.results;
 }
 
 export async function getTelegramUsersByBot(
   db: D1Database,
   botId: number
 ) {
-  const { results } = await db
-    .prepare(`
-      SELECT *
-      FROM telegram_users
-      WHERE bot_id = ?
-      ORDER BY id DESC
-    `)
+  const result = await db
+    .prepare(
+      "SELECT * FROM telegram_users WHERE bot_id = ? ORDER BY id DESC"
+    )
     .bind(botId)
     .all();
 
-  return results;
+  return result.results;
 }
 
-export async function countTelegramUsers(
-  db: D1Database
-) {
+export async function countTelegramUsers(db: D1Database) {
   const result: any = await db
-    .prepare(`
-      SELECT COUNT(*) AS total
-      FROM telegram_users
-    `)
+    .prepare("SELECT COUNT(*) AS total FROM telegram_users")
     .first();
 
-  return Number(result?.total || 0);
+  return Number(result?.total ?? 0);
 }
 
 export async function findTelegramUser(
@@ -50,14 +34,10 @@ export async function findTelegramUser(
   botId: number,
   telegramId: number
 ) {
-  return await db
-    .prepare(`
-      SELECT *
-      FROM telegram_users
-      WHERE bot_id = ?
-        AND telegram_id = ?
-      LIMIT 1
-    `)
+  return db
+    .prepare(
+      "SELECT * FROM telegram_users WHERE bot_id = ? AND telegram_id = ? LIMIT 1"
+    )
     .bind(botId, telegramId)
     .first();
 }
@@ -70,38 +50,24 @@ export async function createTelegramUser(
   const numericBotId = Number(botId);
   const numericUserId = Number(user?.id);
 
-  if (
-    !Number.isSafeInteger(numericBotId) ||
-    numericBotId <= 0
-  ) {
+  if (!Number.isSafeInteger(numericBotId) || numericBotId <= 0) {
     throw new Error("Geçersiz bot ID");
   }
 
-  if (
-    !Number.isSafeInteger(numericUserId) ||
-    numericUserId <= 0
-  ) {
+  if (!Number.isSafeInteger(numericUserId) || numericUserId <= 0) {
     throw new Error("Geçersiz Telegram kullanıcı ID");
   }
 
-  return await db
+  return db
     .prepare(`
       INSERT INTO telegram_users (
-        bot_id,
-        telegram_id,
-        username,
-        first_name,
-        last_name,
-        language_code,
-        is_premium,
-        is_bot
+        bot_id, telegram_id, username, first_name,
+        last_name, language_code, is_premium, is_bot
       )
       SELECT ?, ?, ?, ?, ?, ?, ?, ?
       WHERE NOT EXISTS (
-        SELECT 1
-        FROM telegram_users
-        WHERE bot_id = ?
-          AND telegram_id = ?
+        SELECT 1 FROM telegram_users
+        WHERE bot_id = ? AND telegram_id = ?
       )
     `)
     .bind(
@@ -123,11 +89,8 @@ export async function deleteTelegramUser(
   db: D1Database,
   telegramId: number
 ) {
-  return await db
-    .prepare(`
-      DELETE FROM telegram_users
-      WHERE telegram_id = ?
-    `)
+  return db
+    .prepare("DELETE FROM telegram_users WHERE telegram_id = ?")
     .bind(telegramId)
     .run();
 }
