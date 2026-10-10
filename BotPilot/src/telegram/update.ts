@@ -1,4 +1,4 @@
-
+```ts
 import { getReplyButton } from "../database/reply-buttons";
 import { handleStart } from "./handlers/start";
 import { handleReplyButton } from "./handlers/reply-button";
@@ -15,6 +15,8 @@ export async function handleUpdate(
   const message = update.message;
   const text = String(message.text || "").trim();
 
+  if (!message.chat?.id) return;
+
   try {
     // /start, /start payload ve /start@bot_kullanici_adi
     if (/^\/start(?:@[A-Za-z0-9_]+)?(?:\s+.*)?$/i.test(text)) {
@@ -22,9 +24,11 @@ export async function handleUpdate(
       return;
     }
 
-    const handled = await handleReplyButton(token, message);
+    // Yanıt butonlarını kontrol et
+    const handled = await handleReplyButton(db, token, message);
     if (handled) return;
 
+    // Panelde tanımlanmış diğer yanıtlar
     const reply: any = await getReplyButton(db, text);
 
     if (reply) {
@@ -62,13 +66,15 @@ export async function handleUpdate(
         message.chat.id,
         "Yardım menüsü yakında eklenecek."
       );
+      return;
     }
-  } catch (e: any) {
+  } catch (error: any) {
     console.error("HANDLE UPDATE ERROR:", {
       botId,
       updateId: update?.update_id,
-      error: e?.message || String(e),
-      stack: e?.stack
+      error: error?.message || String(error),
+      stack: error?.stack
     });
   }
 }
+```
