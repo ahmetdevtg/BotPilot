@@ -1,5 +1,9 @@
 ```ts
-export async function getTelegramUsers(db: D1Database) {
+// BotPilot/src/database/telegram-users.ts
+
+export async function getTelegramUsers(
+  db: D1Database
+) {
   const { results } = await db
     .prepare(`
       SELECT *
@@ -28,7 +32,9 @@ export async function getTelegramUsersByBot(
   return results;
 }
 
-export async function countTelegramUsers(db: D1Database) {
+export async function countTelegramUsers(
+  db: D1Database
+) {
   const result: any = await db
     .prepare(`
       SELECT COUNT(*) AS total
@@ -61,11 +67,20 @@ export async function createTelegramUser(
   botId: number,
   user: any
 ) {
-  if (!Number.isSafeInteger(Number(botId)) || Number(botId) <= 0) {
+  const numericBotId = Number(botId);
+  const numericUserId = Number(user?.id);
+
+  if (
+    !Number.isSafeInteger(numericBotId) ||
+    numericBotId <= 0
+  ) {
     throw new Error("Geçersiz bot ID");
   }
 
-  if (!Number.isSafeInteger(Number(user?.id)) || Number(user.id) <= 0) {
+  if (
+    !Number.isSafeInteger(numericUserId) ||
+    numericUserId <= 0
+  ) {
     throw new Error("Geçersiz Telegram kullanıcı ID");
   }
 
@@ -90,16 +105,16 @@ export async function createTelegramUser(
       )
     `)
     .bind(
-      Number(botId),
-      Number(user.id),
+      numericBotId,
+      numericUserId,
       user.username || "",
       user.first_name || "",
       user.last_name || "",
       user.language_code || "",
       user.is_premium ? 1 : 0,
       user.is_bot ? 1 : 0,
-      Number(botId),
-      Number(user.id)
+      numericBotId,
+      numericUserId
     )
     .run();
 }
