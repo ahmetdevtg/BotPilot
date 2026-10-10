@@ -18,17 +18,17 @@ export async function handleUpdate(
   if (!message.chat?.id) return;
 
   try {
-    // /start, /start payload ve /start@bot_kullanici_adi
+    // /start komutunu ve payload içeren /start bağlantılarını işle
     if (/^\/start(?:@[A-Za-z0-9_]+)?(?:\s+.*)?$/i.test(text)) {
       await handleStart(db, token, botId, message);
       return;
     }
 
-    // Yanıt butonlarını kontrol et
+    // Panelden tanımlanan yanıt butonlarını kontrol et
     const handled = await handleReplyButton(db, token, message);
     if (handled) return;
 
-    // Panelde tanımlanmış diğer yanıtlar
+    // Panelde kayıtlı diğer yanıtları kontrol et
     const reply: any = await getReplyButton(db, text);
 
     if (reply) {
