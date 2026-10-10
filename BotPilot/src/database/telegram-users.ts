@@ -1,4 +1,3 @@
-```ts
 // BotPilot/src/database/telegram-users.ts
 
 export async function getTelegramUsers(db: D1Database) {
@@ -94,4 +93,3 @@ export async function deleteTelegramUser(
     .bind(telegramId)
     .run();
 }
-```
