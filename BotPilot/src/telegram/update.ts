@@ -10,25 +10,21 @@ export async function handleUpdate(
   botId: number,
   update: any
 ) {
-  if (!update?.message) return;
+  const message = update?.message;
 
-  const message = update.message;
+  if (!message?.chat?.id) return;
+
   const text = String(message.text || "").trim();
 
-  if (!message.chat?.id) return;
-
   try {
-    // /start komutunu ve payload içeren /start bağlantılarını işle
     if (/^\/start(?:@[A-Za-z0-9_]+)?(?:\s+.*)?$/i.test(text)) {
       await handleStart(db, token, botId, message);
       return;
     }
 
-    // Panelden tanımlanan yanıt butonlarını kontrol et
     const handled = await handleReplyButton(db, token, message);
     if (handled) return;
 
-    // Panelde kayıtlı diğer yanıtları kontrol et
     const reply: any = await getReplyButton(db, text);
 
     if (reply) {
@@ -55,7 +51,8 @@ export async function handleUpdate(
       await sendMessage(
         token,
         message.chat.id,
-        `ID: ${message.from?.id}\nAd: ${message.from?.first_name || ""}`
+        "ID: " + String(message.from?.id || "") +
+          "\nAd: " + String(message.from?.first_name || "")
       );
       return;
     }
@@ -66,10 +63,9 @@ export async function handleUpdate(
         message.chat.id,
         "Yardım menüsü yakında eklenecek."
       );
-      return;
     }
   } catch (error: any) {
-    console.error("HANDLE UPDATE ERROR:", {
+    console.error("HANDLE UPDATE ERROR", {
       botId,
       updateId: update?.update_id,
       error: error?.message || String(error),
