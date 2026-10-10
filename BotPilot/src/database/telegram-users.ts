@@ -1,4 +1,6 @@
 ```ts
+// BotPilot/src/database/telegram-users.ts
+
 export async function getTelegramUsers(db: D1Database) {
   const result = await db
     .prepare("SELECT * FROM telegram_users ORDER BY id DESC")
@@ -34,7 +36,7 @@ export async function findTelegramUser(
   botId: number,
   telegramId: number
 ) {
-  return db
+  return await db
     .prepare(
       "SELECT * FROM telegram_users WHERE bot_id = ? AND telegram_id = ? LIMIT 1"
     )
@@ -58,18 +60,16 @@ export async function createTelegramUser(
     throw new Error("Geçersiz Telegram kullanıcı ID");
   }
 
-  return db
-    .prepare(`
-      INSERT INTO telegram_users (
-        bot_id, telegram_id, username, first_name,
-        last_name, language_code, is_premium, is_bot
-      )
-      SELECT ?, ?, ?, ?, ?, ?, ?, ?
-      WHERE NOT EXISTS (
-        SELECT 1 FROM telegram_users
-        WHERE bot_id = ? AND telegram_id = ?
-      )
-    `)
+  const sql =
+    "INSERT INTO telegram_users " +
+    "(bot_id, telegram_id, username, first_name, last_name, language_code, is_premium, is_bot) " +
+    "SELECT ?, ?, ?, ?, ?, ?, ?, ? " +
+    "WHERE NOT EXISTS (" +
+    "SELECT 1 FROM telegram_users WHERE bot_id = ? AND telegram_id = ?" +
+    ")";
+
+  return await db
+    .prepare(sql)
     .bind(
       numericBotId,
       numericUserId,
@@ -89,7 +89,7 @@ export async function deleteTelegramUser(
   db: D1Database,
   telegramId: number
 ) {
-  return db
+  return await db
     .prepare("DELETE FROM telegram_users WHERE telegram_id = ?")
     .bind(telegramId)
     .run();
