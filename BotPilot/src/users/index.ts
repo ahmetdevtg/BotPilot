@@ -12,6 +12,15 @@ const users = new Hono<Env>();
 
 users.use("*", auth);
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 users.get("/users", async (c) => {
 
   const search = String(c.req.query("q") || "");
@@ -50,19 +59,19 @@ users.get("/users", async (c) => {
 
 <tr>
 
-<td>${user.telegram_id}</td>
+<td>${escapeHtml(user.telegram_id)}</td>
 
-<td>@${user.username || "-"}</td>
+<td>@${escapeHtml(user.username || "-")}</td>
 
 <td>
 
-${user.first_name || ""}
+${escapeHtml(user.first_name || "")}
 
-${user.last_name || ""}
+${escapeHtml(user.last_name || "")}
 
 </td>
 
-<td>${user.language_code || "-"}</td>
+<td>${escapeHtml(user.language_code || "-")}</td>
 
 <td>
 
@@ -74,7 +83,7 @@ ${user.is_premium ? "⭐ Premium" : "-"}
 
 <form
 method="POST"
-action="/users/delete/${user.telegram_id}">
+action="/users/delete/${encodeURIComponent(String(user.id))}">
 
 <button class="delete">
 
@@ -267,7 +276,7 @@ font-weight:bold;
 
 name="q"
 
-value="${search}"
+value="${escapeHtml(search)}"
 
 placeholder="Kullanıcı Ara...">
 
