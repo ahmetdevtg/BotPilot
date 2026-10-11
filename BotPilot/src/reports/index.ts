@@ -5,6 +5,8 @@ import type { Env } from "../types/env";
 const reports = new Hono<Env>();
 reports.use("*", auth);
 
+// Temporary schema guard will be added to the database layer in the next commit.
+
 function esc(value: unknown): string {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
