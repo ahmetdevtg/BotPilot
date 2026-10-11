@@ -46,6 +46,23 @@ Henüz bot eklenmedi.
 
   }
 
+  let invalidBotRows = "";
+
+  for (const bot of stats.invalidBots as any[]) {
+    invalidBotRows += `
+<tr>
+<td>${bot.id}</td>
+<td>${String(bot.name || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+<td>@${String(bot.username || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+<td class="offline">⛔ Geçersiz token</td>
+</tr>
+`;
+  }
+
+  if (invalidBotRows === "") {
+    invalidBotRows = `<tr><td colspan="4">Geçersiz tokenlı bot bulunmuyor.</td></tr>`;
+  }
+
   let broadcastRows = "";
 
   for (const item of stats.lastBroadcasts as any[]) {
@@ -225,11 +242,17 @@ font-weight:bold;
 <p>${stats.onlineBots}</p>
 </div>
 
+<div class="card">
+<h3>Geçersiz Token</h3>
+<p>${stats.invalidBotsCount}</p>
+</div>
+
 </div>
 
 <div class="table">
 
-<h2>🤖 Son Eklenen Botlar</h2>
+<h2>🟢 Geçerli / Online Botlar</h2>
+<p>Bu listede yalnızca status=1 olan botlar gösterilir. Geçersiz tokenlar aşağıdaki ayrı tabloda yer alır.</p>
 
 <table>
 
@@ -244,6 +267,24 @@ font-weight:bold;
 ${botRows}
 
 </table>
+
+</div>
+
+<div class="table">
+
+<h2>⛔ Geçersiz Tokenlı Botlar</h2>
+
+<table>
+<tr>
+<th>ID</th>
+<th>Bot</th>
+<th>Username</th>
+<th>Durum</th>
+</tr>
+${invalidBotRows}
+</table>
+
+<p><a href="/bots">Bot yönetimine git ve geçersiz botları topluca sil</a></p>
 
 </div>
 
