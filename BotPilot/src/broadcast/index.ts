@@ -29,13 +29,12 @@ broadcast.get("/broadcast", async (c) => {
 `;
 
   for (const bot of bots as any[]) {
-
+    if (Number((bot as any).status) !== 1) continue;
     options += `
-<option value="${bot.telegram_id}">
-${bot.name} (@${bot.username})
+<option value="${(bot as any).telegram_id}">
+${(bot as any).name} (@${(bot as any).username})
 </option>
 `;
-
   }
 
   let rows = "";
@@ -532,12 +531,18 @@ border-radius:8px;
     .first();
 
   if (!bot) {
-
     return c.html(`
       <h2>Bot bulunamadı.</h2>
       <a href="/broadcast">Geri Dön</a>
     `);
+  }
 
+  if (Number((bot as any).status) !== 1) {
+    return c.html(`
+      <h2>Bu bot pasif durumda.</h2>
+      <p>Önce Botlar sayfasından botu kontrol et. Telegram tokenı geçerliyse yeniden aktif edilebilir.</p>
+      <a href="/bots">Bot yönetimine dön</a>
+    `, 400);
   }
 
  const result = await createBroadcast(
