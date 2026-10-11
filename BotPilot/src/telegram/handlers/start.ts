@@ -103,7 +103,9 @@ export async function handleStart(
         token, chatId,
         settings.start_message || "👋 Hoş geldiniz.",
         settings.parse_mode || "HTML",
-        keyboard
+        keyboard,
+        settings.button_text || "",
+        settings.button_url || ""
       );
     }
 
