@@ -213,8 +213,8 @@ bots.get("/bots", async (c) => {
 </div>
 </div>
 ${table("🟢 Geçerli Tokenlı Botlar", onlineBots, "Telegram tokenı geçerli olan botlar.")}
-${table("🔴 Offline / Diğer Durum", offlineBots, "Geçmişte offline olarak işaretlenmiş botlar. Yeniden kontrol edilebilir.")}
-${table("⛔ Geçersiz veya İptal Edilmiş Tokenlar", invalidBots, "Yalnızca Telegram 401/Unauthorized yanıtı alınan tokenlar burada görünür. Botlar otomatik silinmez; istersen tek tek silebilirsin.")}
+${table("🔴 Pasif / Offline Botlar", offlineBots, "Pasif durumdaki botlar yayınlara dahil edilmez. Botları Kontrol Et ile yeniden doğrulayabilirsin.")}
+${table("⛔ Pasif: Telegram'da silinmiş veya tokenı iptal edilmiş botlar", invalidBots, "Bot kontrolünde Telegram 401/Unauthorized yanıtı alınan botlar burada pasif olarak görünür. Botlar ve kullanıcı kayıtları silinmez; toplu yayınlara dahil edilmez.")}
 <div class="card">
 <h2>🧹 Geçersiz Botları Toplu Sil</h2>
 <p class="warning">Bu işlem yalnızca ⛔ Geçersiz veya İptal Edilmiş Tokenlar bölümündeki botları siler. Bu botlara bağlı kullanıcı kayıtları, bot ayarları ve broadcast geçmişi de silinir. Geçerli/online botlara dokunulmaz.</p>
