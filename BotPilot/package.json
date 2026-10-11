@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev"
+    "dev": "wrangler dev",
+    "check": "tsc --noEmit",
+    "build": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "hono": "^4.12.27"
