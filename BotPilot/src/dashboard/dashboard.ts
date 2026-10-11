@@ -15,12 +15,19 @@ dashboard.get("/dashboard", async (c) => {
 
   for (const bot of stats.lastBots as any[]) {
 
+    const status = Number(bot.status);
+    const statusLabel = status === 1
+      ? "🟢 Online"
+      : status === -1
+        ? "⛔ Geçersiz token"
+        : "🔴 Offline";
+
     botRows += `
 <tr>
 <td>${bot.name}</td>
 <td>@${bot.username}</td>
-<td class="${bot.status ? "online" : "offline"}">
-${bot.status ? "🟢 Online" : "🔴 Offline"}
+<td class="${status === 1 ? "online" : "offline"}">
+${statusLabel}
 </td>
 </tr>
 `;
