@@ -85,14 +85,14 @@ reports.get("/reports", async (c) => {
 <td><strong>${esc(b.name || "-")}</strong><div class="muted">@${esc(b.username || "-")} · ID ${esc(b.telegram_id)}</div></td>
 <td><span class="pill">${Number(b.status) === 1 ? "🟢 Token geçerli" : Number(b.status) === -1 ? "⛔ Token geçersiz" : "⚪ Kontrol gerekli"}</span></td>
 <td><strong>${Number(b.user_count || 0)}</strong></td><td>${Number(b.active_today || 0)}</td>
-<td><a class="secondary" href="/reports?bot=${encodeURIComponent(String(b.telegram_id))}">Kullanıcıları gör</a></td></tr>`).join("") ||
+<td><a class="secondary" href="/reports/bot/${encodeURIComponent(String(b.telegram_id))}">Kullanıcıları gör</a></td></tr>`).join("") ||
     '<tr><td colspan="5">Henüz bot bulunmuyor.</td></tr>';
 
   const userRows = (users.results as any[]).map((u) => `<tr>
 <td>${esc(u.telegram_id)}</td><td>${u.username ? "@" + esc(u.username) : '<span class="muted">Kullanıcı adı yok</span>'}</td>
 <td><strong>${esc([u.first_name, u.last_name].filter(Boolean).join(" ") || "-")}</strong></td>
 <td>${esc(botNameById.get(Number(u.bot_id)) || u.bot_id)}</td><td>${esc(u.last_seen || "-")}</td>
-<td><a class="secondary" href="/reports?q=${encodeURIComponent(String(u.telegram_id))}">İncele</a></td></tr>`).join("") ||
+<td><a class="secondary" href="/reports/user/${encodeURIComponent(String(u.telegram_id))}">İncele</a></td></tr>`).join("") ||
     '<tr><td colspan="6">Bu filtrede kullanıcı bulunamadı.</td></tr>';
 
   const totalUsers = Number(userResult?.n || 0);
@@ -122,6 +122,37 @@ reports.get("/reports", async (c) => {
 <div class="table-wrap"><table><thead><tr><th>Telegram ID</th><th>Kullanıcı adı</th><th>Ad soyad</th><th>Bot</th><th>Son /start</th><th>Detay</th></tr></thead><tbody>${userRows}</tbody></table></div>
 <div class="pagination"><span class="muted">Sayfa ${pageNumber} / ${maxPage} · ${matched} kayıt · sayfa başına ${pageSize}</span><div style="display:flex;gap:8px">${prev}${next}</div></div>
 </div>`));
+});
+
+reports.get("/reports/bot/:telegramId", async (c) => {
+  const db = c.env.DB;
+  await ensureTelegramUserLastSeenColumn(db);
+  const telegramId = Number(c.req.param("telegramId"));
+  if (!Number.isSafeInteger(telegramId) || telegramId <= 0) return c.text("Geçersiz bot ID", 400);
+  const bot: any = await db.prepare("SELECT id, telegram_id, name, username, status, description, short_description, created_at FROM bots WHERE telegram_id = ? LIMIT 1").bind(telegramId).first();
+  if (!bot) return c.notFound();
+  const result = await db.prepare("SELECT telegram_id, username, first_name, last_name, last_seen FROM telegram_users WHERE bot_id = ? ORDER BY datetime(last_seen) DESC, id DESC LIMIT 500").bind(telegramId).all();
+  const rows = (result.results as any[]).map((u) => `<tr><td>${esc(u.telegram_id)}</td><td>${u.username ? "@" + esc(u.username) : "-"}</td><td>${esc([u.first_name,u.last_name].filter(Boolean).join(" ") || "-")}</td><td>${esc(u.last_seen || "-")}</td><td><a class="secondary" href="/reports/user/${encodeURIComponent(String(u.telegram_id))}">İncele</a></td></tr>`).join("") || '<tr><td colspan="5">Bu bot için kayıtlı kullanıcı bulunamadı.</td></tr>';
+  return c.html(layout("Bot kullanıcıları", `
+<div class="top"><div><h1>🤖 ${esc(bot.name || bot.username || telegramId)}</h1><div class="muted">@${esc(bot.username || "-")} · Telegram ID ${esc(telegramId)}</div></div><a class="secondary" href="/reports">← Raporlara dön</a></div>
+<div class="cards"><div class="card"><div class="metric-label">Kayıtlı kullanıcı</div><div class="metric">${Number((await db.prepare("SELECT COUNT(*) AS n FROM telegram_users WHERE bot_id = ?").bind(telegramId).first<any>())?.n || 0)}</div></div><div class="card"><div class="metric-label">Durum</div><div class="metric">${Number(bot.status) === 1 ? "🟢" : Number(bot.status) === -1 ? "🔴" : "⚪"}</div><div class="muted">${Number(bot.status) === 1 ? "Token geçerli" : Number(bot.status) === -1 ? "Token geçersiz" : "Kontrol gerekli"}</div></div></div>
+<div class="card"><h2>Bu botun kullanıcıları</h2><div class="table-wrap"><table><thead><tr><th>Telegram ID</th><th>Kullanıcı adı</th><th>Ad soyad</th><th>Son /start</th><th>Detay</th></tr></thead><tbody>${rows}</tbody></table></div><div class="muted">En fazla 500 kullanıcı gösterilir.</div></div>`));
+});
+
+reports.get("/reports/user/:telegramId", async (c) => {
+  const db = c.env.DB;
+  await ensureTelegramUserLastSeenColumn(db);
+  const telegramId = Number(c.req.param("telegramId"));
+  if (!Number.isSafeInteger(telegramId) || telegramId <= 0) return c.text("Geçersiz kullanıcı ID", 400);
+  const result = await db.prepare(`SELECT u.telegram_id, u.username, u.first_name, u.last_name, u.language_code, u.is_premium, u.bot_id, u.last_seen, b.name AS bot_name, b.username AS bot_username FROM telegram_users u LEFT JOIN bots b ON b.telegram_id = u.bot_id WHERE u.telegram_id = ? ORDER BY datetime(u.last_seen) DESC`).bind(telegramId).all();
+  const entries = result.results as any[];
+  if (!entries.length) return c.notFound();
+  const first = entries[0];
+  const rows = entries.map((u) => `<tr><td>${esc(u.bot_name || u.bot_username || u.bot_id)}</td><td>@${esc(u.bot_username || "-")}</td><td>${esc(u.last_seen || "-")}</td><td><a class="secondary" href="/reports/bot/${encodeURIComponent(String(u.bot_id))}">Botu incele</a></td></tr>`).join("");
+  return c.html(layout("Kullanıcı detayı", `
+<div class="top"><div><h1>👤 Kullanıcı detayı</h1><div class="muted">Telegram ID: ${esc(telegramId)}</div></div><a class="secondary" href="/reports">← Raporlara dön</a></div>
+<div class="card"><h2>${esc([first.first_name, first.last_name].filter(Boolean).join(" ") || "İsimsiz kullanıcı")}</h2><p><span class="muted">Kullanıcı adı:</span> ${first.username ? "@" + esc(first.username) : "Yok"}</p><p><span class="muted">Telegram ID:</span> ${esc(telegramId)}</p><p><span class="muted">Dil:</span> ${esc(first.language_code || "-")}</p><p><span class="muted">Premium:</span> ${Number(first.is_premium) === 1 ? "Evet" : "Bilinmiyor / Hayır"}</p><p><span class="muted">Kayıtlı olduğu bot sayısı:</span> ${entries.length}</p></div>
+<div class="card"><h2>Kullanıcının etkileşimde bulunduğu botlar</h2><div class="table-wrap"><table><thead><tr><th>Bot</th><th>Kullanıcı adı</th><th>Son /start</th><th>Detay</th></tr></thead><tbody>${rows}</tbody></table></div></div>`));
 });
 
 reports.get("/reports/export.csv", async (c) => {
