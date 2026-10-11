@@ -31,7 +31,7 @@ app.route("/", replyButtons);
 // Çıkış Yap
 app.get("/logout", async (c) => {
   const cookie = c.req.header("Cookie") || "";
-  const match = cookie.match(/(?:^|;\\s*)session=([^;]+)/);
+  const match = cookie.match(/(?:^|;\s*)session=([^;]+)/);
 
   if (match?.[1]) {
     try {
