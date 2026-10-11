@@ -68,9 +68,15 @@ export async function createTelegramUser(
 
 export async function deleteTelegramUser(
   db: D1Database,
-  telegramId: number
+  userRecordId: number
 ) {
+  if (!Number.isSafeInteger(userRecordId) || userRecordId <= 0) {
+    throw new Error("Geçersiz kullanıcı kayıt ID");
+  }
+
+  // Aynı Telegram kullanıcısı birden fazla botu kullanabilir.
+  // Yalnızca seçilen veritabanı satırını sil; diğer botlardaki kayıtları koru.
   return await db.prepare(
-    "DELETE FROM telegram_users WHERE telegram_id = ?"
-  ).bind(telegramId).run();
+    "DELETE FROM telegram_users WHERE id = ?"
+  ).bind(userRecordId).run();
 }
