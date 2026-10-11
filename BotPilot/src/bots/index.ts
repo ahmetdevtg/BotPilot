@@ -561,6 +561,20 @@ bots.post("/bots/update-all", async (c) => {
           error: message,
         });
 
+        // Telegram profil güncellemesinde açıkça geçersiz/iptal edilmiş bot
+        // hatası verirse, kontrol sayfasında da pasif olarak işaretle.
+        // Açıklama uzunluğu gibi sıradan 400 hataları botu pasifleştirmez.
+        if (/\\b401\\b|unauthorized|bot (?:was|is) deleted|bot (?:was|is) deactivated|invalid bot token|token is invalid/i.test(message)) {
+          try {
+            await updateBotStatus(c.env.DB, bot.id, -1);
+          } catch (statusError: any) {
+            console.error("BOT PASİF DURUMU KAYDEDİLEMEDİ:", {
+              botId: bot.id,
+              error: String(statusError?.message || statusError || "Unknown error")
+            });
+          }
+        }
+
         if (!firstError) {
           firstError = `Bot ID ${bot.id} (@${bot.username || "-"}): ${message}`;
         }
