@@ -1,6 +1,12 @@
 
  // BotPilot/src/database/telegram-users.ts
 
+export async function ensureTelegramUserLastSeenColumn(db: D1Database) {
+  const columns: any = await db.prepare("PRAGMA table_info(telegram_users)").all();
+  if ((columns.results as any[]).some((column) => column.name === "last_seen")) return;
+  await db.prepare("ALTER TABLE telegram_users ADD COLUMN last_seen TEXT").run();
+}
+
 export async function getTelegramUsers(db: D1Database) {
   const result = await db.prepare(
     "SELECT * FROM telegram_users ORDER BY id DESC"
