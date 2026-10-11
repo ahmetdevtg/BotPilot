@@ -368,7 +368,7 @@ bots.get("/bots/check", async (c) => {
 
         // Only a definite Telegram 401/Unauthorized marks a token invalid.
         // Transient and unexpected errors never change the existing status.
-        if (/\\b401\\b|unauthorized/i.test(message)) {
+        if (/\b401\b|unauthorized/i.test(message)) {
           await updateBotStatus(c.env.DB, bot.id, -1);
           invalid++;
         } else {
