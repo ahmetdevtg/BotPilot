@@ -215,6 +215,13 @@ bots.get("/bots", async (c) => {
 ${table("🟢 Geçerli Tokenlı Botlar", onlineBots, "Telegram tokenı geçerli olan botlar.")}
 ${table("🔴 Offline / Diğer Durum", offlineBots, "Geçmişte offline olarak işaretlenmiş botlar. Yeniden kontrol edilebilir.")}
 ${table("⛔ Geçersiz veya İptal Edilmiş Tokenlar", invalidBots, "Yalnızca Telegram 401/Unauthorized yanıtı alınan tokenlar burada görünür. Botlar otomatik silinmez; istersen tek tek silebilirsin.")}
+<div class="card">
+<h2>🧹 Geçersiz Botları Toplu Sil</h2>
+<p class="warning">Bu işlem yalnızca ⛔ Geçersiz veya İptal Edilmiş Tokenlar bölümündeki botları siler. Bu botlara bağlı kullanıcı kayıtları, bot ayarları ve broadcast geçmişi de silinir. Geçerli/online botlara dokunulmaz.</p>
+<form method="POST" action="/bots/delete-invalid" onsubmit="return confirm('Yalnızca geçersiz tokenlı botlar ve bu botlara bağlı kullanıcı/ayar/broadcast kayıtları kalıcı olarak silinecek. Devam edilsin mi?')">
+<button class="red" type="submit">🗑 Geçersiz Botların Tamamını Sil</button>
+</form>
+</div>
 `));
 });
 
@@ -610,6 +617,40 @@ ${firstError ? `<div class="notice"><h3>İlk hata mesajı</h3><pre>${escapeHtml(
 <div class="card">
 <h2>❌ Toplu güncelleme durdu</h2>
 <pre>${escapeHtml(message)}</pre>
+<a class="btn" href="/bots">Botlara dön</a>
+</div>`), 500);
+  }
+});
+
+/* =========================
+   TOPLU OLARAK GEÇERSİZ BOTLARI SİL
+========================= */
+
+bots.post("/bots/delete-invalid", async (c) => {
+  try {
+    const allBots = await getBots(c.env.DB) as any[];
+    const invalidBots = allBots.filter((bot) => Number(bot.status) === -1);
+
+    let deleted = 0;
+    for (const bot of invalidBots) {
+      await deleteBot(c.env.DB, Number(bot.id));
+      deleted++;
+    }
+
+    return c.html(page("Geçersiz Botları Silme Sonucu", `
+<div class="card">
+<h1>🧹 Toplu silme tamamlandı</h1>
+<p class="success">Silinen geçersiz bot: ${deleted}</p>
+<p>Geçerli/online botlar bu işlemde silinmedi.</p>
+<p>Silinen botlara ait kullanıcı kayıtları, ayarlar ve broadcast geçmişi de silindi.</p>
+<a class="btn" href="/bots">Bot yönetimine dön</a>
+</div>`));
+  } catch (e: any) {
+    console.error("TOPLU GEÇERSİZ BOT SİLME HATASI:", e?.message || e);
+    return c.html(page("Toplu Silme Hatası", `
+<div class="card">
+<h2>❌ Toplu silme tamamlanamadı</h2>
+<pre>${escapeHtml(e?.message || e || "Bilinmeyen hata")}</pre>
 <a class="btn" href="/bots">Botlara dön</a>
 </div>`), 500);
   }
