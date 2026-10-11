@@ -1,0 +1,35 @@
+name: BotPilot validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "BotPilot/**"
+      - ".github/workflows/botpilot-check.yml"
+  pull_request:
+    paths:
+      - "BotPilot/**"
+      - ".github/workflows/botpilot-check.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BotPilot
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: BotPilot/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: TypeScript check
+        run: npm run check
+      - name: Cloudflare dry-run build
+        run: npm run build
