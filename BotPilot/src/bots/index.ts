@@ -218,6 +218,13 @@ ${table("🔴 Pasif / Offline Botlar", offlineBots, "Pasif durumdaki botlar yay�
 ${table("⛔ Pasif: Telegram'da silinmiş veya tokenı iptal edilmiş botlar", invalidBots, "Bot kontrolünde Telegram 401/Unauthorized yanıtı alınan botlar burada pasif olarak görünür. Botlar ve kullanıcı kayıtları silinmez; toplu yayınlara dahil edilmez.")}
 ${table("🧊 Telegram tarafından dondurulmuş / kısıtlanmış botlar", frozenBots, "FROZEN_METHOD_INVALID yanıtı alınan botlar burada görünür. Token geçersiz sayılmaz; botlar ve kullanıcı kayıtları silinmez, toplu yayınlara dahil edilmez.")}
 <div class="card">
+<h2>🧊 Dondurulmuş Botları Toplu Sil</h2>
+<p class="warning">Bu işlem yalnızca 🧊 dondurulmuş/kısıtlanmış bölümündeki status -2 botlarını hedefler. Bu botlara bağlı kullanıcı kayıtları, ayarlar ve broadcast geçmişi de silinir. Önce D1 yedeği al.</p>
+<form method="POST" action="/bots/delete-frozen" onsubmit="return confirm('Yalnızca status -2 olan dondurulmuş botlar ve bunlara bağlı kullanıcı/ayar/broadcast kayıtları kalıcı olarak silinecek. Online/geçerli botlara dokunulmayacak. Devam edilsin mi?')">
+<button class="red" type="submit">🧊 Dondurulmuş Botların Tamamını Sil</button>
+</form>
+</div>
+<div class="card">
 <h2>🧹 Geçersiz Botları Toplu Sil</h2>
 <p class="warning">Bu işlem yalnızca ⛔ Geçersiz veya İptal Edilmiş Tokenlar bölümündeki botları siler. Bu botlara bağlı kullanıcı kayıtları, bot ayarları ve broadcast geçmişi de silinir. Geçerli/online botlara dokunulmaz.</p>
 <form method="POST" action="/bots/delete-invalid" onsubmit="return confirm('Yalnızca geçersiz tokenlı botlar ve bu botlara bağlı kullanıcı/ayar/broadcast kayıtları kalıcı olarak silinecek. Devam edilsin mi?')">
@@ -677,6 +684,41 @@ bots.post("/bots/delete-invalid", async (c) => {
 </div>`));
   } catch (e: any) {
     console.error("TOPLU GEÇERSİZ BOT SİLME HATASI:", e?.message || e);
+    return c.html(page("Toplu Silme Hatası", `
+<div class="card">
+<h2>❌ Toplu silme tamamlanamadı</h2>
+<pre>${escapeHtml(e?.message || e || "Bilinmeyen hata")}</pre>
+<a class="btn" href="/bots">Botlara dön</a>
+</div>`), 500);
+  }
+});
+
+/* =========================
+   TOPLU OLARAK DONDURULMUŞ BOTLARI SİL
+========================= */
+
+bots.post("/bots/delete-frozen", async (c) => {
+  try {
+    const allBots = await getBots(c.env.DB) as any[];
+    // Deliberately target only status -2. Online/valid bots are never selected.
+    const frozenBots = allBots.filter((bot) => Number(bot.status) === -2);
+
+    let deleted = 0;
+    for (const bot of frozenBots) {
+      await deleteBot(c.env.DB, Number(bot.id));
+      deleted++;
+    }
+
+    return c.html(page("Dondurulmuş Botları Silme Sonucu", `
+<div class="card">
+<h1>🧊 Toplu silme tamamlandı</h1>
+<p class="success">Silinen dondurulmuş bot: ${deleted}</p>
+<p>Yalnızca işlem başında status -2 olan botlar hedeflendi. Online/geçerli botlar bu işlemde silinmedi.</p>
+<p>Silinen botlara bağlı kullanıcı kayıtları, ayarlar ve broadcast geçmişi de silindi.</p>
+<a class="btn" href="/bots">Bot yönetimine dön</a>
+</div>`));
+  } catch (e: any) {
+    console.error("TOPLU DONDURULMUŞ BOT SİLME HATASI:", e?.message || e);
     return c.html(page("Toplu Silme Hatası", `
 <div class="card">
 <h2>❌ Toplu silme tamamlanamadı</h2>
