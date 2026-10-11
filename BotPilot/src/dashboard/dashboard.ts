@@ -207,6 +207,7 @@ font-weight:bold;
 <a href="/bots">🤖 Botlar</a>
 
 <a href="/users">👥 Kullanıcılar</a>
+<a href="/reports">📊 Detaylı Raporlar</a>
 
 <a href="/broadcast">📢 Broadcast</a>
 
