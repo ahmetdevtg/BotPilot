@@ -12,6 +12,7 @@ import admin from "./admin";
 import password from "./admin/password";
 import globalSettings from "./global-settings";
 import replyButtons from "./reply-buttons";
+import { deleteSession } from "./database/sessions";
 
 const app = new Hono<Env>();
 
@@ -28,15 +29,24 @@ app.route("/", globalSettings);
 app.route("/", replyButtons);
 
 // Çıkış Yap
-app.get("/logout", (c) => {
+app.get("/logout", async (c) => {
+  const cookie = c.req.header("Cookie") || "";
+  const match = cookie.match(/(?:^|;\\s*)session=([^;]+)/);
+
+  if (match?.[1]) {
+    try {
+      await deleteSession(c.env.DB, match[1]);
+    } catch (error) {
+      console.error("LOGOUT SESSION DELETE ERROR", error);
+    }
+  }
 
   c.header(
     "Set-Cookie",
-    "session=; Path=/; HttpOnly; Max-Age=0"
+    "session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"
   );
 
   return c.redirect("/login");
-
 });
 
 // Ana Sayfa
