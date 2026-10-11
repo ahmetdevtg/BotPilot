@@ -162,6 +162,7 @@ bots.get("/bots", async (c) => {
   const onlineBots = botlar.filter((bot) => Number(bot.status) === 1);
   const offlineBots = botlar.filter((bot) => Number(bot.status) === 0);
   const invalidBots = botlar.filter((bot) => Number(bot.status) === -1);
+  const frozenBots = botlar.filter((bot) => Number(bot.status) === -2);
 
   const renderRows = (items: any[]) => items.length
     ? items.map((bot) => `
@@ -215,6 +216,7 @@ bots.get("/bots", async (c) => {
 ${table("🟢 Geçerli Tokenlı Botlar", onlineBots, "Telegram tokenı geçerli olan botlar.")}
 ${table("🔴 Pasif / Offline Botlar", offlineBots, "Pasif durumdaki botlar yayınlara dahil edilmez. Botları Kontrol Et ile yeniden doğrulayabilirsin.")}
 ${table("⛔ Pasif: Telegram'da silinmiş veya tokenı iptal edilmiş botlar", invalidBots, "Bot kontrolünde Telegram 401/Unauthorized yanıtı alınan botlar burada pasif olarak görünür. Botlar ve kullanıcı kayıtları silinmez; toplu yayınlara dahil edilmez.")}
+${table("🧊 Telegram tarafından dondurulmuş / kısıtlanmış botlar", frozenBots, "FROZEN_METHOD_INVALID yanıtı alınan botlar burada görünür. Token geçersiz sayılmaz; botlar ve kullanıcı kayıtları silinmez, toplu yayınlara dahil edilmez.")}
 <div class="card">
 <h2>🧹 Geçersiz Botları Toplu Sil</h2>
 <p class="warning">Bu işlem yalnızca ⛔ Geçersiz veya İptal Edilmiş Tokenlar bölümündeki botları siler. Bu botlara bağlı kullanıcı kayıtları, bot ayarları ve broadcast geçmişi de silinir. Geçerli/online botlara dokunulmaz.</p>
@@ -442,8 +444,13 @@ bots.get("/bots/check", async (c) => {
     for (const bot of batch) {
       try {
         await getMe(bot.token);
-        await updateBotStatus(c.env.DB, bot.id, 1);
-        online++;
+        // A valid token does not clear a previously detected frozen restriction.
+        if (Number(bot.status) === -2) {
+          skipped++;
+        } else {
+          await updateBotStatus(c.env.DB, bot.id, 1);
+          online++;
+        }
       } catch (e: any) {
         const message = String(e?.message || e || "Unknown error");
         console.error("BOT CHECK ERROR:", { botId: bot.id, username: bot.username || "-", error: message });
@@ -564,7 +571,16 @@ bots.post("/bots/update-all", async (c) => {
         // Telegram profil güncellemesinde açıkça geçersiz/iptal edilmiş bot
         // hatası verirse, kontrol sayfasında da pasif olarak işaretle.
         // Açıklama uzunluğu gibi sıradan 400 hataları botu pasifleştirmez.
-        if (/\b401\b|unauthorized|bot (?:was|is) deleted|bot (?:was|is) deactivated|bot has been deleted|bot has been deactivated|invalid bot token|token is invalid|token (?:was|has been) revoked/i.test(message)) {
+        if (/FROZEN_METHOD_INVALID/i.test(message)) {
+          try {
+            await updateBotStatus(c.env.DB, bot.id, -2);
+          } catch (statusError: any) {
+            console.error("BOT DONDURULMUŞ DURUMU KAYDEDİLEMEDİ:", {
+              botId: bot.id,
+              error: String(statusError?.message || statusError || "Unknown error")
+            });
+          }
+        } else if (/\b401\b|unauthorized|bot (?:was|is) deleted|bot (?:was|is) deactivated|bot has been deleted|bot has been deactivated|invalid bot token|token is invalid|token (?:was|has been) revoked/i.test(message)) {
           try {
             await updateBotStatus(c.env.DB, bot.id, -1);
           } catch (statusError: any) {
