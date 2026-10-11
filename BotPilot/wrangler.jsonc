@@ -1,20 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-
-  "name": "botpilot",
-
+  "name": "botpilot-panel",
   "main": "src/index.ts",
-
   "compatibility_date": "2026-06-25",
-
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-
-  "observability": {
-    "enabled": true
-  },
-
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
   "d1_databases": [
     {
       "binding": "DB",
