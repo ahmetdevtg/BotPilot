@@ -18,14 +18,25 @@ export async function getDashboardStats(db: D1Database) {
 
   const lastBots = await db
     .prepare(`
-      SELECT
-        id,
-        name,
-        username,
-        status
+      SELECT id, name, username, status
       FROM bots
+      WHERE status = 1
       ORDER BY id DESC
       LIMIT 5
+    `)
+    .all();
+
+  const invalidBotCount = await db
+    .prepare("SELECT COUNT(*) AS total FROM bots WHERE status = -1")
+    .first();
+
+  const invalidBots = await db
+    .prepare(`
+      SELECT id, name, username, status
+      FROM bots
+      WHERE status = -1
+      ORDER BY id DESC
+      LIMIT 10
     `)
     .all();
 
@@ -52,6 +63,10 @@ export async function getDashboardStats(db: D1Database) {
     totalBroadcasts: Number((broadcastCount as any)?.total || 0),
 
     onlineBots: Number((onlineCount as any)?.total || 0),
+
+    invalidBotsCount: Number((invalidBotCount as any)?.total || 0),
+
+    invalidBots: invalidBots.results || [],
 
     lastBots: lastBots.results || [],
 
