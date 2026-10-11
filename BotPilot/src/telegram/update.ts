@@ -43,5 +43,6 @@ export async function handleUpdate(db: D1Database, token: string, botId: number,
       error: error?.message || String(error),
       stack: error?.stack
     });
+    throw error;
   }
 }
