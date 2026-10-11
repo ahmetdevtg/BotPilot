@@ -7,6 +7,7 @@ import {
   sendVideoWithButton,
   sendDocumentWithButton
 } from "../send";
+import { ensureTelegramUserLastSeenColumn } from "../../database/telegram-users";
 import {
   findTelegramUser,
   createTelegramUser
@@ -27,6 +28,7 @@ export async function handleStart(
   }
 
   try {
+    await ensureTelegramUserLastSeenColumn(db);
     const exists = await findTelegramUser(db, botId, Number(user.id));
 
     if (!exists) {
