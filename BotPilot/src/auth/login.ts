@@ -170,7 +170,7 @@ const sessionId = await createSession(
 
 c.header(
   "Set-Cookie",
-  `session=${sessionId}; HttpOnly; Path=/; Max-Age=2592000`
+  `session=${sessionId}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`
 );
 
 return c.redirect("/dashboard");
