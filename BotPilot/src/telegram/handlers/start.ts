@@ -31,28 +31,33 @@ export async function handleStart(
 
     if (!exists) {
       await createTelegramUser(db, botId, user);
-    } else {
-      await db.prepare(
-        "UPDATE telegram_users SET username = ?, first_name = ?, last_name = ? WHERE bot_id = ? AND telegram_id = ?"
-      ).bind(
-        user.username || "",
-        user.first_name || "",
-        user.last_name || "",
-        Number(botId),
-        Number(user.id)
-      ).run();
     }
+
+    // Her /start gelişinde profil ve son aktivite güncellenir.
+    await db.prepare(
+      "UPDATE telegram_users SET username = ?, first_name = ?, last_name = ?, last_seen = CURRENT_TIMESTAMP WHERE bot_id = ? AND telegram_id = ?"
+    ).bind(
+      user.username || "",
+      user.first_name || "",
+      user.last_name || "",
+      Number(botId),
+      Number(user.id)
+    ).run();
 
     console.log("TELEGRAM USER SAVE OK", {
       botId,
-      telegramUserId: user.id
+      telegramUserId: user.id,
+      inserted: !exists
     });
   } catch (e: any) {
     console.error("TELEGRAM USER SAVE ERROR", {
       botId,
       telegramUserId: user.id,
-      error: e?.message || String(e)
+      error: e?.message || String(e),
+      stack: e?.stack
     });
+    // Kayıt başarısızsa webhook 500 dönsün; Telegram güncellemeyi yeniden deneyebilsin.
+    throw e;
   }
 
   try {
