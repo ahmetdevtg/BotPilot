@@ -17,6 +17,28 @@ const broadcast = new Hono<Env>();
 
 broadcast.use("*", auth);
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function failureDetails(stats: any): string {
+  const reasons = Object.entries(stats?.failureReasons || {}) as Array<[string, unknown]>;
+  const samples = Array.isArray(stats?.failureSamples) ? stats.failureSamples : [];
+  if (!reasons.length && !samples.length) return "";
+  const reasonRows = reasons.length
+    ? reasons.map(([reason, count]) => `<li><strong>${escapeHtml(count)}</strong> — ${escapeHtml(reason)}</li>`).join("")
+    : "<li>Henüz ayrıntılı hata yok.</li>";
+  const sampleRows = samples.length
+    ? `<details style="margin-top:12px"><summary>Örnek hata mesajları (${samples.length})</summary><ul>${samples.map((sample: unknown) => `<li><code>${escapeHtml(sample)}</code></li>`).join("")}</ul></details>`
+    : "";
+  return `<div style="margin-top:18px;padding:16px;background:#0f172a;border-radius:8px"><h3>Başarısızlık nedenleri</h3><ul>${reasonRows}</ul>${sampleRows}</div>`;
+}
+
 broadcast.get("/broadcast", async (c) => {
 
   const bots = await getBots(c.env.DB);
@@ -504,6 +526,8 @@ border-radius:8px;
 
 <p>Başarısız: <b>${stats.failed}</b></p>
 
+${failureDetails(stats)}
+
 <a href="/broadcast">
 
 ← Broadcast'a Dön
@@ -583,6 +607,8 @@ await finishBroadcast(
 <p>Başarılı: ${stats.success}</p>
 
 <p>Başarısız: ${stats.failed}</p>
+
+${failureDetails(stats)}
 
 <br>
 
