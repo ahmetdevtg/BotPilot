@@ -12,6 +12,7 @@ import admin from "./admin";
 import password from "./admin/password";
 import globalSettings from "./global-settings";
 import replyButtons from "./reply-buttons";
+import reports from "./reports";
 import { deleteSession } from "./database/sessions";
 
 const app = new Hono<Env>();
@@ -27,6 +28,7 @@ app.route("/", admin);
 app.route("/", password);
 app.route("/", globalSettings);
 app.route("/", replyButtons);
+app.route("/", reports);
 
 // Çıkış Yap
 app.get("/logout", async (c) => {
