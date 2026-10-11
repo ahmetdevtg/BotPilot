@@ -14,6 +14,7 @@ import type { Env } from "../types/env";
 
 import {
   getMe,
+  setWebhook,
   setMyName,
   setMyDescription,
   setMyShortDescription,
@@ -80,6 +81,79 @@ th{background:#334155}
 }
 
 /* =========================
+   TÜM BOTLARIN WEBHOOK ADRESİNİ ONAR
+========================= */
+
+bots.get("/bots/webhooks/repair", async (c) => {
+  const allBots = await getBots(c.env.DB) as any[];
+  const offset = readCount(c.req.query("offset"));
+  const success = readCount(c.req.query("success"));
+  const failed = readCount(c.req.query("failed"));
+  const firstError = String(c.req.query("firstError") || "");
+
+  if (offset >= allBots.length) {
+    return c.html(page("Webhook Onarım Sonucu", `
+<div class="card">
+<h1>Webhook kontrolü tamamlandı</h1>
+<p class="success">Başarılı: ${success}</p>
+<p class="failed">Başarısız: ${failed}</p>
+<p>Toplam bot: ${allBots.length}</p>
+${firstError ? `<div class="notice"><strong>İlk hata:</strong><pre>${escapeHtml(firstError)}</pre></div>` : ""}
+<p>Bu işlem botları veya kullanıcı kayıtlarını silmez; yalnızca webhook adreslerini ayarlar.</p>
+<a class="btn" href="/bots">Bot yönetimine dön</a>
+</div>`));
+  }
+
+  const batchSize = 5;
+  const batch = allBots.slice(offset, offset + batchSize);
+  let nextSuccess = success;
+  let nextFailed = failed;
+  let nextError = firstError;
+
+  for (const bot of batch) {
+    try {
+      await setWebhook(
+        String(bot.token),
+        "https://botpilot-panel.yrdahmets.workers.dev/webhook/" + String(bot.telegram_id)
+      );
+      nextSuccess++;
+    } catch (e: any) {
+      nextFailed++;
+      const message = String(e?.message || e || "Bilinmeyen hata");
+      console.error("WEBHOOK REPAIR ERROR", {
+        botId: bot.id,
+        telegramId: bot.telegram_id,
+        username: bot.username || "-",
+        error: message
+      });
+      if (!nextError) nextError = "Bot ID " + bot.id + " (@" + (bot.username || "-") + "): " + message;
+    }
+  }
+
+  const nextOffset = offset + batch.length;
+  const query = new URLSearchParams({
+    offset: String(nextOffset),
+    success: String(nextSuccess),
+    failed: String(nextFailed),
+    firstError: nextError
+  }).toString();
+  const nextUrl = "/bots/webhooks/repair?" + query;
+  const progress = Math.round(nextOffset / Math.max(1, allBots.length) * 100);
+
+  return c.html(page("Webhook Adresleri Düzeltiliyor", `
+<div class="card">
+<h2>Webhook adresleri güncelleniyor</h2>
+<p>İlerleme: ${nextOffset} / ${allBots.length} (%${progress})</p>
+<div class="bar"><div class="fill" style="width:${progress}%"></div></div>
+<p class="success">Başarılı: ${nextSuccess}</p>
+<p class="failed">Başarısız: ${nextFailed}</p>
+<p>Her seferinde 5 bot işleniyor. Bu sayfayı kapatma.</p>
+<script>setTimeout(function(){location.replace(${JSON.stringify(nextUrl)})},700)</script>
+<noscript><a href="${escapeHtml(nextUrl)}">Sonraki gruba geç</a></noscript>
+</div>`));
+});
+
+/* =========================
    BOT LİSTESİ
 ========================= */
 
@@ -135,6 +209,7 @@ bots.get("/bots", async (c) => {
 <a class="btn green" href="/bots/bulk">📥 Toplu Bot Ekle</a>
 <a class="btn green" href="/bots/update-all">🤖 Tüm Botların Açıklamasını Güncelle</a>
 <a class="btn orange" href="/bots/check">🔄 Botları Kontrol Et</a>
+<a class="btn orange" href="/bots/webhooks/repair" onclick="return confirm('Tüm botların webhook adresleri yenilensin mi? Botlar ve kullanıcı kayıtları silinmez.')">🔧 Webhook Adreslerini Düzelt</a>
 </div>
 </div>
 ${table("🟢 Geçerli Tokenlı Botlar", onlineBots, "Telegram tokenı geçerli olan botlar.")}
