@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { auth } from "../middleware/auth";
 import type { Env } from "../types/env";
+import { ensureTelegramUserLastSeenColumn } from "../database/telegram-users";
 
 const reports = new Hono<Env>();
 reports.use("*", auth);
@@ -41,6 +42,7 @@ th{color:#9fb2cb;font-size:12px;text-transform:uppercase;letter-spacing:.05em;ba
 
 reports.get("/reports", async (c) => {
   const db = c.env.DB;
+  await ensureTelegramUserLastSeenColumn(db);
   const q = String(c.req.query("q") || "").trim().slice(0, 120);
   const selectedBot = String(c.req.query("bot") || "").trim();
   const pageNumber = Math.max(1, Math.min(100000, Number(c.req.query("page") || 1) || 1));
@@ -123,6 +125,7 @@ reports.get("/reports", async (c) => {
 });
 
 reports.get("/reports/export.csv", async (c) => {
+  await ensureTelegramUserLastSeenColumn(c.env.DB);
   const q = String(c.req.query("q") || "").trim().slice(0, 120);
   const selectedBot = String(c.req.query("bot") || "").trim();
   const botFilter = /^\d+$/.test(selectedBot) ? Number(selectedBot) : 0;
