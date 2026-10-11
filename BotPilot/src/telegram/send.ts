@@ -37,11 +37,13 @@ export async function sendMessage(
   chatId: number,
   text: string,
   parseMode: string = "HTML",
-  keyboard?: string
+  keyboard?: string,
+  buttonText?: string,
+  buttonUrl?: string
 ) {
 
   const replyMarkup =
-    await buildReplyMarkup(keyboard);
+    await buildReplyMarkup(keyboard, buttonText, buttonUrl);
 
   const res = await fetch(
     `https://api.telegram.org/bot${token}/sendMessage`,
