@@ -85,14 +85,16 @@ th{background:#334155}
 
 bots.get("/bots", async (c) => {
   const botlar = await getBots(c.env.DB) as any[];
+  const onlineBots = botlar.filter((bot) => Number(bot.status) === 1);
+  const offlineBots = botlar.filter((bot) => Number(bot.status) === 0);
+  const invalidBots = botlar.filter((bot) => Number(bot.status) === -1);
 
-  const rows = botlar.length
-    ? botlar.map((bot) => `
+  const renderRows = (items: any[]) => items.length
+    ? items.map((bot) => `
 <tr>
 <td>${escapeHtml(bot.id)}</td>
 <td>${escapeHtml(bot.name || "-")}</td>
 <td>@${escapeHtml(bot.username || "-")}</td>
-<td>${bot.status ? "🟢 Online" : "🔴 Offline"}</td>
 <td>${escapeHtml(bot.users ?? 0)}</td>
 <td>${escapeHtml(bot.broadcasts ?? 0)}</td>
 <td>
@@ -104,7 +106,19 @@ bots.get("/bots", async (c) => {
 </div>
 </td>
 </tr>`).join("")
-    : `<tr><td colspan="7">Henüz bot eklenmedi.</td></tr>`;
+    : `<tr><td colspan="6">Bu bölümde bot yok.</td></tr>`;
+
+  const table = (title: string, items: any[], statusLabel: string) => `
+<div class="card">
+<h2>${title} (${items.length})</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>ID</th><th>Bot Adı</th><th>Username</th><th>Kullanıcı</th><th>Broadcast</th><th>İşlemler</th></tr></thead>
+<tbody>${renderRows(items)}</tbody>
+</table>
+</div>
+<p>${statusLabel}</p>
+</div>`;
 
   return c.html(page("Bot Yönetimi", `
 <h1>🤖 Bot Yönetimi</h1>
@@ -117,26 +131,16 @@ bots.get("/bots", async (c) => {
 <input name="token" placeholder="Telegram Bot Token" required>
 <button type="submit">➕ Bot Ekle</button>
 </form>
-
 <div class="actions">
 <a class="btn green" href="/bots/bulk">📥 Toplu Bot Ekle</a>
 <a class="btn green" href="/bots/update-all">🤖 Tüm Botların Açıklamasını Güncelle</a>
 <a class="btn orange" href="/bots/check">🔄 Botları Kontrol Et</a>
 </div>
 </div>
-
-<div class="card">
-<h2>Bot Listesi (${botlar.length})</h2>
-<div class="table-wrap">
-<table>
-<thead><tr>
-<th>ID</th><th>Bot Adı</th><th>Username</th><th>Durum</th>
-<th>Kullanıcı</th><th>Broadcast</th><th>İşlemler</th>
-</tr></thead>
-<tbody>${rows}</tbody>
-</table>
-</div>
-</div>`));
+${table("🟢 Geçerli Tokenlı Botlar", onlineBots, "Telegram tokenı geçerli olan botlar.")}
+${table("🔴 Offline / Diğer Durum", offlineBots, "Geçmişte offline olarak işaretlenmiş botlar. Yeniden kontrol edilebilir.")}
+${table("⛔ Geçersiz veya İptal Edilmiş Tokenlar", invalidBots, "Yalnızca Telegram 401/Unauthorized yanıtı alınan tokenlar burada görünür. Botlar otomatik silinmez; istersen tek tek silebilirsin.")}
+`));
 });
 
 /* =========================
@@ -343,16 +347,13 @@ bots.post("/bots/edit/:id", async (c) => {
 bots.get("/bots/check", async (c) => {
   try {
     const botlar = await getBots(c.env.DB) as any[];
-
     const batchSize = 5;
     const offset = readCount(c.req.query("offset"));
     let online = readCount(c.req.query("online"));
-    let offline = readCount(c.req.query("offline"));
+    let invalid = readCount(c.req.query("invalid"));
     let skipped = readCount(c.req.query("skipped"));
 
-    if (offset >= botlar.length && offset !== 0) {
-      return c.redirect("/bots/check");
-    }
+    if (offset >= botlar.length && offset !== 0) return c.redirect("/bots/check");
 
     const batch = botlar.slice(offset, offset + batchSize);
 
@@ -363,46 +364,33 @@ bots.get("/bots/check", async (c) => {
         online++;
       } catch (e: any) {
         const message = String(e?.message || e || "Unknown error");
+        console.error("BOT CHECK ERROR:", { botId: bot.id, username: bot.username || "-", error: message });
 
-        console.error("BOT CHECK ERROR:", {
-          botId: bot.id,
-          username: bot.username || "-",
-          error: message,
-        });
-
-        const temporaryError =
-          /too many subrequests|fetch failed|network|timeout|timed out|rate.?limit|\b429\b|service unavailable|\b5\d\d\b|internal error|connection|socket|temporar/i.test(message);
-
-        if (temporaryError) {
-          skipped++;
+        // Only a definite Telegram 401/Unauthorized marks a token invalid.
+        // Transient and unexpected errors never change the existing status.
+        if (/\\b401\\b|unauthorized/i.test(message)) {
+          await updateBotStatus(c.env.DB, bot.id, -1);
+          invalid++;
         } else {
-          await updateBotStatus(c.env.DB, bot.id, 0);
-          offline++;
+          skipped++;
         }
       }
     }
 
     const nextOffset = offset + batch.length;
-
     if (nextOffset < botlar.length) {
       const nextUrl = "/bots/check?offset=" + nextOffset +
-        "&online=" + online +
-        "&offline=" + offline +
-        "&skipped=" + skipped;
-
-      const progress = Math.round(
-        nextOffset / Math.max(1, botlar.length) * 100
-      );
-
+        "&online=" + online + "&invalid=" + invalid + "&skipped=" + skipped;
+      const progress = Math.round(nextOffset / Math.max(1, botlar.length) * 100);
       return c.html(page("Botlar Kontrol Ediliyor", `
 <div class="card">
 <h2>🔄 Botlar kontrol ediliyor</h2>
 <p>İlerleme: ${nextOffset} / ${botlar.length} (%${progress})</p>
 <div class="bar"><div class="fill" style="width:${progress}%"></div></div>
-<p class="success">🟢 Online: ${online}</p>
-<p class="failed">🔴 Offline: ${offline}</p>
-<p class="warning">🟡 Geçici hata nedeniyle atlanan: ${skipped}</p>
-<p>İşlem bitene kadar bu sayfayı açık tut.</p>
+<p class="success">🟢 Tokenı geçerli: ${online}</p>
+<p class="failed">⛔ Geçersiz/iptal edilmiş token: ${invalid}</p>
+<p class="warning">🟡 Hata nedeniyle durumu korunmuş: ${skipped}</p>
+<p>Geçici veya beklenmeyen hatalar botların durumunu değiştirmez.</p>
 <script>setTimeout(function(){location.replace(${JSON.stringify(nextUrl)})},500)</script>
 <noscript><a href="${escapeHtml(nextUrl)}">Sonraki gruba geç</a></noscript>
 </div>`));
@@ -411,16 +399,15 @@ bots.get("/bots/check", async (c) => {
     return c.html(page("Bot Kontrol Sonucu", `
 <div class="card">
 <h2>✅ Bot kontrolü tamamlandı</h2>
-<p class="success">🟢 Online: ${online}</p>
-<p class="failed">🔴 Offline: ${offline}</p>
-<p class="warning">🟡 Geçici hata nedeniyle atlanan: ${skipped}</p>
-<p>Toplam bot: ${botlar.length}</p>
-<p>Geçici hata alan botların mevcut durumları korundu.</p>
+<p class="success">🟢 Tokenı geçerli: ${online}</p>
+<p class="failed">⛔ Geçersiz/iptal edilmiş token: ${invalid}</p>
+<p class="warning">🟡 Hata nedeniyle durumu korunmuş: ${skipped}</p>
+<p>Kontrol edilen toplam bot: ${botlar.length}</p>
+<p>Geçersiz tokenlar ayrı gösterilir; hiçbir bot otomatik silinmez.</p>
 <a class="btn" href="/bots">⬅ Botlara Dön</a>
 </div>`));
   } catch (e: any) {
     console.error("BOT CHECK GENEL HATA:", e?.message || e, e?.stack || "");
-
     return c.html(page("Kontrol Hatası", `
 <div class="card">
 <h2>❌ Kontrol tamamlanamadı</h2>
