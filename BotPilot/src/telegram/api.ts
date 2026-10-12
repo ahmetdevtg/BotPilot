@@ -23,6 +23,11 @@ async function telegramRequest(
   body: any
 ) {
 
+  // An empty parse mode means plain text; omit parse_mode entirely.
+  if (body && body.parse_mode === "") {
+    delete body.parse_mode;
+  }
+
   const res = await fetch(
     `https://api.telegram.org/bot${token}/${method}`,
     {
