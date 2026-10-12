@@ -63,23 +63,36 @@ export async function sendBroadcast(
 
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
-    try {
+    const deliver = async (parseMode: string) => {
       if (options.photo && options.buttonText && options.buttonUrl) {
-        await sendPhotoWithButton(token, user.telegram_id, options.photo, options.message, options.buttonText, options.buttonUrl, options.parseMode || "HTML");
+        await sendPhotoWithButton(token, user.telegram_id, options.photo, options.message, options.buttonText, options.buttonUrl, parseMode);
       } else if (options.video && options.buttonText && options.buttonUrl) {
-        await sendVideoWithButton(token, user.telegram_id, options.video, options.message, options.buttonText, options.buttonUrl, options.parseMode || "HTML");
+        await sendVideoWithButton(token, user.telegram_id, options.video, options.message, options.buttonText, options.buttonUrl, parseMode);
       } else if (options.document && options.buttonText && options.buttonUrl) {
-        await sendDocumentWithButton(token, user.telegram_id, options.document, options.message, options.buttonText, options.buttonUrl, options.parseMode || "HTML");
+        await sendDocumentWithButton(token, user.telegram_id, options.document, options.message, options.buttonText, options.buttonUrl, parseMode);
       } else if (options.buttonText && options.buttonUrl) {
-        await sendMessageWithButton(token, user.telegram_id, options.message, options.buttonText, options.buttonUrl, options.parseMode || "HTML");
+        await sendMessageWithButton(token, user.telegram_id, options.message, options.buttonText, options.buttonUrl, parseMode);
       } else if (options.photo) {
-        await sendPhoto(token, user.telegram_id, options.photo, options.message, options.parseMode || "HTML");
+        await sendPhoto(token, user.telegram_id, options.photo, options.message, parseMode);
       } else if (options.video) {
-        await sendVideo(token, user.telegram_id, options.video, options.message, options.parseMode || "HTML");
+        await sendVideo(token, user.telegram_id, options.video, options.message, parseMode);
       } else if (options.document) {
-        await sendDocument(token, user.telegram_id, options.document, options.message, options.parseMode || "HTML");
+        await sendDocument(token, user.telegram_id, options.document, options.message, parseMode);
       } else {
-        await sendText(token, user.telegram_id, options.message, options.parseMode || "HTML");
+        await sendText(token, user.telegram_id, options.message, parseMode);
+      }
+    };
+    try {
+      const selectedParseMode = options.parseMode || "HTML";
+      try {
+        await deliver(selectedParseMode);
+      } catch (firstError: any) {
+        const firstMessage = String(firstError?.message || firstError || "");
+        if (!/parse entities|can't parse|unsupported start tag|can't find end of the entity/i.test(firstMessage) || !selectedParseMode) {
+          throw firstError;
+        }
+        // Invalid formatting should not discard the whole broadcast: retry as plain text.
+        await deliver("");
       }
       success++;
     } catch (error: any) {
