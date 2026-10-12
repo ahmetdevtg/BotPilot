@@ -36,7 +36,8 @@ function classifyFailure(error: unknown): string {
   if (/\b401\b|unauthorized|token is invalid/i.test(message)) return "Geçersiz bot tokenı (401)";
   if (/parse entities|can't parse|unsupported start tag|can't find end of the entity/i.test(message)) return "Mesaj HTML/Markdown biçimi hatalı";
   if (/FROZEN_METHOD_INVALID/i.test(message)) return "Telegram botu kısıtlamış (FROZEN_METHOD_INVALID)";
-  return "Diğer Telegram/API hatası";
+  // Keep the actual Telegram/API message visible so unknown failures can be diagnosed.
+  return "Diğer Telegram/API hatası: " + message.slice(0, 180);
 }
 
 function wait(ms: number): Promise<void> {
